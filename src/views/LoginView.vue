@@ -9,8 +9,8 @@
       <!-- 左侧：插画 + 文案（小屏会自动排到上面） -->
       <section class="hero">
         <img class="hero-art" src="/img/hero-boy.png" alt="Warm illustration" />
-        <h1>欢迎回到克罗恩王国</h1>
-        <p class="sub">一起记录 · 互相支持 · 走得更轻松</p>
+        <h1>welcome to crohn disease <br>👑✨kingdom✨👑</h1>
+        <p class="sub">这里有最坚强，最深刻，最智慧的灵魂一起记录， 互相支持</p>
       </section>
 
       <!-- 右侧：登录卡片 -->
@@ -133,10 +133,15 @@ async function submit () {
   content: "";
   position: absolute; inset: 0;
   background: url("/img/bg-stars.png") center no-repeat;
-  /* 关键：宽度在 320px~100vw 之间，但绝不超过 1080px，因此不会被放大 */
-  background-size: clamp(320px, 100vw, 1080px) auto;
-  margin: 0 auto;              /* 居中 */
-}
+
+  /* 把下面这行： */
+  /* background-size: clamp(320px, 100vw, 1080px) auto; */
+
+  /* 换成这行： */
+  background-size: cover;}
+
+  /* `margin: 0 auto;` 这一行现在也不需要了，可以删掉，cover 会自动处理居中 */
+  /* margin: 0 auto; */
 
 /* 暖色罩层：只做颜色，不做模糊（模糊会把后面的图一起糊掉） */
 .overlay{
@@ -172,9 +177,19 @@ async function submit () {
   filter: drop-shadow(0 12px 30px rgba(0,0,0,.35));
   margin-bottom: 12px;
 }
-.hero h1{ font-size: clamp(28px, 5vw, 42px); margin: 0 0 6px; }
-.hero .sub{ opacity:.92; font-size: clamp(14px, 2.6vw, 16px); }
+.hero h1 {
+  font-size: clamp(3px, 6vw, 50px); /* 字更大 */
+  font-weight: 700; /* 更有力量 */
+  letter-spacing: 1px; /* 稍微拉开字距 */
+  margin-bottom: 10px;
+}
 
+.hero .sub {
+  opacity: 0.95;
+  font-size: clamp(18px, 3vw, 22px); /* 字更大一点 */
+  font-weight: 500;
+  line-height: 1.6;
+}
 /* 玻璃拟态登录卡 */
 .card{
   background: var(--card-bg);
