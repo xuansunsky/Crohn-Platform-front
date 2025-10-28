@@ -1,4 +1,4 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <div class="page">
     <!-- 背景 & 渐变遮罩 -->
     <div class="bg"></div>
@@ -8,56 +8,14 @@
     <main class="wrap">
       <!-- 左侧：插画 + 文案（小屏会自动排到上面） -->
       <section class="hero">
-        <img class="hero-art" src="/img/hero-boy.png" alt="Warm illustration" />
+
         <h1>welcome to crohn disease <br>👑✨kingdom✨👑</h1>
-        <p class="sub">这里有最坚强，最深刻，最智慧的灵魂一起记录， 互相支持</p>
+        <p class="sub">这里有最坚强，最智慧，最深刻的灵魂一起记录， 互相支持！</p>
+        <p class="sub"><span class="clickable" @click="goToLoginView2">🌹点击进入！</span></p>
       </section>
 
       <!-- 右侧：登录卡片 -->
-      <section class="card">
-        <h2>登录</h2>
-        <form @submit.prevent="submit">
-          <label class="field">
-            <span>手机号</span>
-            <input
-                v-model.trim="phone"
-                type="tel"
-                inputmode="numeric"
-                pattern="[0-9]{11}"
-                placeholder="请输入 11 位手机号"
-                required
-            />
-          </label>
 
-          <label class="field">
-            <span>密码</span>
-            <div class="pass">
-              <input
-                  :type="showPass ? 'text' : 'password'"
-                  v-model="password"
-                  placeholder="请输入密码"
-                  required
-              />
-              <button type="button" class="eye" @click="showPass = !showPass">
-                {{ showPass ? '🙈' : '👁️' }}
-              </button>
-            </div>
-          </label>
-
-          <button class="primary" :disabled="!canSubmit || loading">
-            <span v-if="!loading">进入王国</span>
-            <span v-else>正在进入…</span>
-          </button>
-
-          <p v-if="error" class="error">{{ error }}</p>
-
-          <div class="links">
-            <a href="javascript:void(0)">忘记密码</a>
-            <a href="javascript:void(0)">去注册</a>
-          </div>
-        </form>
-        <footer>© {{ year }} Crohn Kingdom</footer>
-      </section>
     </main>
   </div>
 </template>
@@ -73,7 +31,9 @@ const showPass = ref(false)
 const loading = ref(false)
 const error = ref('')
 const year = new Date().getFullYear()
-
+const goToLoginView2 = () => {
+  router.push({ name: 'LoginView2' })  // 跳转到 LoginView2
+}
 const canSubmit = computed(() => phone.value.length === 11 && password.value.length > 0)
 
 async function submit () {
@@ -106,7 +66,7 @@ async function submit () {
 /* 主题色（想换风格只改这里） */
 :root{
   --ink:#0f172a;           /* 深色文字 */
-  --card-bg: rgba(255,255,255,.22);
+  --card-bg: rgba(255,255,255,1);
   --blur: 12px;
   --primary-1:#ffb86c;     /* 暖橙 */
   --primary-2:#ff6b6b;     /* 珊瑚红 */
@@ -167,10 +127,17 @@ async function submit () {
   .wrap{ grid-template-columns: 1fr; place-items:center; }
 }
 
-.hero{
+.hero {
   color: #fff;
-  text-shadow: 0 2px 18px rgba(0,0,0,.35);
+  transform:translate(300px,10px);
+  text-align: center; /* 文本水平居中 */
+  display: flex; /* 使用 flexbox 让内容居中 */
+  flex-direction: column; /* 垂直排列文字和图片 */
+  justify-content: center; /* 垂直居中 */
+  align-items: center; /* 水平居中 */
   max-width: 720px;
+  margin: 0 auto; /* 确保它居中 */
+  height: 100vh; /* 让容器高度充满屏幕 */
 }
 .hero-art{
   width: clamp(160px, 24vw, 260px);
@@ -188,15 +155,16 @@ async function submit () {
   opacity: 0.95;
   font-size: clamp(18px, 3vw, 22px); /* 字更大一点 */
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1;
 }
 /* 玻璃拟态登录卡 */
 .card{
   background: var(--card-bg);
+  transform:translate(-200px,-100px);
   backdrop-filter: blur(var(--blur));
   -webkit-backdrop-filter: blur(var(--blur));
   border:1px solid rgba(255,255,255,.35);
-  box-shadow: 0 18px 40px rgba(0,0,0,.20);
+  box-shadow: 0 18px 40px rgba(0,0,0,1);
   border-radius: 18px;
   padding: 26px 22px 18px;
   color:#0b1220;
@@ -204,10 +172,10 @@ async function submit () {
 .card h2{ margin:0 0 10px; }
 
 .field{ display:block; margin: 12px 0; }
-.field span{ display:block; font-size:13px; opacity:.8; margin-bottom:6px; }
+.field span{ display:block; font-size:13px; opacity:1; margin-bottom:6px; }
 .field input{
-  width:100%; padding:12px 14px;
-  background: rgba(255,255,255,.88);
+  width:80%; padding:12px 14px;
+  background: var(--card-bg);
   border:1px solid rgba(0,0,0,.08);
   border-radius: 12px;
   outline:none;
