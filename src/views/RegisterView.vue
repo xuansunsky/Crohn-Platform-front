@@ -1,27 +1,26 @@
 <template>
   <div class="page">
-    <!-- 动态星空背景 -->
     <div class="bg"></div>
     <div class="stars"></div>
     <div class="overlay"></div>
-    <CyberAlert
-        v-if="showSuccessAlert"
-        title="身份验证通过"
-        msg="welcome back to Kingdom,Architect-Xuan！"
-    />
-    <!-- 登录卡片 -->
-    <main class="login-card" :class="{ 'floating': isHovered }">
-      <div class="hero-container" @mouseenter="heroHover = true" @mouseleave="heroHover = false">
-        <img src="/img/hero-boy.png" alt="Hero" class="hero-art" :class="{ 'hover': heroHover }" />
+
+    <main class="login-card">
+      <div class="hero-container">
+        <img src="/img/hero-boy.png" alt="Hero" class="hero-art" />
         <div class="glow"></div>
       </div>
 
-      <h1 class="title">
-        <span class="gradient-text">Crohn Disease Kingdom</span>
-      </h1>
-      <p class="sub">欢迎勇士，开启你的星辉之旅 ✨</p>
+      <h1 class="title"><span class="gradient-text">加入 Crohn Kingdom</span></h1>
+      <p class="sub">注册一个属于你的星光身份 🌠</p>
 
-      <form @submit.prevent="submit" class="form">
+      <form @submit.prevent="register" class="form">
+        <!-- 昵称 -->
+        <div class="input-group">
+          <input v-model.trim="nickName" required id="nickName" class="input" :class="{ filled: nickName }" />
+          <label for="nickName" class="label">昵称</label>
+          <div class="focus-line"></div>
+        </div>
+
         <!-- 手机号 -->
         <div class="input-group">
           <input
@@ -32,7 +31,7 @@
               required
               id="phone"
               class="input"
-              :class="{ 'filled': phone }"
+              :class="{ filled: phone }"
           />
           <label for="phone" class="label">手机号</label>
           <div class="focus-line"></div>
@@ -46,21 +45,29 @@
               required
               id="password"
               class="input"
-              :class="{ 'filled': password }"
+              :class="{ filled: password }"
           />
           <label for="password" class="label">密码</label>
           <div class="focus-line"></div>
-          <button type="button" class="eye-toggle" @click="showPass = !showPass">
-            <i :class="showPass ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
-          </button>
+        </div>
+
+        <!-- 确认密码 -->
+        <div class="input-group">
+          <input
+              :type="showPass ? 'text' : 'password'"
+              v-model="confirm"
+              required
+              id="confirm"
+              class="input"
+              :class="{ filled: confirm }"
+          />
+          <label for="confirm" class="label">确认密码</label>
+          <div class="focus-line"></div>
         </div>
 
         <!-- 提交按钮 -->
         <button class="primary-btn" :disabled="!canSubmit || loading" type="submit">
-          <span v-if="!loading" class="btn-text">
-            <span>进入王国</span>
-            <i class="ri-arrow-right-line"></i>
-          </span>
+          <span v-if="!loading" class="btn-text">✨ 注册成为勇士</span>
           <span v-else class="loading">
             <span class="dot"></span>
             <span class="dot"></span>
@@ -68,96 +75,77 @@
           </span>
         </button>
 
-        <p v-if="error" class="error-msg">
-          <i class="ri-error-warning-line"></i> {{ error }}
-        </p>
+        <p v-if="error" class="error-msg">{{ error }}</p>
+
+        <!-- 返回登录 -->
         <div class="links">
-          <p>还没有账号？</p>
-          <button type="button" class="register-btn" @click="goRegister">
-            去注册 🌈
-          </button>
+          <p>已经有账号？</p>
+          <button type="button" class="register-btn" @click="goLogin">去登录 🌙</button>
         </div>
       </form>
     </main>
-
   </div>
-
 </template>
+
 <script setup>
-const showSuccessAlert = ref(false)
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router' // 引入路由
-import axios from 'axios'
-import CyberAlert from "@/components/CyberAlert.vue"; // 引入 axios (确保你 npm install axios 了)
-
+import { useRouter } from 'vue-router'
+import { registerUser } from '@/api/user'
 const router = useRouter()
-
-// 表单状态
+const nickName = ref('')
 const phone = ref('')
 const password = ref('')
+const confirm = ref('')
 const showPass = ref(false)
 const loading = ref(false)
 const error = ref('')
-const isHovered = ref(false)
-const heroHover = ref(false)
 
-// 校验规则
+// 校验：昵称非空、手机号合法、密码一致且 ≥6 位
 const canSubmit = computed(() =>
-    /^1[3-9]\d{9}$/.test(phone.value) && password.value.length >= 6
+    nickName.value &&
+    /^1[3-9]\d{9}$/.test(phone.value) &&
+    password.value.length >= 6 &&
+    password.value === confirm.value
 )
 
-// 跳转注册页
-function goRegister() {
-  router.push('/register')
-}
-
-// ✅ 真正的登录逻辑
-async function submit() {
+// 注册逻辑
+async function register() {
   if (!canSubmit.value || loading.value) return
-
-  // 1. 重置状态
-  error.value = ''
   loading.value = true
+  error.value = ''
 
   try {
-    // 2. 发送请求给你的 Spring Boot 后端
-    // 注意：这里用 '/api' 是假设你配置了 vite 代理，如果没有，就写 'http://localhost:8080/users/login'
-    const response = await axios.post('/api/users/login', {
-      phoneNumber: phone.value, // ⚠️ 关键：后端 User 对象里叫 phoneNumber，前端变量叫 phone，这里要对应上！
+    // ✅ 真实后端请求
+    const { data } = await registerUser({
+      nickName: nickName.value,      // 👈 跟后端字段对上
+      phoneNumber: phone.value,
       password: password.value
     })
 
-    const resData = response.data // 拿到 ApiResponse
-
-    // 3. 判断后端返回的状态码 (假设你后端成功是 200)
-    if (resData.status === 200) {
-      // 🎉 登录成功！
-console.log("1")
-      // A. 把 Token 存进保险箱 (LocalStorage)
-      const token = resData.data // 你的 ApiResponse 把 token 放在 data 里
-      localStorage.setItem('token', token)
-      showSuccessAlert.value = true
-
-      // C. 穿越！前往仪表盘
-      setTimeout(async () => {
-        await router.push('/dashboard')
-      }, 1500)
-
+    // 成功
+    if (data.code === 200) {
+      alert('注册成功！✨ 欢迎加入克罗恩王国')
+      await router.push('/login2')
     } else {
-      // 😭 业务逻辑失败 (比如密码错了)
-      error.value = resData.message || '登录失败，请检查账号密码'
+      // 后端返回错误信息
+      error.value = data.message || '注册失败，请稍后重试'
     }
-
   } catch (err) {
-    // 💥 网络崩了，或者后端报错 500
-    console.error(err)
-    error.value = '连接王国的通道拥堵，请稍后再试 (网络错误)'
+    // 网络或服务器异常
+    console.error('注册请求出错：', err)
+    error.value = '网络异常，请稍后再试 ⚠️'
   } finally {
-    // 4. 无论成功失败，都要停止转圈圈
     loading.value = false
   }
 }
+
+// 跳转登录
+function goLogin() {
+  router.push('/login2')
+}
 </script>
+
+
 <style scoped>
 /* 主题色 */
 :root {
@@ -491,5 +479,9 @@ console.log("1")
   text-shadow: 0 0 10px rgba(255, 184, 108, 0.4);
   transform: translateY(-2px);
 }
+ /* ✅ 如果你想让风格完全一致，可以复用LoginView的样式文件 */
 
+.sub {
+  margin-bottom: 20px;
+}
 </style>

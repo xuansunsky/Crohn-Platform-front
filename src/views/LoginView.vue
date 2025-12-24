@@ -145,13 +145,15 @@ async function submit () {
   margin-bottom: 12px;
 }
 .hero h1 {
+  margin-bottom: 30px;
   font-size: clamp(3px, 6vw, 50px); /* 字更大 */
   font-weight: 700; /* 更有力量 */
   letter-spacing: 1px; /* 稍微拉开字距 */
-  margin-bottom: 10px;
+
 }
 
 .hero .sub {
+  margin-bottom: 30px;
   opacity: 0.95;
   font-size: clamp(18px, 3vw, 22px); /* 字更大一点 */
   font-weight: 500;
