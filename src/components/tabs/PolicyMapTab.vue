@@ -571,12 +571,6 @@ const initMap = () => {
   // 🔥 监听点击事件 🔥
   myChart.on('click', async (params) => {
     console.log('点击了区域:', params.name)
-    try {
-      const res = await http.get('/users/whoami')
-      console.log('通信成功！后端回复：', res)
-    } catch (e) {
-      console.error('通信失败', e)
-    }
     // A. 无论点哪里，先更新右边的数据面板
     // (调用我们刚才写的生成假数据的函数)
     loadPolicyData(params.name)

@@ -6,6 +6,7 @@ import DashboardView from "../views/DashboardView.vue";
 import insuranceMap from "@/components/tabs/PolicyMapTab.vue";
 import ExperienceCard from "@/components/ExperienceCard.vue";
 import TestTab from "@/components/tabs/TestTab.vue";
+import AdminConsole from "@/views/AdminConsole.vue";
 export default createRouter({
     history: createWebHistory(),
     routes: [
@@ -16,7 +17,8 @@ export default createRouter({
         {path:'/dashboard',name:'dashboard',component:DashboardView},
         {path:'/insuranceMap',name:'insuranceMap',component:insuranceMap},
         {path:'/ExperienceCard',name:'ExperienceCard',component:ExperienceCard},
-        {path:'/TestTab',name:'TestTab',component:TestTab}
+        {path:'/TestTab',name:'TestTab',component:TestTab},
+        {path:'/AdminConsole',name:'AdminConsole',component:AdminConsole}
 
     ]
 })
