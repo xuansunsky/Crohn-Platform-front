@@ -116,19 +116,19 @@ async function register() {
 
   try {
     // ✅ 真实后端请求
-    const { data } = await registerUser({
+    const resData  = await registerUser({
       nickName: nickName.value,      // 👈 跟后端字段对上
       phoneNumber: phone.value,
       password: password.value
     })
 
     // 成功
-    if (data.code === 200) {
+    if (resData.status === 200) {
       alert('注册成功！✨ 欢迎加入克罗恩王国')
       await router.push('/login2')
     } else {
       // 后端返回错误信息
-      error.value = data.message || '注册失败，请稍后重试'
+      error.value = resData.message || '注册失败，请稍后重试'
     }
   } catch (err) {
     // 网络或服务器异常
