@@ -84,6 +84,8 @@
 
 </template>
 <script setup>
+import {loginUser} from "@/api/user.js";
+
 const showSuccessAlert = ref(false)
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router' // 引入路由
@@ -122,20 +124,21 @@ async function submit() {
   try {
     // 2. 发送请求给你的 Spring Boot 后端
     // 注意：这里用 '/api' 是假设你配置了 vite 代理，如果没有，就写 'http://localhost:8080/users/login'
-    const response = await axios.post('/api/users/login', {
+    const response = await loginUser( {
       phoneNumber: phone.value, // ⚠️ 关键：后端 User 对象里叫 phoneNumber，前端变量叫 phone，这里要对应上！
       password: password.value
     })
 
-    const resData = response.data // 拿到 ApiResponse
+     // 拿到 ApiResponse
 
     // 3. 判断后端返回的状态码 (假设你后端成功是 200)
-    if (resData.status === 200) {
+    if (response.status === 200) {
       // 🎉 登录成功！
 console.log("1")
       // A. 把 Token 存进保险箱 (LocalStorage)
-      const token = resData.data // 你的 ApiResponse 把 token 放在 data 里
-      localStorage.setItem('token', token)
+      const res = response.data // 你的 ApiResponse 把 token 放在 data 里
+      localStorage.setItem('token', res.token)
+      localStorage.setItem('roleId', res.roleId)
       showSuccessAlert.value = true
 
       // C. 穿越！前往仪表盘

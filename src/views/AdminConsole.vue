@@ -87,6 +87,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import {getAllUsers, updaterole} from "@/api/user.js";
 
 const router = useRouter()
 const userList = ref([])
@@ -94,10 +95,8 @@ const myId = ref(1) // 你自己的 ID
 
 const fetchUsers = async () => {
   try {
-    const res = await axios.get('/api/users/all', {
-      headers: { Authorization: localStorage.getItem('token') }
-    })
-    if (res.data.status === 200) userList.value = res.data.data
+    const res = await getAllUsers()
+    if (res.status === 200) userList.value = res.data
   } catch (err) {
     console.error('获取名册失败', err)
   }
@@ -105,10 +104,8 @@ const fetchUsers = async () => {
 
 const updateRole = async (userId, roleId) => {
   try {
-    const res = await axios.post('/api/users/updateRole', { userId, roleId }, {
-      headers: { Authorization: localStorage.getItem('token') }
-    })
-    if (res.data.status === 200) fetchUsers()
+    const res = await updaterole({ userId, roleId })
+    if (res.status === 200) await fetchUsers()
   } catch (err) {
     console.error('操作失败', err)
   }
