@@ -148,7 +148,7 @@ console.log("1")
 
     } else {
       // 😭 业务逻辑失败 (比如密码错了)
-      error.value = resData.message || '登录失败，请检查账号密码'
+      error.value = response.message || '登录失败，请检查账号密码'
     }
 
   } catch (err) {

@@ -57,22 +57,26 @@
     <PolicyMapTab v-else-if="activeTab === 'policy'" />
 
     <LibraryTab v-else-if="activeTab === 'library'" />
-
+    <AdminConsoleTab v-else-if="activeTab === 'admin'"/>
     <main v-else-if="activeTab === 'map'" class="single-main">
     </main>
   </div>
 </template>
 
 <script setup>
-import InsuranceMap from "@/components/tabs/PolicyMapTab.vue";
 // 👇 1. 引入我们的新卡片组件
-import { computed, ref } from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import LibraryTab from "@/components/tabs/LibraryTab.vue";
 import CheckinTab from "@/components/tabs/CheckinTab.vue";
-import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue"; // NEW
+import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue";
+import router from "@/router/index.js";
+import AdminConsoleTab from "@/components/tabs/AdminConsoleTab.vue";
+import http from "@/api/http.js"; // NEW
 
 // 顶部菜单（NEW）
-const tabs = [
+const roleId = ref(localStorage.getItem('roleId') || '0')
+
+const tabs = computed(() =>  [
   { key: 'checkin',   label: '星光打卡',           icon: 'ri-sparkling-2-line' },
   { key: 'library',   label: '经验金库',           icon: 'ri-archive-drawer-line' },
   { key: 'drugmap',   label: '药物体验图谱',       icon: 'ri-capsule-line' },
@@ -81,12 +85,39 @@ const tabs = [
   { key: 'qa',        label: '问答广场',           icon: 'ri-question-answer-line' },
   { key: 'circle',    label: '好友 / 圈子 / 小队', icon: 'ri-user-smile-line' },
   { key: 'reward',    label: '奖励系统',           icon: 'ri-medal-line' },
-  { key: 'values',    label: '王国的价值观',       icon: 'ri-heart-2-line' }
-]
+  { key: 'values',    label: '王国的价值观',       icon: 'ri-heart-2-line' },
+
+  // 👇 就像你说的，直接在后面加一个判断，如果是国王就显示
+  ...(roleId.value === 1 ? [{ key: 'admin', label: '权限掌控', icon: 'ri-shield-keyhole-line' }] : [])
+])
 
 const activeTab = ref('checkin')
-// 👇 2. 准备一点假数据 (模拟从后端取回来的帖子)
-// 这里我们可以故意混搭不同的 theme，看看效果
+onMounted(async () => {
+  try {
+    console.log('正在与后台同步身份信息...')
+
+    // 假设这是你的 API 请求，我先用 setTimeout 模拟一下异步请求
+    // const res = await api.getUserInfo()
+
+    // 模拟：假设后台返回的数据里，你依然是国王 (roleId = 1)
+    // 如果后台把你封了，这里就会返回 roleId = 0
+    const mockResponse =await http.get("users/getRole")
+
+    // 拿到最新数据
+    const latestRole = mockResponse.data
+
+    // Update 1: 更新响应式数据，UI 会自动刷新
+    roleId.value = latestRole
+
+    // Update 2: 更新本地缓存，下次进来也准
+    localStorage.setItem('roleId', latestRole)
+
+    console.log('身份同步完成，当前权限等级：', latestRole)
+
+  } catch (e) {
+    console.error('身份同步失败，降级使用本地缓存')
+  }
+})
 
 
 </script>

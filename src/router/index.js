@@ -23,7 +23,7 @@ const router = createRouter({
             path: '/AdminConsole',
             name: 'AdminConsole',
             // 使用懒加载提高首页性能
-            component: () => import('@/views/AdminConsole.vue'),
+            component: () => import('@/components/tabs/AdminConsoleTab.vue'),
             meta: { requiresAuth: true, role: 1 } // 标记：需要鉴权且必须是国王权限
         }
     ]
