@@ -60,22 +60,44 @@
     <AdminConsoleTab v-else-if="activeTab === 'admin'"/>
     <main v-else-if="activeTab === 'map'" class="single-main">
     </main>
+    <button
+        @click="handleLogout"
+        class="mt-auto flex items-center gap-3 px-6 py-4 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all font-bold"
+    >
+      <i class="ri-logout-box-r-line text-xl"></i>
+      <span>退出登录</span>
+    </button>
   </div>
 </template>
 
 <script setup>
 // 👇 1. 引入我们的新卡片组件
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import LibraryTab from "@/components/tabs/LibraryTab.vue";
 import CheckinTab from "@/components/tabs/CheckinTab.vue";
 import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue";
-import router from "@/router/index.js";
 import AdminConsoleTab from "@/components/tabs/AdminConsoleTab.vue";
-import http from "@/api/http.js"; // NEW
+import http from "@/api/http.js";
+import router from "@/router/index.js"; // NEW
 
 // 顶部菜单（NEW）
 const roleId = ref(localStorage.getItem('roleId') || '0')
+const handleLogout = () => {
+  // 1. 问一句，防止手滑
+  if(!confirm('兄弟，确定要暂时离开王国吗？')) return
 
+  // 2. 🔥 毁尸灭迹：清空所有身份信息
+  localStorage.removeItem('token')
+  localStorage.removeItem('userId')
+  localStorage.removeItem('roleId')
+  localStorage.removeItem('lastActiveTab') // Tab记忆也顺便清了吧，下次进来从头开始
+
+  // 或者粗暴点直接 clear()，但小心误伤别的
+  // localStorage.clear()
+
+  // 3. 踢回登录页
+  router.push('/login')
+}
 const tabs = computed(() =>  [
   { key: 'checkin',   label: '星光打卡',           icon: 'ri-sparkling-2-line' },
   { key: 'library',   label: '经验金库',           icon: 'ri-archive-drawer-line' },
@@ -91,7 +113,15 @@ const tabs = computed(() =>  [
   ...(roleId.value === 1 ? [{ key: 'admin', label: '权限掌控', icon: 'ri-shield-keyhole-line' }] : [])
 ])
 
-const activeTab = ref('checkin')
+// ✅ 现在的写法：先去 localStorage 找找看有没有存过
+// 如果有，就用存的；如果没有，再默认 'checkin'
+const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
+
+// 🌟 关键一步：一旦你点了别的 Tab，立马拿小本本记下来！
+// watch 监听器：只要 activeTab 变了，就执行里面的代码
+watch(activeTab, (newTab) => {
+  localStorage.setItem('lastActiveTab', newTab)
+})
 onMounted(async () => {
   try {
     console.log('正在与后台同步身份信息...')

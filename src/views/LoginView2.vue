@@ -134,11 +134,11 @@ async function submit() {
     // 3. 判断后端返回的状态码 (假设你后端成功是 200)
     if (response.status === 200) {
       // 🎉 登录成功！
-console.log("1")
       // A. 把 Token 存进保险箱 (LocalStorage)
       const res = response.data // 你的 ApiResponse 把 token 放在 data 里
       localStorage.setItem('token', res.token)
       localStorage.setItem('roleId', res.roleId)
+      localStorage.setItem('userId', res.id)
       showSuccessAlert.value = true
 
       // C. 穿越！前往仪表盘

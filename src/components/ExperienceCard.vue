@@ -70,26 +70,34 @@
           {{ tagPrefix[theme] }}{{ tag }}
         </span>
       </div>
-
+      <div v-if="canEdit" class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+        <button class="bg-red-500 text-white p-1 rounded hover:bg-red-600" @click.stop="$emit('delete')">
+          <i class="ri-delete-bin-line"></i>
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-const props = defineProps({
-  theme: {
-    type: String,
-    default: 'neon',
-    validator: (value) => ['neon', 'glass', 'pop', 'cyber', 'paper', 'aurora', 'sunset', 'deepsea'].includes(value)
-  },
+defineProps({
+  id: Number,
   title: String,
   summary: String,
   icon: String,
-  tags: {
-    type: Array,
-    default: () => ['经验', '恢复']
+  theme: String,
+  date: String,
+  tags: Array,
+
+  // 👇 关键：接收权限开关！
+  canEdit: {
+    type: Boolean,
+    default: false
   }
 })
+
+// 👇 声明我们要抛出的事件，告诉父组件“我要删这个！”
+defineEmits(['delete'])
 
 // === 🎨 皮肤配置中心 ===
 

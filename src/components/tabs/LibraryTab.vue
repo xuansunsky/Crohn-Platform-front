@@ -18,6 +18,10 @@
           v-for="item in libraryItems"
           :key="item.id"
           v-bind="item"
+
+          :can-edit="checkPermission(item.userId)"
+
+          @delete="deleteCard(item.id)"
       />
     </div>
 
@@ -104,11 +108,13 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import ExperienceCard from "@/components/ExperienceCard.vue"
-
+import {useAuth} from "@/components/useAuth.js";
+const { checkPermission } = useAuth()
 // === 1. 数据源 ===
 const libraryItems = ref([
   {
     id: 1,
+    userId: 100,
     theme: 'neon',
     title: '深夜痛悟：红汤是魔鬼',
     summary: '昨晚看着朋友吃红汤，心里那个馋啊。但是一想到上次复发...兄弟们，忍住就是胜利！',
@@ -119,6 +125,7 @@ const libraryItems = ref([
   // ... 其他旧数据保留 ...
   {
     id: 8,
+    userId: 1,
     theme: 'sunset',
     title: '内江的夕阳',
     summary: '肚子阴痛了会儿，站在阳台看了一眼夕阳，感觉世界还是挺温柔的。',
@@ -127,7 +134,30 @@ const libraryItems = ref([
     date: '2025.12.23'
   }
 ])
+const deleteCard = (id) => {
+  // 弹个窗确认一下，防止手滑
+  if (!confirm('兄弟，确定要把这条经验从金库里移除吗？')) return
 
+  // 简单粗暴：把这个 id 的项过滤掉
+  // (如果是真实后端，这里要写 await axios.delete(`/posts/${id}`))
+  libraryItems.value = libraryItems.value.filter(item => item.id !== id)
+}
+
+const publishPost = () => {
+  if (!newPost.title) return alert('兄弟，写个标题呗！')
+
+  const newItem = {
+    ...newPost,
+    // 💡 小技巧：用时间戳做 ID，保证不重复
+    id: Date.now(),
+    // 🔥 关键：要把这个帖子标记为“我”发的！
+    // 这样发出去之后，checkPermission 就会立即返回 true，你马上就能编辑它
+    userId: currentUserId.value
+  }
+
+  libraryItems.value.unshift(newItem)
+  closeModal()
+}
 // === 2. 弹窗控制 ===
 const showModal = ref(false)
 
@@ -165,21 +195,5 @@ const openModal = () => {
 
 const closeModal = () => {
   showModal.value = false
-}
-
-const publishPost = () => {
-  if (!newPost.title) return alert('兄弟，写个标题呗！')
-
-  // 1. 模拟生成 ID
-  const newItem = {
-    ...newPost,
-    id: libraryItems.value.length + 1
-  }
-
-  // 2. 存入列表 (如果是真实后端，这里就是发请求 axios.post)
-  libraryItems.value.unshift(newItem) // 加到最前面
-
-  // 3. 关闭弹窗
-  closeModal()
 }
 </script>
