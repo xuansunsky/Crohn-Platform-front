@@ -6,6 +6,7 @@ import DashboardView from "../views/DashboardView.vue"
 import insuranceMap from "@/components/tabs/PolicyMapTab.vue"
 import ExperienceCard from "@/components/ExperienceCard.vue"
 import TestTab from "@/components/tabs/TestTab.vue"
+import SocialTab from "@/components/tabs/SocialTab.vue";
 
 // 创建路由实例
 const router = createRouter({
@@ -25,7 +26,8 @@ const router = createRouter({
             // 使用懒加载提高首页性能
             component: () => import('@/components/tabs/AdminConsoleTab.vue'),
             meta: { requiresAuth: true, role: 1 } // 标记：需要鉴权且必须是国王权限
-        }
+        },
+        {path: '/SocialTab', name: 'SocialTab', component: SocialTab}
     ]
 })
 
