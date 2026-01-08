@@ -19,25 +19,25 @@
         </button>
       </div>
 
-      <div v-if="activeTab === 'friend'" class="space-y-4">
-        <div
-            v-for="item in friendList" :key="item.id"
-            @click="openChat(item, 'friend')"
-            class="flex items-center gap-4 bg-white p-4 rounded-2xl active:scale-95 transition-transform"
-        >
-          <div class="relative">
-            <img :src="item.avatar" class="w-12 h-12 rounded-full bg-slate-200 object-cover border border-slate-100">
-            <div v-if="item.unread > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{{ item.unread }}</div>
-          </div>
-          <div class="flex-1">
-            <div class="flex justify-between items-center">
-              <h3 class="font-bold text-slate-800">{{ item.name }}</h3>
-              <span class="text-xs text-slate-400">{{ item.lastTime }}</span>
+        <div v-if="activeTab === 'friend'" class="space-y-4">
+          <div
+              v-for="item in friendList" :key="item.id"
+              @click="openChat(item, 'friend')"
+              class="flex items-center gap-4 bg-white p-4 rounded-2xl active:scale-95 transition-transform"
+          >
+            <div class="relative">
+              <img :src="item.avatar" class="w-12 h-12 rounded-full bg-slate-200 object-cover border border-slate-100">
+              <div v-if="item.unread > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{{ item.unread }}</div>
             </div>
-            <p class="text-xs text-slate-500 line-clamp-1 mt-1">{{ item.lastMsg }}</p>
+            <div class="flex-1">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800">{{ item.name }}</h3>
+                <span class="text-xs text-slate-400">{{ item.lastTime }}</span>
+              </div>
+              <p class="text-xs text-slate-500 line-clamp-1 mt-1">{{ item.lastMsg }}</p>
+            </div>
           </div>
         </div>
-      </div>
 
       <div v-else-if="activeTab === 'squad'" class="space-y-4">
         <div
