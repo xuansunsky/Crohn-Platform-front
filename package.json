@@ -17,6 +17,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "echarts": "^6.0.0",
+    "element-plus": "^2.13.0",
     "lucide-vue-next": "^0.561.0",
     "motion-v": "^1.7.4",
     "simplex-noise": "^4.0.3",
