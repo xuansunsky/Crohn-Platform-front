@@ -301,13 +301,56 @@ const handleAccept = async (shipId) => {
     ElMessage.error('操作失败')
   }
 }
+// === WebSocket 相关变量 ===
+let socket = null
+// 🔥 重点：你需要知道自己是谁！
+// 如果你登录时存了 userId，就这样取。如果没有，先写死测试，比如 const myId = 1
+const myId = localStorage.getItem('userId') || 1
+console.log(myId)
+// === 1. 启动 WebSocket (接电话) ===
+const initWebSocket = () => {
+  if (typeof(WebSocket) === "undefined") {
+    console.log("你的浏览器不支持 WebSocket，换个现代点的吧兄弟")
+    return
+  }
 
+  // 这里的地址对应后端：ws://localhost:8080/ws/{userId}
+  const wsUrl = 'ws://localhost:8080/ws/' + myId
+  socket = new WebSocket(wsUrl)
+
+  socket.onopen = () => {
+    console.log("WebSocket 已连接！随时准备接收消息！")
+  }
+
+  socket.onmessage = (msg) => {
+    console.log("收到广播消息：", msg.data)
+
+    // 🔥 核心逻辑：收到消息后，直接推入聊天记录数组！
+    // 因为后端刚才只发了 content (文本)，我们前端临时把它包装成一个对象
+    // 注意：这里假设消息就是当前聊天对象发来的
+    if (currentFriend.value) {
+      const newMsg = {
+        id: Date.now(),
+        senderId: currentFriend.value.friendId, // 假定是当前打开的人发的
+        content: msg.data, // 消息内容
+        type: 'text'
+      }
+      chatHistory.value.push(newMsg)
+      scrollToBottom() // 自动滚到底部
+    }
+  }
+
+  socket.onclose = () => {
+    console.log("WebSocket 已断开")
+  }
+}
 // === 核心功能 4: 打开聊天 ===
 
 // 页面加载时执行
 onMounted(() => {
   refreshData()
 })
+initWebSocket()
 </script>
 
 <style scoped>

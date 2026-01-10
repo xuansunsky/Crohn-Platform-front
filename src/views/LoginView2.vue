@@ -135,10 +135,10 @@ async function submit() {
     if (response.status === 200) {
       // 🎉 登录成功！
       // A. 把 Token 存进保险箱 (LocalStorage)
-      const res = response.data // 你的 ApiResponse 把 token 放在 data 里
+      const res = response.data // 你的 ApiResponse 把 token 放在 data
       localStorage.setItem('token', res.token)
       localStorage.setItem('roleId', res.roleId)
-      localStorage.setItem('userId', res.id)
+      localStorage.setItem('userId', res.userId)
       showSuccessAlert.value = true
 
       // C. 穿越！前往仪表盘
