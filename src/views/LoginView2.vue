@@ -140,6 +140,7 @@ async function submit() {
       localStorage.setItem('roleId', res.roleId)
       localStorage.setItem('userId', res.userId)
       showSuccessAlert.value = true
+      console.log("前端热更新成功")
 
       // C. 穿越！前往仪表盘
       setTimeout(async () => {

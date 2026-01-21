@@ -92,8 +92,7 @@ const handleLogout = () => {
   localStorage.removeItem('roleId')
   localStorage.removeItem('lastActiveTab') // Tab记忆也顺便清了吧，下次进来从头开始
 
-  // 或者粗暴点直接 clear()，但小心误伤别的
-  // localStorage.clear()
+
 
   // 3. 踢回登录页
   router.push('/login')
@@ -109,7 +108,6 @@ const tabs = computed(() =>  [
   { key: 'reward',    label: '奖励系统',           icon: 'ri-medal-line' },
   { key: 'values',    label: '王国的价值观',       icon: 'ri-heart-2-line' },
 
-  // 👇 就像你说的，直接在后面加一个判断，如果是国王就显示
   ...(roleId.value === 1 ? [{ key: 'admin', label: '权限掌控', icon: 'ri-shield-keyhole-line' }] : [])
 ])
 

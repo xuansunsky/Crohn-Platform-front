@@ -109,6 +109,7 @@
 import { ref, reactive } from 'vue'
 import ExperienceCard from "@/components/ExperienceCard.vue"
 import {useAuth} from "@/components/useAuth.js";
+import {statsBuffer as currentUserId} from "motion-v";
 const { checkPermission } = useAuth()
 // === 1. 数据源 ===
 const libraryItems = ref([
