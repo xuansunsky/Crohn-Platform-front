@@ -147,13 +147,13 @@ const deleteCard = (id) => {
 const publishPost = () => {
   if (!newPost.title) return alert('兄弟，写个标题呗！')
 
-  const newItem = {
-    ...newPost,
-    // 💡 小技巧：用时间戳做 ID，保证不重复
-    id: Date.now(),
-    // 🔥 关键：要把这个帖子标记为“我”发的！
-    // 这样发出去之后，checkPermission 就会立即返回 true，你马上就能编辑它
-    userId: currentUserId.value
+  const postData = {
+    userId: currentUserId.value, // 告诉后端是谁写的
+    title: newPost.title,
+    summary: newPost.summary,
+    icon: newPost.icon,
+    theme: newPost.theme,
+    tags: newPost.tags, // 确保后端能存数组（或者转成逗号分隔字符串）
   }
 
   libraryItems.value.unshift(newItem)

@@ -1,102 +1,163 @@
 <template>
-  <div class="dashboard-page">
-    <!-- 顶部栏 -->
-    <header class="topbar">
-      <div>
-        <p class="topbar-sub">Good Morning, 勇士</p>
-        <h1 class="topbar-title">欢迎回到 Crohn Kingdom</h1>
-      </div>
-      <div class="topbar-right">
-        <div class="search-box">
-          <i class="ri-search-line"></i>
-          <input placeholder="搜索：药物、记录、经验卡片…" />
+  <div class="flex h-screen w-full bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30 overflow-hidden">
+
+    <aside
+        :class="[
+        'flex flex-col border-r border-white/5 bg-slate-900/50 backdrop-blur-xl transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden',
+        isSidebarCollapsed ? 'w-0 opacity-0 -translate-x-10' : 'w-64 opacity-100 translate-x-0'
+      ]"
+    >
+
+      <div class="flex h-16 items-center gap-3 px-6 border-b border-white/5 min-w-[256px]">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20">
+          <i class="ri-crown-fill text-lg"></i>
         </div>
-        <div class="user-badge">
-          <div class="avatar">轩</div>
-          <div class="user-info">
-            <span class="name">Architect-Xuan</span>
-            <span class="tag">爱与创造ing</span>
+        <span class="text-lg font-bold tracking-tight text-white">Crohn Kingdom</span>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto px-3 py-6 space-y-1 min-w-[256px]">
+        <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Command Center</p>
+
+        <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            @click="activeTab = tab.key"
+            :class="[
+            'group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
+            activeTab === tab.key
+              ? 'bg-indigo-500/10 text-indigo-400 shadow-inner shadow-indigo-500/5 border border-indigo-500/20'
+              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+          ]"
+        >
+          <i :class="[tab.icon, activeTab === tab.key ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300', 'text-lg transition-colors']"></i>
+          <span>{{ tab.label }}</span>
+
+          <div v-if="activeTab === tab.key" class="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]"></div>
+        </button>
+      </nav>
+
+      <div class="border-t border-white/5 p-4 bg-slate-900/30 min-w-[256px]">
+        <div class="flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/5 backdrop-blur-sm">
+          <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
+            轩
+          </div>
+          <div class="flex flex-col overflow-hidden">
+            <span class="truncate text-sm font-bold text-slate-200">Architect-Xuan</span>
+            <span class="truncate text-xs text-slate-500">Lv.1 王国建造者</span>
           </div>
         </div>
+        <button
+            @click="handleLogout"
+            class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/5 py-2 text-xs font-medium text-slate-500 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all"
+        >
+          <i class="ri-logout-box-r-line"></i> 暂时离线
+        </button>
       </div>
-    </header>
+    </aside>
 
-    <!-- 顶部模块菜单（NEW） -->
-    <nav class="main-tabs">
-      <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          class="tab-item"
-          :class="{ active: tab.key === activeTab }"
-          @click="activeTab = tab.key"
-      >
-        <i :class="tab.icon"></i>
-        <span>{{ tab.label }}</span>
-      </button>
-    </nav>
-    <!-- 为什么要记录提示 -->
-
-    <!-- 提示小模块：为什么要记录 -->
-    <CheckinTab v-if="activeTab === 'checkin'" />
-
-    <!-- 其它模块占位（你以后自己来填） -->
-    <main v-else-if="activeTab === 'meds'" class="single-main">
-      <section class="card placeholder-card">
-        <h2>用药总览（开发中）</h2>
-        <p>以后可以在这里做一个「按时间线 / 药物维度」的总览页。</p>
-      </section>
-    </main>
-
-    <main v-else-if="activeTab === 'log'" class="single-main">
-      <section class="card placeholder-card">
-        <h2>每日日志（开发中）</h2>
-        <p>你可以在这里做 Markdown 日志、情绪记录、关键事件。</p>
-      </section>
-    </main>
-
-    <PolicyMapTab v-else-if="activeTab === 'policy'" />
-
-    <LibraryTab v-else-if="activeTab === 'library'" />
-    <AdminConsoleTab v-else-if="activeTab === 'admin'"/>
-    <main v-else-if="activeTab === 'map'" class="single-main">
-    </main>
-    <button
-        @click="handleLogout"
-        class="mt-auto flex items-center gap-3 px-6 py-4 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all font-bold"
+    <main
+        :class="[
+        'flex flex-1 flex-col overflow-hidden transition-colors duration-500 relative',
+        activeTab === 'policy'
+          ? 'bg-slate-50 text-slate-600'
+          : 'bg-slate-950 text-slate-300 bg-[url(@/assets/noise.png)]'
+      ]"
     >
-      <i class="ri-logout-box-r-line text-xl"></i>
-      <span>退出登录</span>
-    </button>
+
+      <header
+          :class="[
+          'flex h-16 items-center justify-between px-8 z-10 sticky top-0 backdrop-blur-md border-b transition-colors duration-500',
+          activeTab === 'policy'
+            ? 'bg-white/90 border-slate-200'
+            : 'bg-slate-900/80 border-white/5'
+        ]"
+      >
+        <div class="flex items-center gap-4">
+          <button
+              @click="toggleSidebar"
+              :class="[
+              'p-2 rounded-lg transition-all hover:bg-black/5',
+              activeTab === 'policy' ? 'text-slate-600' : 'text-slate-300 hover:bg-white/10'
+            ]"
+          >
+            <i :class="isSidebarCollapsed ? 'ri-menu-unfold-line text-xl' : 'ri-menu-fold-line text-xl'"></i>
+          </button>
+
+          <div>
+            <h2 :class="['text-lg font-bold tracking-wide transition-colors', activeTab === 'policy' ? 'text-slate-800' : 'text-white']">
+              {{ currentTabLabel }}
+            </h2>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="relative hidden md:block group">
+            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" placeholder="检索王国数据..." :class="['h-9 w-64 rounded-full pl-9 pr-4 text-sm outline-none transition-all', activeTab === 'policy' ? 'bg-white border border-slate-200 text-slate-700 shadow-sm' : 'bg-black/20 border border-white/10 text-slate-300']">
+          </div>
+          <button :class="['relative rounded-full p-2', activeTab === 'policy' ? 'text-slate-400 hover:text-blue-600' : 'text-slate-400 hover:text-white']">
+            <i class="ri-notification-3-line text-lg"></i>
+          </button>
+        </div>
+      </header>
+
+      <div
+          :class="[
+          'flex-1 transition-all duration-300',
+          activeTab === 'policy' ? 'p-0 overflow-hidden relative' : 'p-6 overflow-y-auto scroll-smooth'
+        ]"
+      >
+        <transition name="fade" mode="out-in">
+          <div :key="activeTab" class="h-full w-full">
+            <PolicyMapTab v-if="activeTab === 'policy'" class="h-full w-full" />
+            <CheckinTab v-else-if="activeTab === 'checkin'" />
+            <LibraryTab v-else-if="activeTab === 'library'" />
+            <AdminConsoleTab v-else-if="activeTab === 'admin'"/>
+          </div>
+        </transition>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-// 👇 1. 引入我们的新卡片组件
-import {computed, onMounted, ref, watch} from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import LibraryTab from "@/components/tabs/LibraryTab.vue";
 import CheckinTab from "@/components/tabs/CheckinTab.vue";
 import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue";
 import AdminConsoleTab from "@/components/tabs/AdminConsoleTab.vue";
 import http from "@/api/http.js";
-import router from "@/router/index.js"; // NEW
+import router from "@/router/index.js";
 
-// 顶部菜单（NEW）
 const roleId = ref(localStorage.getItem('roleId') || '0')
-const handleLogout = () => {
-  // 1. 问一句，防止手滑
-  if(!confirm('兄弟，确定要暂时离开王国吗？')) return
+const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
 
-  // 2. 🔥 毁尸灭迹：清空所有身份信息
-  localStorage.removeItem('token')
-  localStorage.removeItem('userId')
-  localStorage.removeItem('roleId')
-  localStorage.removeItem('lastActiveTab') // Tab记忆也顺便清了吧，下次进来从头开始
+// 🔥 3. 新增：控制侧边栏是否折叠的状态
+const isSidebarCollapsed = ref(false)
 
-
-
-  // 3. 踢回登录页
-  router.push('/login')
+// 手动切换函数
+const toggleSidebar = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
 }
+
+// 🔥 4. 监听 activeTab 的变化
+// 逻辑：只要切到 'policy' (地图)，自动收起侧边栏；切到其他，自动展开
+watch(activeTab, (newTab) => {
+  localStorage.setItem('lastActiveTab', newTab)
+
+  if (newTab === 'policy') {
+    isSidebarCollapsed.value = true // 自动沉浸模式
+  } else {
+    isSidebarCollapsed.value = false // 恢复控制台模式
+  }
+})
+
+// 初始化检查
+if (activeTab.value === 'policy') {
+  isSidebarCollapsed.value = true
+}
+
+// ... 你的 tabs 配置和其他代码保持不变 ...
 const tabs = computed(() =>  [
   { key: 'checkin',   label: '星光打卡',           icon: 'ri-sparkling-2-line' },
   { key: 'library',   label: '经验金库',           icon: 'ri-archive-drawer-line' },
@@ -107,233 +168,54 @@ const tabs = computed(() =>  [
   { key: 'circle',    label: '好友 / 圈子 / 小队', icon: 'ri-user-smile-line' },
   { key: 'reward',    label: '奖励系统',           icon: 'ri-medal-line' },
   { key: 'values',    label: '王国的价值观',       icon: 'ri-heart-2-line' },
-
-  ...(roleId.value === 1 ? [{ key: 'admin', label: '权限掌控', icon: 'ri-shield-keyhole-line' }] : [])
+  ...(roleId.value === '1' ? [{ key: 'admin', label: '权限掌控', icon: 'ri-shield-keyhole-line' }] : [])
 ])
 
-// ✅ 现在的写法：先去 localStorage 找找看有没有存过
-// 如果有，就用存的；如果没有，再默认 'checkin'
-const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
-
-// 🌟 关键一步：一旦你点了别的 Tab，立马拿小本本记下来！
-// watch 监听器：只要 activeTab 变了，就执行里面的代码
-watch(activeTab, (newTab) => {
-  localStorage.setItem('lastActiveTab', newTab)
+const currentTabLabel = computed(() => {
+  return tabs.value.find(t => t.key === activeTab.value)?.label || '控制台'
 })
+
+const handleLogout = () => {
+  if(!confirm('兄弟，确定要暂时离开王国吗？')) return
+  localStorage.removeItem('token')
+  localStorage.removeItem('userId')
+  localStorage.removeItem('roleId')
+  localStorage.removeItem('lastActiveTab')
+  router.push('/login')
+}
+
 onMounted(async () => {
   try {
-    console.log('正在与后台同步身份信息...')
-
-    // 假设这是你的 API 请求，我先用 setTimeout 模拟一下异步请求
-    // const res = await api.getUserInfo()
-
-    // 模拟：假设后台返回的数据里，你依然是国王 (roleId = 1)
-    // 如果后台把你封了，这里就会返回 roleId = 0
-    const mockResponse =await http.get("users/getRole")
-
-    // 拿到最新数据
-    const latestRole = mockResponse.data
-
-    // Update 1: 更新响应式数据，UI 会自动刷新
-    roleId.value = latestRole
-
-    // Update 2: 更新本地缓存，下次进来也准
-    localStorage.setItem('roleId', latestRole)
-
-    console.log('身份同步完成，当前权限等级：', latestRole)
-
-  } catch (e) {
-    console.error('身份同步失败，降级使用本地缓存')
-  }
+    const res = await http.get("users/getRole")
+    roleId.value = res.data
+    localStorage.setItem('roleId', res.data)
+  } catch (e) { console.error(e) }
 })
-
-
 </script>
 
 <style scoped>
-.dashboard-page {
-  min-height: 100vh;
-  padding: 24px 32px 40px;
-  background: radial-gradient(circle at top, #111827 0, #020617 55%);
-  color: #f9fafb;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'PingFang SC',
-  sans-serif;
+/* 保持你的滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-/* 顶部栏 */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px; /* 原来 24，可以略微调小给 tabs 腾空间 */
-}
-
-.topbar-sub {
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-.topbar-title {
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-.search-box input {
-  border: none;
+::-webkit-scrollbar-track {
   background: transparent;
-  color: #e5e7eb;
-  outline: none;
-  font-size: 13px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.search-box i {
-  font-size: 16px;
-  color: #6b7280;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
-
-.user-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.85);
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #22c55e, #a3e635);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: #022c22;
-  font-size: 14px;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.user-info .name {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.user-info .tag {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-/* 顶部 tabs（NEW） */
-.main-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
-  margin-top: 4px;
-}
-
-.tab-item {
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(15, 23, 42, 0.9);
-  color: #9ca3af;
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-}
-
-.tab-item i {
-  font-size: 16px;
-}
-
-.tab-item:hover {
-  background: rgba(31, 41, 55, 0.9);
-  color: #e5e7eb;
-}
-
-.tab-item.active {
-  background: rgba(22, 163, 74, 0.16);
-  color: #bbf7d0;
-  border-color: rgba(34, 197, 94, 0.6);
-}
-.card {
-  background: rgba(15, 23, 42, 0.95);
-  border-radius: 18px;
-  padding: 16px 18px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.4);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.card-header h2 {
-  font-size: 15px;
-  font-weight: 600;
-}
-.single-main {
-  margin-top: 8px;
-}
-
-.placeholder-card {
-  max-width: 520px;
-  margin-top: 12px;
-}
-
-/* 地图专属样式 */
-.map-card-container {
-  /* 让卡片铺满高度，或者至少高一点 */
-  min-height: 600px;
-  display: flex;
-  flex-direction: column;
-}
-
-.map-viewport {
-  flex: 1; /* 让地图占据卡片剩下的所有空间 */
-  width: 100%;
-  margin-top: 16px;
-  background: #f8fafc; /* 给地图一个浅色底，防止透明背景看不清 */
-  border-radius: 12px;
-  overflow: hidden; /* 防止地图超出圆角 */
-  position: relative; /* 这一步很重要，给绝对定位的地图做参考 */
-}
-
-/* 如果你的 InsuranceMap 组件里没有定高度，这里可以强行定一下 */
-/* :deep() 是 Vue 的一种穿透写法，可以影响子组件的样式 */
-:deep(.echarts-map) {
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 500px;
-}
-
 </style>
