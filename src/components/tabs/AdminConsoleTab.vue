@@ -115,4 +115,5 @@ const promote = (u) => updateRole(u.id, 1)
 const demote = (u) => updateRole(u.id, 2)
 
 onMounted(fetchUsers)
+
 </script>

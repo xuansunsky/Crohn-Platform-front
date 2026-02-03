@@ -3,16 +3,28 @@
 
     <aside
         :class="[
-        'flex flex-col border-r border-white/5 bg-slate-900/50 backdrop-blur-xl transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden',
-        isSidebarCollapsed ? 'w-0 opacity-0 -translate-x-10' : 'w-64 opacity-100 translate-x-0'
-      ]"
+    'flex flex-col border-r border-white/5 bg-slate-900/95 backdrop-blur-xl transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden',
+    'fixed md:relative z-50 h-full',
+    isSidebarCollapsed ? 'w-0 opacity-0 -translate-x-10' : 'w-64 opacity-100 translate-x-0'
+  ]"
     >
 
-      <div class="flex h-16 items-center gap-3 px-6 border-b border-white/5 min-w-[256px]">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20">
-          <i class="ri-crown-fill text-lg"></i>
+      <div class="flex h-16 items-center justify-between px-6 border-b border-white/5 min-w-[256px]">
+
+        <div class="flex items-center gap-3">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20">
+            <i class="ri-crown-fill text-lg"></i>
+          </div>
+          <span class="text-lg font-bold tracking-tight text-white">Crohn Kingdom</span>
         </div>
-        <span class="text-lg font-bold tracking-tight text-white">Crohn Kingdom</span>
+
+        <button
+            @click="isSidebarCollapsed = true"
+            class="md:hidden text-slate-400 hover:text-white p-1"
+        >
+          <i class="ri-close-line text-xl"></i>
+        </button>
+
       </div>
 
       <nav class="flex-1 overflow-y-auto px-3 py-6 space-y-1 min-w-[256px]">
@@ -54,13 +66,17 @@
         </button>
       </div>
     </aside>
-
+    <div
+        v-if="!isSidebarCollapsed"
+        @click="isSidebarCollapsed = true"
+        class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden transition-opacity duration-300"
+    ></div>
     <main
         :class="[
         'flex flex-1 flex-col overflow-hidden transition-colors duration-500 relative',
         activeTab === 'policy'
           ? 'bg-slate-50 text-slate-600'
-          : 'bg-slate-950 text-slate-300 bg-[url(@/assets/noise.png)]'
+          : 'bg-slate-950 text-slate-300 ]'
       ]"
     >
 
@@ -185,6 +201,10 @@ const handleLogout = () => {
 }
 
 onMounted(async () => {
+  if (window.innerWidth < 768) {
+    isSidebarCollapsed.value = true
+  }
+
   try {
     const res = await http.get("users/getRole")
     roleId.value = res.data

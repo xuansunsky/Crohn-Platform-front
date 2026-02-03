@@ -5,9 +5,8 @@ import RegisterView from "../views/RegisterView.vue"
 import DashboardView from "../views/DashboardView.vue"
 import insuranceMap from "@/components/tabs/PolicyMapTab.vue"
 import ExperienceCard from "@/components/ExperienceCard.vue"
-import TestTab from "@/components/tabs/TestTab.vue"
 import SocialTab from "@/components/tabs/SocialTab.vue";
-
+import LiuShi666 from "@/components/ui/LiuShi666.vue";
 // 创建路由实例
 const router = createRouter({
     history: createWebHistory(),
@@ -19,7 +18,7 @@ const router = createRouter({
         { path: '/dashboard', name: 'dashboard', component: DashboardView },
         { path: '/insuranceMap', name: 'insuranceMap', component: insuranceMap },
         { path: '/ExperienceCard', name: 'ExperienceCard', component: ExperienceCard },
-        { path: '/TestTab', name: 'TestTab', component: TestTab },
+        {path:'/Liushi666',name:'Liu666',component:LiuShi666},
         {
             path: '/AdminConsole',
             name: 'AdminConsole',
