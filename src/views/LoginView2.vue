@@ -139,6 +139,7 @@ async function submit() {
       localStorage.setItem('token', res.token)
       localStorage.setItem('roleId', res.roleId)
       localStorage.setItem('userId', res.userId)
+      localStorage.setItem('nickname',res.nickname)
       showSuccessAlert.value = true
       console.log("前端热更新成功")
 

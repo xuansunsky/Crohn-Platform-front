@@ -33,9 +33,9 @@
               <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-slate-900
                               bg-gradient-to-br from-[#ffb86c] to-[#ff6b6b]">
-                  {{ user.nickName?.charAt(0) || '?' }}
+                  {{ user.nickname?.charAt(0) || '?' }}
                 </div>
-                <span class="font-medium text-white/90">{{ user.nickName }}</span>
+                <span class="font-medium text-white/90">{{ user.nickname }}</span>
               </div>
             </td>
 

@@ -37,16 +37,98 @@
           <div class="flex items-center gap-3 w-full md:w-auto">
             <button @click="closeDetailPanel" class="rounded-full p-2 hover:bg-slate-100 text-slate-400"><i class="ri-arrow-left-line text-xl"></i></button>
             <div class="flex-1 min-w-0">
-              <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <span class="whitespace-nowrap">{{ selectedArea.name }}</span>
-                <span class="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 border border-blue-100 whitespace-nowrap">Target Zone</span>
-              </h2>
-              <p class="text-xs text-slate-400 truncate flex items-center gap-2">
-                <span>更新: {{ currentPolicy.updateTime }}</span>
-                <span v-if="currentPolicy.contributor" class="flex items-center gap-1 text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-    <i class="ri-user-star-line text-blue-500"></i> {{ currentPolicy.contributor }}
-  </span>
-              </p>
+              <div class="flex items-center gap-2 mb-1">
+                <h2 class="text-xl font-black text-slate-800 whitespace-nowrap">
+                  {{ selectedArea.name }}
+                </h2>
+
+                <span v-if="currentPolicy.auditStatus === 1" class="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[10px] font-bold border border-blue-100 ring-1 ring-blue-500/20">
+                  <i class="ri-verified-badge-fill"></i> 官方核验
+                </span>
+                <span v-else class="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200">
+                  <i class="ri-information-line"></i> 待核验
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <p class="text-xs text-slate-400 flex items-center gap-1">
+                  <span>{{ currentPolicy.updateTime }}</span>
+                  <span class="w-px h-2 bg-slate-300"></span>
+                  <span>{{ currentPolicy.nickname || '匿名大侠' }}</span>
+                </p>
+
+                <button
+                    @click.stop="handleLike"
+                    :class="['flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all active:scale-95 border',
+                    currentPolicy.isLiked
+                      ? 'bg-pink-50 text-pink-500 border-pink-200 shadow-sm shadow-pink-100'
+                      : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50']"
+                >
+                  <i :class="currentPolicy.isLiked ? 'ri-heart-3-fill' : 'ri-heart-3-line'"></i>
+                  {{ currentPolicy.likes || 0 }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 mb-6 bg-slate-50/80 rounded-xl p-3 border border-slate-100 flex items-center justify-between">
+            <button
+                @click="openHistoryDrawer"
+                class="text-left text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline w-fit"
+            >
+              <span>当前是最新版本，查看其他 3 位伙伴的贡献</span>
+              <i class="ri-arrow-right-s-line"></i>
+            </button>
+
+          </div>
+          <div v-if="showHistoryDrawer" class="fixed inset-0 z-[80] flex items-end justify-center sm:items-center">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="showHistoryDrawer = false"></div>
+
+            <div class="relative w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-4 shadow-2xl transform transition-transform max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom-10 fade-in duration-300">
+
+              <div class="flex items-center justify-between mb-4 px-2 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 class="text-lg font-bold text-slate-800">选择政策版本</h3>
+                  <p class="text-xs text-slate-400">不同老师上传的数据可能不同，请选择最信赖的</p>
+                </div>
+                <button @click="showHistoryDrawer = false" class="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
+                  <i class="ri-close-line"></i>
+                </button>
+              </div>
+
+              <div class="space-y-3 pb-6">
+                <div
+                    v-for="(item, index) in historyList"
+                    :key="item.id"
+                    @click="switchVersion(item)"
+                    class="relative p-4 rounded-xl border cursor-pointer transition-all group overflow-hidden"
+                    :class="currentPolicy.id === item.id ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white border-slate-100 hover:border-blue-300 shadow-sm'"
+                >
+                  <div v-if="currentPolicy.id === item.id" class="absolute top-0 right-0 bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">
+                    当前展示
+                  </div>
+
+                  <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-slate-800 text-sm">{{ item.nickname }}</span>
+                      <span v-if="item.auditStatus === 1" class="text-blue-600 text-[10px] bg-blue-100 px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
+                      <i class="ri-verified-badge-fill"></i> 已核验
+                    </span>
+                    </div>
+                    <span class="text-xs text-slate-400">{{ item.updateTime }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-4 text-xs text-slate-500 bg-slate-50/50 p-2 rounded-lg">
+                    <span>报销: <b class="text-slate-900">{{ item.ratio }}%</b></span>
+                    <span class="w-px h-3 bg-slate-300"></span>
+                    <span>起付: <b class="text-slate-900">{{ item.deductible }}</b></span>
+                    <span class="w-px h-3 bg-slate-300"></span>
+                    <span class="flex items-center gap-1 text-pink-500 font-bold">
+                    <i class="ri-heart-3-fill"></i> {{ item.likes }}
+                  </span>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
           <div class="flex bg-slate-100 p-1 w-full md:w-auto overflow-x-auto no-scrollbar">
@@ -184,7 +266,30 @@
               </div>
 
             </div>
+            <div class="mb-6">
+              <h3 class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center justify-between">
+                <span>📸 报销凭证 & 政策截图</span>
+                <span v-if="currentPolicy.evidenceList?.length" class="bg-slate-100 text-slate-500 px-1.5 rounded text-[10px]">
+                {{ currentPolicy.evidenceList.length }} 张
+              </span>
+              </h3>
 
+              <div v-if="currentPolicy.evidenceList && currentPolicy.evidenceList.length > 0" class="grid grid-cols-4 gap-2">
+                <div
+                    v-for="(img, index) in currentPolicy.evidenceList"
+                    :key="index"
+                    class="relative aspect-square rounded-lg bg-slate-100 overflow-hidden cursor-zoom-in group border border-slate-200"
+                    @click="previewImage(img)"
+                >
+                  <img :src="img" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="证据">
+                </div>
+              </div>
+
+              <div v-else class="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 p-3 rounded-lg border border-dashed border-slate-200">
+                <i class="ri-image-line"></i>
+                <span>暂无图片证据，等待病友上传...</span>
+              </div>
+            </div>
             <div class="rounded-xl border border-slate-200 bg-white p-4 md:p-6 mb-6">
               <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <i class="ri-book-open-line text-blue-500"></i> 避坑指南 & 摘要
@@ -223,20 +328,20 @@
                       <label class="font-bold text-slate-700 flex items-center gap-2">
                         <i class="ri-hospital-line text-green-500"></i> 门诊特殊病种
                       </label>
-                      <span :class="['text-xs px-2 py-0.5 rounded font-bold', editForm.isMente ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500']">
-                  {{ editForm.isMente ? '已纳入' : '未纳入' }}
+                      <span :class="['text-xs px-2 py-0.5 rounded font-bold', editForm.mente ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500']">
+                  {{ editForm.mente ? '已纳入' : '未纳入' }}
                 </span>
                     </div>
                     <div class="flex gap-3">
                       <button
-                          @click="editForm.isMente = true"
-                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', editForm.isMente ? 'bg-green-500 text-white border-green-600 shadow-md shadow-green-200' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
+                          @click="editForm.mente = true"
+                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', editForm.mente ? 'bg-green-500 text-white border-green-600 shadow-md shadow-green-200' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
                       >
                         已纳入
                       </button>
                       <button
-                          @click="editForm.isMente = false"
-                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', !editForm.isMente ? 'bg-slate-700 text-white border-slate-800' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
+                          @click="editForm.mente = false"
+                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', !editForm.mente ? 'bg-slate-700 text-white border-slate-800' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
                       >
                         未纳入
                       </button>
@@ -248,20 +353,20 @@
                       <label class="font-bold text-slate-700 flex items-center gap-2">
                         <i class="ri-store-2-line text-purple-500"></i> 双通道药店
                       </label>
-                      <span :class="['text-xs px-2 py-0.5 rounded font-bold', editForm.isDual ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-500']">
-                  {{ editForm.isDual ? '支持外购' : '不支持' }}
+                      <span :class="['text-xs px-2 py-0.5 rounded font-bold', editForm.dualChannel ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-500']">
+                  {{ editForm.dualChannel ? '支持外购' : '不支持' }}
                 </span>
                     </div>
                     <div class="flex gap-3">
                       <button
-                          @click="editForm.isDual = true"
-                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', editForm.isDual ? 'bg-purple-600 text-white border-purple-700 shadow-md shadow-purple-200' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
+                          @click="editForm.dualChannel = true"
+                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', editForm.dualChannel ? 'bg-purple-600 text-white border-purple-700 shadow-md shadow-purple-200' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
                       >
                         支持
                       </button>
                       <button
-                          @click="editForm.isDual = false"
-                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', !editForm.isDual ? 'bg-slate-700 text-white border-slate-800' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
+                          @click="editForm.dualChannel = false"
+                          :class="['flex-1 py-2.5 rounded-lg text-sm font-bold transition-all border', !editForm.dualChannel ? 'bg-slate-700 text-white border-slate-800' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100']"
                       >
                         不支持
                       </button>
@@ -409,7 +514,52 @@
                 </div>
 
               </div>
+              <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                  <label class="font-bold text-slate-700 flex items-center gap-2">
+                    <i class="ri-image-add-line text-blue-500"></i> 上传报销凭证/截图
+                  </label>
+                  <span class="text-xs text-slate-400">{{ editForm.evidenceList.length }}/4 张</span>
+                </div>
 
+                <div class="grid grid-cols-4 gap-2">
+                  <div
+                      v-for="(img, index) in editForm.evidenceList"
+                      :key="index"
+                      class="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group"
+                  >
+                    <img :src="img" class="w-full h-full object-cover" />
+
+                    <button
+                        @click="removeImage(index)"
+                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                    >
+                      <i class="ri-close-line text-xs"></i>
+                    </button>
+                  </div>
+
+                  <div
+                      v-if="editForm.evidenceList.length < 4"
+                      @click="triggerUpload"
+                      class="aspect-square rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 hover:border-blue-400 cursor-pointer transition-colors text-slate-400 hover:text-blue-500"
+                  >
+                    <i class="ri-add-line text-2xl mb-1"></i>
+                    <span class="text-[10px] font-bold">添加图片</span>
+                  </div>
+                </div>
+
+                <input
+                    type="file"
+                    ref="fileInputRef"
+                    accept="image/*"
+                    class="hidden"
+                    @change="handleFileChange"
+                >
+
+                <p class="text-[10px] text-slate-400 mt-2">
+                  * 请上传真实的报销单、发票或政策截图，您的贡献将帮助更多人。
+                </p>
+              </div>
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-bold text-slate-700 mb-1">避坑指南 & 经验摘要</label>
@@ -432,7 +582,7 @@
                 </div>
               </div>
 
-              <div class="h-20"></div>
+
 
             </div>
 
@@ -502,10 +652,11 @@ const drugOptions = [
 ]
 // 2. 表单数据模型 (对应你后端的字段)
 const editForm = reactive({
-  isMente: false,       // 门特病种 (布尔值)
-  isDual: false,        // 双通道 (布尔值)
+  mente: false,       // 门特病种 (布尔值)
+  dualChannel: false,        // 双通道 (布尔值)
   dualRatio: 0,         // 报销比例 (数字)
-  summary: '',          // 避坑指南 (文本)
+  summary: '',
+  evidenceList: [],
   dualNote: '',
   // 🔥 新增：复杂计算字段
   deductible: 0,        // 起付线 (元)
@@ -525,15 +676,66 @@ const calculatedRealRatio = computed(() => {
   const real = editForm.nominalRatio * (100 - editForm.hiddenSelfPay) / 100
   return Math.round(real) // 取整
 })
+const triggerUpload = () => {
+  fileInputRef.value.click()
+}
 
+// 🔥 处理文件选择 (核心)
+const handleFileChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // 1. 限制大小 (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('图片太大了，请上传 5MB 以内的图片')
+    return
+  }
+
+  // 2. 准备包裹
+  const formData = new FormData()
+  formData.append('file', file) // 这里的 'file' 要跟后端 @RequestParam("file") 对应
+
+  try {
+    // 🔥 3. 发送请求 (加上 await 等待结果)
+    const res = await http.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+console.log(res)
+    // 🔥 4. 解析后端返回的数据
+    // 假设后端结构是: { code: 200, data: { url: "http://..." } }
+    if (res.status === 200) {
+      // 拿到真链接！不是本地的假链接了
+      const serverUrl = res.data.url
+
+      console.log('上传成功，后端返回地址:', serverUrl)
+
+      // 5. 塞进数组，页面立马显示
+      editForm.evidenceList.push(serverUrl)
+    } else {
+      alert('上传失败: ' + res.data.msg)
+    }
+  } catch (error) {
+    console.error('上传炸了:', error)
+    alert('网络或者权限出了问题，看看控制台报错')
+  } finally {
+    // 6. 无论成功失败，都把 input 清空，防止选同一张图没反应
+    event.target.value = ''
+  }
+}
+// 🔥 删除图片
+const removeImage = (index) => {
+  editForm.evidenceList.splice(index, 1)
+}
 // 监听计算结果，自动同步给 dualRatio
 watch(calculatedRealRatio, (val) => {
   editForm.dualRatio = val
 })
 // 3. 打开编辑抽屉 (把当前数据填进去)
 const openEditDialog = () => {
-  editForm.isMente = currentPolicy.value.mente || false
-  editForm.isDual = currentPolicy.value.dualChannel || false
+  editForm.mente = currentPolicy.value.mente || false
+  editForm.dualChannel = currentPolicy.value.dualChannel || false
   editForm.dualRatio = currentPolicy.value.dualRatio || 0
   editForm.summary = currentPolicy.value.summary || ''
   editForm.dualNote = currentPolicy.value.dualNote || ''
@@ -543,37 +745,41 @@ const openEditDialog = () => {
 
 // 4. 提交保存 (这里对接你后端的 API)
 const submitEdit = async () => {
+
   // 1. 组装数据 payload
-  // 我们要把 editForm 里的数据，加上“城市”和“类型”
   const payload = {
-    // 上下文信息
+    // 📍 上下文定位
     cityName: selectedArea.name,
     policyType: activeType.value,
 
-    // 自动生成更新时间 (格式 yyyy-MM-dd)
+    // 🕒 自动生成今天的时间
     updateTime: new Date().toISOString().split('T')[0],
-    // 贡献者 (等你做登录系统了，这里就填当前用户名)
-    contributor: '内江第一深情', // 目前先写死，或者填 '热心病友'
 
-    // 把表单里的 mente, dualChannel, drugs... 全部展开放进去
+    // 👤 🔥 核心修改：编一个名字！
+    // 加个随机数，这样你在演示“历史版本”时，列表里会有不同的人，显得平台很火！
+    nickname: '热心战友_' + Math.floor(Math.random() * 1000),
+    userId: 0, // 游客 ID
+
+    // 📝 把表单里的数据 (报销比例、门特、图片...) 全部展开塞进去
     ...editForm
   }
 
-  // 2. 检查一下数据 (可选)
-  console.log('兄弟，准备发送的数据包:', payload)
+  // 2. 打印看看，心里有底
+  console.log('🚀 准备发射数据:', payload)
 
   try {
-    // 🔥 发起真提交！
-    // 对应后端: POST /api/policy/save
-    // 前端直接发 JSON 对象，后端 @RequestBody 自动接住
+    // 🔥 发起真提交！POST /api/policy/save
     const res = await http.post('/policy/save', payload)
 
     if (res.code === 200) {
-      alert('提交成功！感谢你的情报！')
-      showEditDrawer.value = false
+      // 🎉 成功！
+      alert('提交成功！你的贡献已被记录！')
+      showEditDrawer.value = false // 关掉编辑框
 
-      // ✨ 关键一步：提交完后，重新拉取一次数据，让界面马上更新！
+      // ✨✨✨ 见证奇迹的时刻 ✨✨✨
+      // 马上重新拉取数据，页面上的报销比例、名字、时间瞬间变成你刚才填的！
       await loadPolicyData(selectedArea.name)
+
     } else {
       alert('提交失败: ' + res.msg)
     }
@@ -616,9 +822,7 @@ const selectedArea = reactive({
 })
 
 // 计算属性
-const currentPolicy = computed(() => selectedArea.data[activeType.value] || { hasData: false })
-
-// --- 逻辑方法 ---
+const currentPolicy = ref({})
 
 const switchType = (key) => {
   activeType.value = key
@@ -650,8 +854,8 @@ const cleanData = (backendData) => {
     hasData: true,
     contributor: backendData.contributor || '匿名英雄',
     updateTime: backendData.updateTime,
-    mente: backendData.isMente === 1,
-    dualChannel: backendData.isDual === 1,
+    mente: backendData.mente === 1,
+    dualChannel: backendData.dualChannel === 1,
     dualRatio: backendData.dualRatio,
     dualNote: backendData.dualNote,
     summary: backendData.summary
@@ -660,47 +864,42 @@ const cleanData = (backendData) => {
 
 const loadPolicyData = async (areaName) => {
   console.log(`正在请求 ${areaName} 的数据...`)
+
+  // 1. 告诉全场，现在选的是哪里 (地图高亮需要这个)
   selectedArea.name = areaName
 
-  // 1. 获取当前选中的医保类型 (employee / resident)
   const type = activeType.value
 
-  // 2. 先把缓存清成“加载中/无数据”状态，防止界面卡在上一条数据
-  // 注意：这里我们只清空当前类型的，不然切换太快会闪烁
-  if (!selectedArea.data[type]) {
-    selectedArea.data[type] = { hasData: false }
-  }
+  // 2. 先清空当前白板，防止显示上一条数据
+  // (也可以不清，看你想不想让用户看到闪烁)
+  currentPolicy.value = { hasData: false }
 
   try {
-    // 🔥 发起真请求！
-    // 对应后端: GET /api/policy/detail?city=内江市&type=employee
+    // 🔥 发起请求
     const res = await http.get('/policy/detail', {
-      params: {
-        city: areaName,
-        type: type
-      }
+      params: { city: areaName, type: type }
     })
 
     if (res.code === 200 && res.data) {
-      // 成功拿到数据！
-      // 后端返回的 res.data 就是那个 PolicyDetailVO
-      // 我们只需要给它补一个 hasData: true 标记，让前端显示
       const realData = res.data
       realData.hasData = true
 
-      // 塞进对应的抽屉 (employee/resident)
-      selectedArea.data[type] = realData
+      // ✅ 【关键改动】直接更新 UI！(这就是你想要的直观逻辑)
+      // 使用 {...} 也是为了保险，强迫 Vue 刷新
+      currentPolicy.value = { ...realData }
 
-      console.log('数据加载成功:', realData)
+      // 同时也存一份到缓存里 (selectedArea)，以备不时之需
+
+
+      console.log('数据加载成功，界面已更新')
     } else {
-      // 后端说没数据 (404)
-      selectedArea.data[type] = { hasData: false }
+      // 没数据，保持白板为空
+      currentPolicy.value = { hasData: false }
     }
 
   } catch (error) {
     console.error('拉取数据失败:', error)
-    // 可以给个提示，或者静默失败
-    selectedArea.data[type] = { hasData: false }
+    currentPolicy.value = { hasData: false }
   }
 }
 
@@ -835,6 +1034,96 @@ onMounted(() => {
   // 4. (可选) 如果你正在调编辑框，把下面这行注释解开，它会自动弹出编辑框
   // showEditDrawer.value = true
 })
+const showHistoryDrawer = ref(false)
+const historyList = ref([])
+
+// ✅ 1. 点赞逻辑
+const handleLike = async () => {
+  // 如果已经点过了，暂时不支持“取消点赞”（后端目前只写了+1），这就防止反复刷
+  if (currentPolicy.value.isLiked) return;
+
+  // 1. 视觉交互：先斩后奏，让用户觉得秒开
+  if (!currentPolicy.value.likes) currentPolicy.value.likes = 0;
+  currentPolicy.value.likes++;
+  currentPolicy.value.isLiked = true;
+
+  // 2. 默默通知后端 +1
+  try {
+    // 假设你的后端接口是 /api/like?id=xxx
+    // 注意：这里要用 FormData 或者 params 传参，取决于你后端的接收方式
+    // 既然后端用的是 @RequestParam，这里直接拼在 url 里或者用 params 最稳
+    await http.post('/policy/like', null, {
+      params: { id: currentPolicy.value.id }
+    });
+    console.log('❤️ 后端点赞成功');
+  } catch (e) {
+    console.error('点赞失败', e);
+    // 如果失败了，要把刚才视觉上加的 1 减回来，防止欺骗用户
+    currentPolicy.value.likes--;
+    currentPolicy.value.isLiked = false;
+  }
+}
+
+// ✅ 2. 打开历史列表逻辑
+const openHistoryDrawer = async () => {
+  console.log('正在加载历史版本...');
+
+  try {
+    // 拿到当前城市和类型
+    const city = currentPolicy.value.cityName || currentPolicy.value.city; // 兼容不同字段名
+    const type = currentPolicy.value.policyType;
+
+    // 发请求给后端：兄弟，把内江的所有版本给我！
+    const res = await http.get('/policy/history', {
+      params: { city: city, type: type }
+    });
+
+    if (res.code === 200) {
+      // 成功拿到真数据！
+      historyList.value = res.data;
+      // 打开抽屉
+      showHistoryDrawer.value = true;
+    } else {
+      console.warn('获取历史失败:', res.msg);
+    }
+  } catch (e) {
+    console.error('网络请求炸了:', e);
+  }
+}
+const fileInputRef = ref(null)
+// 简单的看图 (暂时用新窗口打开，省事)
+const previewImage = (url) => {
+  window.open(url, '_blank')
+}
+// 🔥 核心动作：切换版本 (点击列表某一项)
+const switchVersion = async (item) => {
+  console.log('正在切换到版本 ID:', item.id); // 打印一下，看看是不是那个 ID
+
+  try {
+    // 1. 拿着身份证 (ID) 去后端找那一条特定数据
+    // 注意：这里的接口 /detail/version 是我们刚才在 Controller 里新写的
+    const res = await http.get('policy/detail/version', {
+      params: { id: item.id }
+    });
+
+    if (res.code === 200 && res.data) {
+      // 2. 🔥 核心瞬间：把当前页面的数据，替换成查回来的旧版本数据
+      currentPolicy.value = res.data
+
+      // 3. 关掉抽屉 (完事拂衣去)
+      showHistoryDrawer.value = false;
+      console.log(res)
+      // 4. (可选) 给个提示
+      // alert(`已切换到 ${item.nickname} 的版本`);
+      console.log('🎉 切换成功，现在看的是:', item.nickname);
+
+    } else {
+      console.warn('切换失败，后端没给数据');
+    }
+  } catch (e) {
+    console.error('切换版本接口炸了:', e);
+  }
+}
 onMounted(() => {
   initMap()
   window.addEventListener('resize', () => myChart && myChart.resize())

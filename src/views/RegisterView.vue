@@ -16,8 +16,8 @@
       <form @submit.prevent="register" class="form">
         <!-- 昵称 -->
         <div class="input-group">
-          <input v-model.trim="nickName" required id="nickName" class="input" :class="{ filled: nickName }" />
-          <label for="nickName" class="label">昵称</label>
+          <input v-model.trim="nickname" required id="nickname" class="input" :class="{ filled: nickname }" />
+          <label for="nickname" class="label">昵称</label>
           <div class="focus-line"></div>
         </div>
 
@@ -92,7 +92,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerUser } from '@/api/user'
 const router = useRouter()
-const nickName = ref('')
+const nickname = ref('')
 const phone = ref('')
 const password = ref('')
 const confirm = ref('')
@@ -102,7 +102,7 @@ const error = ref('')
 
 // 校验：昵称非空、手机号合法、密码一致且 ≥6 位
 const canSubmit = computed(() =>
-    nickName.value &&
+    nickname.value &&
     /^1[3-9]\d{9}$/.test(phone.value) &&
     password.value.length >= 6 &&
     password.value === confirm.value
@@ -117,7 +117,7 @@ async function register() {
   try {
     // ✅ 真实后端请求
     const resData  = await registerUser({
-      nickName: nickName.value,      // 👈 跟后端字段对上
+      nickname: nickname.value,      // 👈 跟后端字段对上
       phoneNumber: phone.value,
       password: password.value
     })
