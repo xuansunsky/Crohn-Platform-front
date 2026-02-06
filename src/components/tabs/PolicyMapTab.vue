@@ -30,7 +30,17 @@
           <i class="ri-fingerprint-line mr-1"></i> 点击省份下钻，点击城市查看详情
         </div>
       </div>
-
+      <div class="absolute bottom-20 right-4 flex flex-col gap-2 z-10">
+        <button @click="zoomMap(1.2)" class="h-10 w-10 bg-white/90 backdrop-blur shadow-lg rounded-lg flex items-center justify-center text-slate-600 active:bg-blue-50 active:text-blue-600 border border-slate-100 transition-colors">
+          <i class="ri-add-line text-xl"></i>
+        </button>
+        <button @click="zoomMap(0.8)" class="h-10 w-10 bg-white/90 backdrop-blur shadow-lg rounded-lg flex items-center justify-center text-slate-600 active:bg-blue-50 active:text-blue-600 border border-slate-100 transition-colors">
+          <i class="ri-subtract-line text-xl"></i>
+        </button>
+        <button @click="resetMap" class="h-10 w-10 bg-white/90 backdrop-blur shadow-lg rounded-lg flex items-center justify-center text-blue-600 active:bg-blue-50 border border-slate-100 transition-colors">
+          <i class="ri-focus-3-line text-xl"></i>
+        </button>
+      </div>
       <div v-if="showDetailPanel" class="absolute inset-0 z-20 flex flex-col bg-slate-50">
 
         <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 bg-white px-4 py-4 md:px-6 shadow-sm gap-4 shrink-0 z-20 relative">
@@ -118,7 +128,7 @@
                   </div>
 
                   <div class="flex items-center gap-4 text-xs text-slate-500 bg-slate-50/50 p-2 rounded-lg">
-                    <span>报销: <b class="text-slate-900">{{ item.ratio }}%</b></span>
+                    <span>报销: <b class="text-slate-900">{{ item.dualRatio }}%</b></span>
                     <span class="w-px h-3 bg-slate-300"></span>
                     <span>起付: <b class="text-slate-900">{{ item.deductible }}</b></span>
                     <span class="w-px h-3 bg-slate-300"></span>
@@ -925,7 +935,7 @@ const getAdcodeByName = (name) => {
 }
 const initMap = () => {
   if (!chartRef.value) return
-  myChart = echarts.init(chartRef.value)
+  myChart = echarts.init(chartRef.value, null, { renderer: 'svg' })
   echarts.registerMap('china', chinaJson)
   renderMap('china')
 
@@ -957,7 +967,7 @@ const initMap = () => {
       if (adcode && adcode !== '999999') {
         try {
           // 1.3 请求地图数据
-          const url = `public/map/citys/${adcode}.json`
+          const url = `/map/citys/${adcode}.json`
           console.log('🚀 正在请求地图:', url)
 
           const response = await fetch(url)
@@ -999,25 +1009,85 @@ const initMap = () => {
 }
 
 const renderMap = (mapName) => {
-  // 既然换了风格，地图配色也要改改，改成清新的蓝色系
   const option = {
-    tooltip: { trigger: 'item', backgroundColor: 'rgba(255,255,255,0.9)', borderColor: '#e2e8f0', textStyle: {color:'#1e293b'} },
-    geo: {
-      map: mapName, roam: true, zoom: 1.1,
-      label: { show: true, color: '#64748b' }, // 灰色文字
-      itemStyle: {
-        areaColor: '#f1f5f9', // 浅灰底色
-        borderColor: '#cbd5e1', // 边框
-        borderWidth: 1,
-        shadowColor: 'rgba(0,0,0,0.05)', shadowBlur: 4
-      },
-      emphasis: {
-        itemStyle: { areaColor: '#bfdbfe', borderColor: '#3b82f6' }, // 选中变浅蓝
-        label: { color: '#1e40af' }
+    // 1. 提示框优化：手机上点击才显示，手指离开稍微延迟消失
+    tooltip: {
+      trigger: 'item',
+      triggerOn: 'click', // 手机上只有点击，没有悬停
+      enterable: true,    // 允许点击提示框内部
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      borderColor: '#e2e8f0',
+      textStyle: { color: '#1e293b', fontSize: 12 },
+      padding: 10,
+      // 手机上提示框容易遮挡手指，稍微偏移一点
+      position: function (point, params, dom, rect, size) {
+        // 固定在顶部，或者跟随手指但往上提
+        return [point[0] - size.contentSize[0] / 2, point[1] - size.contentSize[1] - 20];
       }
+    },
+
+    geo: {
+      map: mapName,
+
+      // 🔥🔥🔥 核心手感优化区 🔥🔥🔥
+
+      // 1. 开启漫游 (缩放 + 平移)
+      roam: true,
+
+      // 2. 初始大小：手机屏幕窄，我们要把地图撑满！
+      // 不要用 zoom: 1.1 了，用 layoutSize 更稳
+      layoutCenter: ['50%', '50%'], // 地图中心对准屏幕中心
+      layoutSize: '95%',            // 撑满 95% 的宽度，视觉冲击力强，好点选
+
+      // 3. 限制缩放范围 (防呆设计)
+      // 防止用户缩得太小看不见，或者放得太大迷路
+      scaleLimit: {
+        min: 0.8, // 最小缩放到 0.8 倍 (不能缩成蚂蚁)
+        max: 3    // 最大放大到 3 倍 (太大了也没意义，还容易糊)
+      },
+
+      // 4. 文字优化：手机上字太小看不清，稍微大一点
+      label: {
+        show: true,
+        color: '#64748b',
+        fontSize: 10 // 稍微控制一下字体大小，别太挤
+      },
+
+      // 5. 配色样式 (保持你喜欢的清新蓝)
+      itemStyle: {
+        areaColor: '#f1f5f9',
+        borderColor: '#cbd5e1',
+        borderWidth: 1,
+      },
+
+      // 6. 选中高亮样式
+      emphasis: {
+        itemStyle: {
+          areaColor: '#bfdbfe',
+          borderColor: '#3b82f6',
+          borderWidth: 2 // 选中时边框加粗，反馈感更强
+        },
+        label: {
+          color: '#1e40af',
+          fontWeight: 'bold' // 选中文字加粗
+        }
+      },
+
+      // 7. 这是一个隐藏技巧：优化拖拽流畅度
+      // 定义只有在地图区域内才能拖拽，防止和页面滚动冲突太严重
+      silent: false
     }
   }
+
+  // 必须加上 true (不合并配置，彻底重绘)，防止切换地图时残留
   myChart.setOption(option, true)
+}
+const resetMap = () => {
+  if (!myChart) return
+  // 恢复默认视图，不用双指捏半天
+  myChart.dispatchAction({
+    type: 'restore'
+  })
 }
 onMounted(() => {
   console.log('🚀 自动进入开发调试模式...')
@@ -1109,7 +1179,7 @@ const switchVersion = async (item) => {
     if (res.code === 200 && res.data) {
       // 2. 🔥 核心瞬间：把当前页面的数据，替换成查回来的旧版本数据
       currentPolicy.value = res.data
-
+      console.log(currentPolicy)
       // 3. 关掉抽屉 (完事拂衣去)
       showHistoryDrawer.value = false;
       console.log(res)
@@ -1123,6 +1193,25 @@ const switchVersion = async (item) => {
   } catch (e) {
     console.error('切换版本接口炸了:', e);
   }
+}
+const zoomMap = (ratio) => {
+  if (!myChart) return
+
+  // 获取当前的配置
+  const option = myChart.getOption()
+  // 拿到当前的缩放比例
+  const currentZoom = option.geo[0].zoom || 1.1
+
+  // 计算新比例 (限制一下最大最小，别缩没了)
+  let newZoom = currentZoom * ratio
+  if (newZoom < 0.8) newZoom = 0.8
+  if (newZoom > 5) newZoom = 5
+
+  myChart.setOption({
+    geo: {
+      zoom: newZoom
+    }
+  })
 }
 onMounted(() => {
   initMap()
