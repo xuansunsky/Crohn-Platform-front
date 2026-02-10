@@ -49,15 +49,18 @@
       </nav>
 
       <div class="border-t border-white/5 p-4 bg-slate-900/30 min-w-[256px]">
-        <div class="flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/5 backdrop-blur-sm">
-          <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
+        <button
+            @click="activeTab = 'profile'"
+            class="group w-full flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 text-left"
+        >
+          <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">
             轩
           </div>
           <div class="flex flex-col overflow-hidden">
-            <span class="truncate text-sm font-bold text-slate-200">Architect-Xuan</span>
-            <span class="truncate text-xs text-slate-500">Lv.1 王国建造者</span>
+            <span class="truncate text-sm font-bold text-slate-200 group-hover:text-white transition-colors">Architect-Xuan</span>
+            <span class="truncate text-xs text-slate-500 group-hover:text-indigo-300 transition-colors">Lv.1 王国建造者</span>
           </div>
-        </div>
+        </button>
         <button
             @click="handleLogout"
             class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/5 py-2 text-xs font-medium text-slate-500 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all"
@@ -129,6 +132,7 @@
             <CheckinTab v-else-if="activeTab === 'checkin'" />
             <LibraryTab v-else-if="activeTab === 'library'" />
             <AdminConsoleTab v-else-if="activeTab === 'admin'"/>
+            <ProfileTab v-else-if="activeTab === 'profile'" />
           </div>
         </transition>
       </div>
@@ -144,6 +148,7 @@ import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue";
 import AdminConsoleTab from "@/components/tabs/AdminConsoleTab.vue";
 import http from "@/api/http.js";
 import router from "@/router/index.js";
+import ProfileTab from "@/components/tabs/ProfileTab.vue";
 
 const roleId = ref(localStorage.getItem('roleId') || '0')
 const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
