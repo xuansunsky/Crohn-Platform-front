@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 p-4 font-sans text-slate-700">
-
+  <div class="relative -m-4 w-[calc(100%+2rem)] h-[calc(100vh-96px)] bg-slate-50 overflow-hidden">
     <header class="mb-4 flex items-center justify-between px-2">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-blue-200 shadow-lg">
@@ -717,7 +716,7 @@ console.log(res)
     // 假设后端结构是: { code: 200, data: { url: "http://..." } }
     if (res.status === 200) {
       // 拿到真链接！不是本地的假链接了
-      const serverUrl = res.data.url
+      const serverUrl = res.data
 
       console.log('上传成功，后端返回地址:', serverUrl)
 
@@ -749,7 +748,8 @@ const openEditDialog = () => {
   editForm.dualRatio = currentPolicy.value.dualRatio || 0
   editForm.summary = currentPolicy.value.summary || ''
   editForm.dualNote = currentPolicy.value.dualNote || ''
-
+  editForm.evidenceList=currentPolicy.value.evidenceList||''
+      editForm.deductible=currentPolicy.value.deductible||''
   showEditDrawer.value = true
 }
 

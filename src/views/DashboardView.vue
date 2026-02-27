@@ -1,215 +1,163 @@
 <template>
-  <div class="flex h-screen w-full bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30 overflow-hidden">
+  <div class="bg-gray-50 min-h-screen pb-[50px] font-sans text-gray-800">
 
-    <aside
-        :class="[
-    'flex flex-col border-r border-white/5 bg-slate-900/95 backdrop-blur-xl transition-all duration-500 ease-in-out whitespace-nowrap overflow-hidden',
-    'fixed md:relative z-50 h-full',
-    isSidebarCollapsed ? 'w-0 opacity-0 -translate-x-10' : 'w-64 opacity-100 translate-x-0'
-  ]"
-    >
-
-      <div class="flex h-16 items-center justify-between px-6 border-b border-white/5 min-w-[256px]">
-
+    <van-nav-bar fixed placeholder z-index="50" class="shadow-sm">
+      <template #left>
+        <div class="flex flex-col justify-center py-1">
+          <div class="flex items-center gap-1 text-blue-600 font-bold text-lg leading-none">
+            <i class="ri-crown-fill"></i> BioHazard
+          </div>
+          <div class="text-[10px] text-gray-400 mt-1 font-medium tracking-wide">
+            早上好 Xuan，今天也要按时吃饭 🌞
+          </div>
+        </div>
+      </template>
+      <template #right>
         <div class="flex items-center gap-3">
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20">
-            <i class="ri-crown-fill text-lg"></i>
-          </div>
-          <span class="text-lg font-bold tracking-tight text-white">Crohn Kingdom</span>
-        </div>
-
-        <button
-            @click="isSidebarCollapsed = true"
-            class="md:hidden text-slate-400 hover:text-white p-1"
-        >
-          <i class="ri-close-line text-xl"></i>
-        </button>
-
-      </div>
-
-      <nav class="flex-1 overflow-y-auto px-3 py-6 space-y-1 min-w-[256px]">
-        <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Command Center</p>
-
-        <button
-            v-for="tab in tabs"
-            :key="tab.key"
-            @click="activeTab = tab.key"
-            :class="[
-            'group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
-            activeTab === tab.key
-              ? 'bg-indigo-500/10 text-indigo-400 shadow-inner shadow-indigo-500/5 border border-indigo-500/20'
-              : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-          ]"
-        >
-          <i :class="[tab.icon, activeTab === tab.key ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300', 'text-lg transition-colors']"></i>
-          <span>{{ tab.label }}</span>
-
-          <div v-if="activeTab === tab.key" class="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]"></div>
-        </button>
-      </nav>
-
-      <div class="border-t border-white/5 p-4 bg-slate-900/30 min-w-[256px]">
-        <button
-            @click="activeTab = 'profile'"
-            class="group w-full flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 text-left"
-        >
-          <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">
-            轩
-          </div>
-          <div class="flex flex-col overflow-hidden">
-            <span class="truncate text-sm font-bold text-slate-200 group-hover:text-white transition-colors">Architect-Xuan</span>
-            <span class="truncate text-xs text-slate-500 group-hover:text-indigo-300 transition-colors">Lv.1 王国建造者</span>
-          </div>
-        </button>
-        <button
-            @click="handleLogout"
-            class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/5 py-2 text-xs font-medium text-slate-500 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all"
-        >
-          <i class="ri-logout-box-r-line"></i> 暂时离线
-        </button>
-      </div>
-    </aside>
-    <div
-        v-if="!isSidebarCollapsed"
-        @click="isSidebarCollapsed = true"
-        class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden transition-opacity duration-300"
-    ></div>
-    <main
-        :class="[
-        'flex flex-1 flex-col overflow-hidden transition-colors duration-500 relative',
-        activeTab === 'policy'
-          ? 'bg-slate-50 text-slate-600'
-          : 'bg-slate-950 text-slate-300 ]'
-      ]"
-    >
-
-      <header
-          :class="[
-          'flex h-16 items-center justify-between px-8 z-10 sticky top-0 backdrop-blur-md border-b transition-colors duration-500',
-          activeTab === 'policy'
-            ? 'bg-white/90 border-slate-200'
-            : 'bg-slate-900/80 border-white/5'
-        ]"
-      >
-        <div class="flex items-center gap-4">
-          <button
-              @click="toggleSidebar"
-              :class="[
-              'p-2 rounded-lg transition-all hover:bg-black/5',
-              activeTab === 'policy' ? 'text-slate-600' : 'text-slate-300 hover:bg-white/10'
-            ]"
-          >
-            <i :class="isSidebarCollapsed ? 'ri-menu-unfold-line text-xl' : 'ri-menu-fold-line text-xl'"></i>
-          </button>
-
-          <div>
-            <h2 :class="['text-lg font-bold tracking-wide transition-colors', activeTab === 'policy' ? 'text-slate-800' : 'text-white']">
-              {{ currentTabLabel }}
-            </h2>
+          <i class="ri-search-line text-xl text-gray-500"></i>
+          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200 overflow-hidden">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Architect" class="w-full h-full object-cover">
           </div>
         </div>
+      </template>
+    </van-nav-bar>
 
-        <div class="flex items-center gap-4">
-          <div class="relative hidden md:block group">
-            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" placeholder="检索王国数据..." :class="['h-9 w-64 rounded-full pl-9 pr-4 text-sm outline-none transition-all', activeTab === 'policy' ? 'bg-white border border-slate-200 text-slate-700 shadow-sm' : 'bg-black/20 border border-white/10 text-slate-300']">
+    <main class="p-4 overflow-x-hidden space-y-4">
+
+      <van-swipe v-if="activeTab === 'checkin'" class="my-swipe rounded-xl overflow-hidden shadow-sm h-40" :autoplay="4000" indicator-color="white">
+        <van-swipe-item>
+          <div class="w-full h-full relative">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80" class="w-full h-full object-cover">
+            <div class="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4 pt-10 text-white">
+              <p class="text-sm font-bold">去海边吹吹风吧 🌊</p>
+              <p class="text-[10px] opacity-80">保持心情愉悦，是缓解炎症的良药。</p>
+            </div>
           </div>
-          <button :class="['relative rounded-full p-2', activeTab === 'policy' ? 'text-slate-400 hover:text-blue-600' : 'text-slate-400 hover:text-white']">
-            <i class="ri-notification-3-line text-lg"></i>
-          </button>
+        </van-swipe-item>
+        <van-swipe-item>
+          <div class="w-full h-full relative">
+            <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80" class="w-full h-full object-cover">
+            <div class="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4 pt-10 text-white">
+              <p class="text-sm font-bold">好好吃饭，慢慢变强 💪</p>
+              <p class="text-[10px] opacity-80">每一次记录，都是对身体的负责。</p>
+            </div>
+          </div>
+        </van-swipe-item>
+      </van-swipe>
+
+      <transition name="van-fade" mode="out-in">
+        <div :key="activeTab" class="w-full">
+          <CheckinTab v-if="activeTab === 'checkin'" />
+
+          <PolicyMapTab v-else-if="activeTab === 'policy'" />
+
+          <CircleTab v-else-if="activeTab === 'circle'" /> <LibraryTab v-else-if="activeTab === 'library'" />
+
+          <ProfileTab v-else-if="activeTab === 'profile'" />
+
+          <AdminConsoleTab v-else-if="activeTab === 'admin'" />
+
+          <DrugMapTab v-else-if="activeTab === 'drugmap'" />
+          <HospitalTab v-else-if="activeTab === 'hospital'" />
+
+          <van-empty v-else description="正在加载模块..." />
         </div>
-      </header>
-
-      <div
-          :class="[
-          'flex-1 transition-all duration-300',
-          activeTab === 'policy' ? 'p-0 overflow-hidden relative' : 'p-6 overflow-y-auto scroll-smooth'
-        ]"
-      >
-        <transition name="fade" mode="out-in">
-          <div :key="activeTab" class="h-full w-full">
-            <PolicyMapTab v-if="activeTab === 'policy'" class="h-full w-full" />
-            <CheckinTab v-else-if="activeTab === 'checkin'" />
-            <LibraryTab v-else-if="activeTab === 'library'" />
-            <AdminConsoleTab v-else-if="activeTab === 'admin'"/>
-            <ProfileTab v-else-if="activeTab === 'profile'" />
-          </div>
-        </transition>
-      </div>
+      </transition>
     </main>
+
+    <van-tabbar v-model="activeTab" fixed route active-color="#2563EB" inactive-color="#94A3B8" class="shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] border-t border-gray-100">
+
+      <van-tabbar-item name="checkin" icon="fire-o">
+        <span>情报</span>
+        <template #icon>
+          <i class="ri-sparkling-2-line text-xl"></i>
+        </template>
+      </van-tabbar-item>
+
+      <van-tabbar-item name="policy" icon="location-o">
+        <span>地图</span>
+        <template #icon>
+          <i class="ri-map-pin-2-line text-xl"></i>
+        </template>
+      </van-tabbar-item>
+
+      <van-tabbar-item name="circle" icon="friends-o" badge="3">
+        <span>小队</span>
+        <template #icon>
+          <i class="ri-team-line text-xl"></i>
+        </template>
+      </van-tabbar-item>
+
+      <van-tabbar-item name="library" icon="label-o">
+        <span>金库</span>
+        <template #icon>
+          <i class="ri-archive-drawer-line text-xl"></i>
+        </template>
+      </van-tabbar-item>
+
+      <van-tabbar-item name="profile" icon="user-o">
+        <span>我的</span>
+        <template #icon>
+          <i class="ri-user-smile-line text-xl"></i>
+        </template>
+      </van-tabbar-item>
+
+    </van-tabbar>
+
+    <van-floating-bubble
+        v-if="roleId === '1'"
+        axis="xy"
+        icon="shield-o"
+        magnetic="x"
+        @click="activeTab = 'admin'"
+        class="bg-blue-600 text-white shadow-xl"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { showConfirmDialog, showToast } from 'vant';
+
+// 引入组件 (确保路径对)
 import LibraryTab from "@/components/tabs/LibraryTab.vue";
 import CheckinTab from "@/components/tabs/CheckinTab.vue";
 import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue";
 import AdminConsoleTab from "@/components/tabs/AdminConsoleTab.vue";
+import ProfileTab from "@/components/tabs/ProfileTab.vue";
+// import CircleTab from "@/components/tabs/CircleTab.vue"; // 暂时注释，除非你创建了这个文件
+
+// 备用组件
+// import DrugMapTab from "@/components/tabs/DrugMapTab.vue";
+// import HospitalTab from "@/components/tabs/HospitalTab.vue";
+
 import http from "@/api/http.js";
 import router from "@/router/index.js";
-import ProfileTab from "@/components/tabs/ProfileTab.vue";
 
 const roleId = ref(localStorage.getItem('roleId') || '0')
 const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
 
-// 🔥 3. 新增：控制侧边栏是否折叠的状态
-const isSidebarCollapsed = ref(false)
+// 动态标题
+const currentTabLabel = computed(() => {
+  const map = {
+    checkin: '星光打卡',
+    policy: '医保地图', // 回来了！
+    circle: '战术小队',
+    library: '经验金库',
+    profile: '个人中心',
+    admin: '王国控制台',
+    drugmap: '药物图谱',
+    hospital: '医院调查'
+  }
+  return map[activeTab.value] || '克罗恩王国'
+})
 
-// 手动切换函数
-const toggleSidebar = () => {
-  isSidebarCollapsed.value = !isSidebarCollapsed.value
-}
-
-// 🔥 4. 监听 activeTab 的变化
-// 逻辑：只要切到 'policy' (地图)，自动收起侧边栏；切到其他，自动展开
 watch(activeTab, (newTab) => {
   localStorage.setItem('lastActiveTab', newTab)
-
-  if (newTab === 'policy') {
-    isSidebarCollapsed.value = true // 自动沉浸模式
-  } else {
-    isSidebarCollapsed.value = false // 恢复控制台模式
-  }
 })
-
-// 初始化检查
-if (activeTab.value === 'policy') {
-  isSidebarCollapsed.value = true
-}
-
-// ... 你的 tabs 配置和其他代码保持不变 ...
-const tabs = computed(() =>  [
-  { key: 'checkin',   label: '星光打卡',           icon: 'ri-sparkling-2-line' },
-  { key: 'library',   label: '经验金库',           icon: 'ri-archive-drawer-line' },
-  { key: 'drugmap',   label: '药物体验图谱',       icon: 'ri-capsule-line' },
-  { key: 'policy',    label: '医保政策地图',       icon: 'ri-map-pin-line' },
-  { key: 'hospital',  label: '各地医院大调查',     icon: 'ri-hospital-line' },
-  { key: 'qa',        label: '问答广场',           icon: 'ri-question-answer-line' },
-  { key: 'circle',    label: '好友 / 圈子 / 小队', icon: 'ri-user-smile-line' },
-  { key: 'reward',    label: '奖励系统',           icon: 'ri-medal-line' },
-  { key: 'values',    label: '王国的价值观',       icon: 'ri-heart-2-line' },
-  ...(roleId.value === '1' ? [{ key: 'admin', label: '权限掌控', icon: 'ri-shield-keyhole-line' }] : [])
-])
-
-const currentTabLabel = computed(() => {
-  return tabs.value.find(t => t.key === activeTab.value)?.label || '控制台'
-})
-
-const handleLogout = () => {
-  if(!confirm('兄弟，确定要暂时离开王国吗？')) return
-  localStorage.removeItem('token')
-  localStorage.removeItem('userId')
-  localStorage.removeItem('roleId')
-  localStorage.removeItem('lastActiveTab')
-  router.push('/login')
-}
 
 onMounted(async () => {
-  if (window.innerWidth < 768) {
-    isSidebarCollapsed.value = true
-  }
-
   try {
     const res = await http.get("users/getRole")
     roleId.value = res.data
@@ -219,28 +167,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* 保持你的滚动条样式 */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+:deep(.van-nav-bar__title) {
+  font-weight: 700;
+  color: #111827;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+/* 选中状态变蓝，加粗 */
+:deep(.van-tabbar-item--active) {
+  font-weight: 600;
+  color: #2563EB;
 }
 </style>
