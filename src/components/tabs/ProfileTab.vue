@@ -5,7 +5,7 @@
 
     <header class="greeting-bar">
       <div class="greeting-text">
-        <span class="greeting-title">早上好 文彬，今天也要按时吃饭 🌼</span>
+        <span class="greeting-title">早上好 小轩，今天也要按时吃饭 🌼</span>
         <span class="greeting-subtitle">Architect-xuan 专属守护</span>
       </div>
     </header>
@@ -17,20 +17,55 @@
       <div class="profile-content">
         <div class="avatar-wrapper">
           <div class="avatar-glow"></div>
-          <img class="avatar" src="https://picsum.photos/id/64/300/300" alt="文彬头像" />
+          <img class="avatar" :src="userInfo.avatar" alt="小轩头像" />
           <div class="tech-ring"></div>
+
+          <van-uploader
+              :after-read="afterRead"
+              class="avatar-uploader"
+          >
+            <div class="uploader-trigger"></div>
+          </van-uploader>
+
           <div class="status-indicator">
             <span class="status-dot"></span>
           </div>
         </div>
 
         <div class="profile-info">
-          <div class="name-wrapper">
-            <h2 class="vip-name">全栈架构师_文彬</h2>
-            <div class="verified-badge">✓</div>
-          </div>
+          <div class="name-wrapper" @click="openEditName">
+            <h2 class="vip-name">{{ userInfo.nickname }}</h2>
+            <div class="edit-dot"></div> </div>
           <p class="title-tag">Architect-xuan 专属系统守护者</p>
+        </div>
 
+        <van-popup
+            v-model:show="showEditName"
+            position="bottom"
+            round
+            class="app-edit-popup"
+            teleport="body"
+        >
+          <div class="popup-header">
+            <span class="cancel-btn" @click="showEditName = false">取消</span>
+            <span class="popup-title">修改身份标识</span>
+            <span class="confirm-btn" @click="onConfirmName">保存</span>
+          </div>
+
+          <div class="popup-body">
+            <van-field
+                v-model="tempNickname"
+                placeholder="请输入新的全栈昵称"
+                :border="false"
+                autofocus
+                class="app-input"
+                maxlength="15"
+            />
+            <p class="input-tip">好的名字是架构成功的开始</p>
+          </div>
+        </van-popup>
+
+      </div>
           <!-- 垂直徽章列表（已更新为最新图片内容） -->
           <div class="badges-list">
             <div class="badge-item">
@@ -47,8 +82,8 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+
+
 
     <!-- 🔥 全新简洁版：我的当前状态（超工整、无乱字） -->
     <div class="clean-panel">
@@ -133,8 +168,10 @@
 
 <script setup>
 
+import http from "@/api/http.js";
+
 const triggerRecovery = () => {
-  alert('【系统级降级预案已启动】\n文彬，立刻切换全流质模式！小轩为你护航！');
+  alert('【系统级降级预案已启动】\n小轩，立刻切换全流质模式！小轩为你护航！');
 };
 
 const uploadMedicalRecord = () => {
@@ -142,6 +179,7 @@ const uploadMedicalRecord = () => {
 };// 模拟用户点击切换状态
 
 import { ref } from 'vue';
+import {closeToast, showLoadingToast, showToast} from "vant";
 // 注意：如果你的项目按需引入了 Vant，可能需要单独引入 ActionSheet 组件
 
 // --- 1. 响应式状态 (当前显示的数据) ---
@@ -195,8 +233,50 @@ const openSheet = (type) => {
   }
   showSheet.value = true;
 };
+// --- 响应式数据：对应 UserHealthProfile 大类 ---
+const userInfo = ref({
+  nickname: '全栈架构师_小轩',
+  avatar: 'https://picsum.photos/id/64/300/300',
+  userId: null // 实际上是从后端 /info 接口加载出来的
+});
 
-// 选中选项后的处理
+/**
+ * 逻辑 A：头像更新
+ * 流程：先上传拿到 URL，再调用我们的“动态大接口”
+ */
+const afterRead = async (file) => {
+  // 1. 创建标准表单对象
+  const formData = new FormData();
+
+  // 2. 这里的 key 必须叫 "file"，必须和后端 @RequestParam("file") 严格对应
+  formData.append('file', file.file);
+  try {
+    // 1. 上传文件 (假设你的 http 封装处理了 FormData 剥壳)
+    const uploadRes = await http.post('/upload', formData);
+    const newAvatarUrl = uploadRes.data;
+
+    // 2. 调用动态大接口，只传 avatar，后端会用 <if> 自动匹配
+    await http.post('/center/update-basic', {
+      avatar: newAvatarUrl
+    });
+
+    // 3. 视图层无感更新
+    userInfo.value.avatar = newAvatarUrl;
+    showToast('头像已在位 🚀');
+  } catch (err) {
+    showToast('链路中断');
+  } finally {
+    closeToast();
+  }
+};
+
+/**
+ * 逻辑 B：昵称更新
+ */
+const showEditName = ref(false);
+const tempNickname = ref('');
+
+
 const onSelectOption = (item) => {
   // item 就是你点中的那个字典对象
   if (currentEditType.value === 'phase') {
@@ -208,6 +288,26 @@ const onSelectOption = (item) => {
     currentGut.value = item;
   }
   // Vant 设置了 close-on-click-action，选中后会自动关闭弹窗，无需手动 showSheet.value = false
+};
+const openEditName = () => {
+  tempNickname.value = userInfo.value.nickname;
+  showEditName.value = true;
+};
+
+const onConfirmName = async () => {
+  if (!tempNickname.value.trim() || tempNickname.value === userInfo.value.nickname) {
+    showEditName.value = false;
+    return;
+  }
+
+  // 你的剥壳 http 调用
+  await http.post('/center/update-basic', {
+    nickname: tempNickname.value
+  });
+
+  userInfo.value.nickname = tempNickname.value;
+  showEditName.value = false;
+  showToast({ message: '标识已重构', icon: 'success' });
 };
 </script>
 
@@ -424,7 +524,49 @@ const onSelectOption = (item) => {
   color: #4a5568;
   font-weight: 500;
 }
+/* 昵称旁的小点点，暗示可点 */
+.edit-dot {
+  width: 6px;
+  height: 6px;
+  background: #22d3ee;
+  border-radius: 50%;
+  margin-left: 8px;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+}
 
+.app-edit-popup {
+  padding-bottom: env(safe-area-inset-bottom); /* 适配全面屏 */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 0.5px solid #eee;
+}
+
+.popup-title { font-weight: 600; font-size: 16px; color: #333; }
+.cancel-btn { color: #999; font-size: 14px; }
+.confirm-btn { color: #4338ca; font-weight: 700; font-size: 14px; }
+
+.popup-body { padding: 24px 20px 40px; }
+
+.app-input {
+  background: #f5f7fa !important;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+.input-tip {
+  font-size: 12px;
+  color: #ccc;
+  margin-top: 12px;
+  text-align: center;
+}
 .row-value {
   display: flex;
   align-items: center;
@@ -455,6 +597,30 @@ const onSelectOption = (item) => {
   color: #cbd5e1;
   margin-left: 4px;
   font-family: monospace;
+}
+/* 1. 确保父容器是定位基准 */
+.avatar-wrapper {
+  position: relative; /* 必须有这个，否则 uploader 会飞到页面顶端 */
+  width: 76px;
+  height: 76px;
+}
+
+/* 2. 让上传组件完全盖在头像图层之上 */
+.avatar-uploader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10; /* 确保在所有装饰元素（tech-ring等）的最顶层 */
+  opacity: 0;  /* 保持透明，不破坏你的高阶审美 */
+}
+
+/* 3. 核心：必须给内部 trigger 一个确定的宽高，否则点击区域是 0 */
+.uploader-trigger {
+  width: 76px;
+  height: 76px;
+  cursor: pointer;
 }
 
 .line-divider {
