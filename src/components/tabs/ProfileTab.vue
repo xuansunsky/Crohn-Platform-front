@@ -293,7 +293,22 @@ const openEditName = () => {
   tempNickname.value = userInfo.value.nickname;
   showEditName.value = true;
 };
+import { onMounted } from 'vue';
 
+// 1. 定义拉取函数
+const loadData = async () => {
+  // 调你之前写的获取全量信息的接口
+  const res = await http.get('/center/info');
+  if (res) {
+    // 把后端查出来的真实数据（包含最新的头像和昵称）直接同步给 userInfo
+    userInfo.value = res.data;
+  }
+};
+
+// 2. 挂载时触发：这就是“拉取”真理的过程
+onMounted(() => {
+  loadData();
+});
 const onConfirmName = async () => {
   if (!tempNickname.value.trim() || tempNickname.value === userInfo.value.nickname) {
     showEditName.value = false;
