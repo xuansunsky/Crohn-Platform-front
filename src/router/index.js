@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import LoginView2 from "../views/LoginView2.vue"
 import RegisterView from "../views/RegisterView.vue"
-import DashboardView from "../views/DashboardView.vue"
+import DashboardView from "../components/tabs/DashboardView.vue"
 import insuranceMap from "@/components/tabs/PolicyMapTab.vue"
 import ExperienceCard from "@/components/ExperienceCard.vue"
 import SocialTab from "@/components/tabs/SocialTab.vue";

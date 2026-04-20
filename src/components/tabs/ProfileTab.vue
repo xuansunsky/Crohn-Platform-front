@@ -67,20 +67,16 @@
 
       </div>
           <!-- 垂直徽章列表（已更新为最新图片内容） -->
-          <div class="badges-list">
-            <div class="badge-item">
-              <span class="badge-icon">🛡️</span>
-              <span class="badge-text">克罗恩 V1 认证</span>
-            </div>
-            <div class="badge-item">
-              <span class="badge-icon">⚙️</span>
-              <span class="badge-text">全栈架构师</span>
-            </div>
-            <div class="badge-item">
-              <span class="badge-icon">🌿</span>
-              <span class="badge-text">无麸质探路者</span>
-            </div>
-          </div>
+      <div class="badges-list relative group cursor-pointer" @click="showBadgeSelector = true">
+        <div class="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800/10 backdrop-blur text-slate-500 p-1.5 rounded-full z-10 flex items-center justify-center shadow-sm">
+          <i class="ri-pencil-fill text-xs"></i>
+        </div>
+
+        <div v-for="badge in badgeLibrary.filter(b => b.selected)" :key="badge.id" class="badge-item relative z-0">
+          <span class="badge-icon">{{ badge.icon }}</span>
+          <span class="badge-text">{{ badge.name }}</span>
+        </div>
+      </div>
         </div>
 
 
@@ -93,7 +89,7 @@
       </div>
 
       <div class="status-list">
-        <div class="status-row" @click="openSheet('phase')">
+        <div class="status-row" @click="openMatrixSheet('phase')">
           <span class="row-label">当前阶段</span>
           <div class="row-value">
           <span class="tag-dynamic" :style="{ color: currentPhase.color, background: currentPhase.bgColor }">
@@ -106,7 +102,7 @@
 
         <div class="line-divider"></div>
 
-        <div class="status-row" @click="openSheet('diet')">
+        <div class="status-row" @click="openMatrixSheet('diet')">
           <span class="row-label">饮食协议</span>
           <div class="row-value">
           <span class="tag-dynamic" :style="{ color: currentDiet.color, background: currentDiet.bgColor }">
@@ -118,7 +114,7 @@
 
         <div class="line-divider"></div>
 
-        <div class="status-row" @click="openSheet('gut')">
+        <div class="status-row" @click="openMatrixSheet('gut')">
           <span class="row-label">肠道反馈</span>
           <div class="row-value">
           <span class="tag-dynamic" :style="{ color: currentGut.color, background: currentGut.bgColor }">
@@ -130,14 +126,7 @@
       </div>
     </div>
 
-    <van-action-sheet
-        v-model:show="showSheet"
-        :actions="sheetOptions"
-        :title="sheetTitle"
-        cancel-text="取消"
-        close-on-click-action
-        @select="onSelectOption"
-    />    <!-- 修复按钮保持原样但更柔和 -->
+       <!-- 修复按钮保持原样但更柔和 -->
     <div class="recovery-section">
       <button class="btn-recovery" @click="triggerRecovery">
         <span class="btn-icon">❤️💊</span>
@@ -164,6 +153,130 @@
       </div>
     </div>
   </div>
+  <transition name="van-slide-up">
+  <div v-if="showBadgeSelector" class="fixed inset-0 z-[150] flex flex-col justify-end">
+
+    <div @click="showBadgeSelector = false" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
+
+    <div class="relative w-full h-[85vh] bg-white/95 backdrop-blur-2xl rounded-t-[36px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden border-t border-white">
+
+      <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
+
+      <div class="shrink-0 px-6 pt-10 pb-4 flex justify-between items-end border-b border-slate-100">
+        <div>
+          <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            荣誉徽章库 <i class="ri-vip-diamond-fill text-blue-500 animate-pulse"></i>
+          </h2>
+          <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">
+            已装备: <span :class="selectedCount === MAX_BADGES ? 'text-blue-600' : 'text-slate-800'">{{ selectedCount }}</span> / {{ MAX_BADGES }}
+          </p>
+        </div>
+        <button @click="showBadgeSelector = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-full transition-colors active:scale-90">
+          <i class="ri-close-line text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scroll p-6 space-y-8 pb-32">
+
+        <div v-for="category in ['官方身份', '饮食流派', '战神荣誉']" :key="category">
+          <h3 class="text-[13px] font-black text-slate-400 mb-4 tracking-widest flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> {{ category }}
+          </h3>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div v-for="badge in badgeLibrary.filter(b => b.category === category)" :key="badge.id"
+                 @click="toggleBadge(badge)"
+                 class="relative p-4 rounded-2xl cursor-pointer transition-all duration-300 active:scale-95 group overflow-hidden"
+                 :class="[
+                       badge.selected
+                        ? 'bg-white border-2 border-blue-500 shadow-[0_8px_20px_rgba(59,130,246,0.15)] ring-4 ring-blue-50'
+                        : 'bg-slate-50 border-2 border-transparent hover:bg-slate-100'
+                     ]">
+
+              <div v-if="badge.selected" class="absolute -top-1 -right-1 w-8 h-8 bg-blue-500 rounded-bl-2xl flex items-center justify-center shadow-sm">
+                <i class="ri-check-line text-white text-lg font-black relative top-0.5 right-0.5"></i>
+              </div>
+
+              <div class="flex flex-col items-center text-center mt-1">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-inner mb-3 transition-transform duration-300 group-hover:scale-110"
+                     :class="[badge.selected ? badge.bg : 'bg-slate-200/50']">
+                  {{ badge.icon }}
+                </div>
+                <h4 class="text-[14px] font-black tracking-tight" :class="badge.selected ? 'text-slate-800' : 'text-slate-500'">
+                  {{ badge.name }}
+                </h4>
+                <p class="text-[10px] font-medium mt-1" :class="badge.selected ? 'text-blue-500/80' : 'text-slate-400'">
+                  {{ badge.desc }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="absolute bottom-0 w-full p-6 bg-gradient-to-t from-white via-white/90 to-transparent pt-12">
+        <button @click="saveBadges"
+                class="w-full bg-slate-900 text-white font-black text-[16px] py-4 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.3)] hover:shadow-[0_10px_40px_rgba(15,23,42,0.4)] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+          装备徽章 <i class="ri-shield-flash-fill text-blue-400"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</transition>
+  <transition name="van-slide-up">
+    <div v-if="activeSheetType" class="fixed inset-0 z-[200] flex flex-col justify-end">
+
+      <div @click="activeSheetType = ''" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+
+      <div class="relative w-full bg-slate-50/95 backdrop-blur-2xl rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden border-t border-white">
+
+        <div class="px-6 pt-8 pb-5 flex justify-between items-center border-b border-slate-200/60 bg-white/50">
+          <h3 class="text-[17px] font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <i class="ri-equalizer-line text-blue-500"></i>
+            {{ sheetTitles[activeSheetType] }}
+          </h3>
+          <button @click="activeSheetType = ''" class="w-8 h-8 flex items-center justify-center bg-slate-200/50 text-slate-500 rounded-full active:scale-90 transition-all">
+            <i class="ri-close-line text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-6 pb-[calc(env(safe-area-inset-bottom)+24px)] overflow-y-auto max-h-[60vh]">
+          <div class="grid grid-cols-2 gap-3">
+
+            <div v-for="item in statusLibrary[activeSheetType]" :key="item.id"
+                 @click="selectStatus(item)"
+                 class="relative p-4 rounded-2xl cursor-pointer transition-all duration-300 active:scale-95 border-2 flex flex-col justify-between min-h-[100px] overflow-hidden group"
+                 :class="[
+                     currentSelectedIds[activeSheetType] === item.id
+                      ? `${item.bg} ${item.border} shadow-md ring-2 ring-white scale-[1.02]`
+                      : 'bg-white border-transparent shadow-sm hover:shadow-md'
+                   ]">
+
+              <div v-if="currentSelectedIds[activeSheetType] === item.id"
+                   class="absolute -top-10 -right-10 w-24 h-24 bg-white/40 rounded-full blur-xl pointer-events-none"></div>
+
+              <div class="flex items-start justify-between relative z-10">
+                <span class="text-2xl drop-shadow-sm">{{ item.icon }}</span>
+                <i v-if="currentSelectedIds[activeSheetType] === item.id"
+                   class="ri-checkbox-circle-fill text-[20px]" :class="item.color"></i>
+              </div>
+
+              <div class="mt-3 relative z-10">
+                <h4 class="text-[14px] font-black tracking-tight text-slate-800 mb-0.5">{{ item.name }}</h4>
+                <p class="text-[10px] font-medium text-slate-500 leading-tight">{{ item.desc }}</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </transition>
+
 </template>
 
 <script setup>
@@ -178,7 +291,7 @@ const uploadMedicalRecord = () => {
   alert('安全加密通道已开启，准备上传病历...');
 };// 模拟用户点击切换状态
 
-import { ref } from 'vue';
+
 import {closeToast, showLoadingToast, showToast} from "vant";
 // 注意：如果你的项目按需引入了 Vant，可能需要单独引入 ActionSheet 组件
 
@@ -187,52 +300,78 @@ const currentPhase = ref({ name: '临床缓解期', icon: '✨', days: 128, colo
 const currentDiet = ref({ name: '低 FODMAP', icon: '🌿', color: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' });
 const currentGut = ref({ name: '运行平稳', icon: '🟢', color: '#16a34a', bgColor: 'rgba(22, 163, 74, 0.1)' });
 
-// --- 2. 病友专属字典 (Vant ActionSheet 格式) ---
-// Vant 的 actions 接受 name (主标题) 和 subname (副标题说明)
-const dicPhase = [
-  { name: '临床缓解期', icon: '✨', subname: '症状完全消失，复查指标平稳', color: '#6b46c1', bgColor: 'rgba(107, 70, 193, 0.1)' },
-  { name: '轻度活动期', icon: '⚠️', subname: '偶有腹痛腹泻，生活基本不受限', color: '#d97706', bgColor: 'rgba(217, 119, 6, 0.1)' },
-  { name: '中重度活动期', icon: '🔥', subname: '腹痛频繁，急需就医调整方案', color: '#dc2626', bgColor: 'rgba(220, 38, 38, 0.1)' },
-  { name: '诱导缓解期', icon: '💊', subname: '正在上激素或初打生物制剂', color: '#2563eb', bgColor: 'rgba(37, 99, 235, 0.1)' },
-  { name: '术后康复期', icon: '🏥', subname: '刚经历手术，极其关键的休养期', color: '#059669', bgColor: 'rgba(5, 150, 105, 0.1)' },
-];
+import { ref, computed } from 'vue'
 
-const dicDiet = [
-  { name: '低 FODMAP', icon: '🌿', subname: '避开易发酵碳水，减少产气', color: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' },
-  { name: '无麸质饮食', icon: '🌾', subname: '严格避开小麦等麸质过敏源', color: '#b45309', bgColor: 'rgba(180, 83, 9, 0.1)' },
-  { name: '低渣/软食协议', icon: '🥣', subname: '白粥烂面条为主，减轻物理摩擦', color: '#4f46e5', bgColor: 'rgba(79, 70, 229, 0.1)' },
-  { name: '纯肠内营养', icon: '🧪', subname: '全流质/营养粉，让肠道彻底休息', color: '#db2777', bgColor: 'rgba(219, 39, 119, 0.1)' },
-  { name: '极简白名单', icon: '🍚', subname: '只吃自己亲测过的安全食物', color: '#4b5563', bgColor: 'rgba(75, 85, 99, 0.1)' },
-];
+// 控制徽章选择舱的开关
+const showBadgeSelector = ref(false)
 
-const dicGut = [
-  { name: '运行平稳', icon: '🟢', subname: '大便成型，毫无痛感', color: '#16a34a', bgColor: 'rgba(22, 163, 74, 0.1)' },
-  { name: '轻微预警', icon: '🟡', subname: '肚子咕噜叫，轻微胀气或不成形', color: '#ca8a04', bgColor: 'rgba(202, 138, 4, 0.1)' },
-  { name: '局部故障', icon: '🟠', subname: '腹痛明显，跑厕所次数增加', color: '#ea580c', bgColor: 'rgba(234, 88, 12, 0.1)' },
-  { name: '严重报错', icon: '🔴', subname: '剧烈绞痛/便血，立即就医！', color: '#dc2626', bgColor: 'rgba(220, 38, 38, 0.1)' },
-];
+// 限制最多只能选 3 个挂在主页
+const MAX_BADGES = 3
 
-// --- 3. 面板控制逻辑 ---
-const showSheet = ref(false); // 控制底部面板是否显示
-const sheetTitle = ref('');   // 面板标题
-const sheetOptions = ref([]); // 当前面板要展示的选项列表
+// 💥 我们精心捏造的“荣誉武器库”数据
+const badgeLibrary = ref([
+  { id: 1, category: '官方身份', icon: '🛡️', name: '克罗恩 V1 认证', desc: '系统初代守护者', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', selected: true },
+  { id: 2, category: '官方身份', icon: '⚙️', name: '全栈架构师', desc: '代码改变命运', color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-300', selected: true },
+
+  { id: 3, category: '饮食流派', icon: '🌿', name: '无麸质探路者', desc: '坚守纯净饮食', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', selected: true },
+  { id: 4, category: '饮食流派', icon: '🥩', name: '食肉狂战士', desc: '高蛋白纯肉摄入', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200', selected: false },
+  { id: 5, category: '饮食流派', icon: '🥥', name: '低FODMAP大师', desc: '精准避开产气雷区', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', selected: false },
+
+  { id: 6, category: '战神荣誉', icon: '⚔️', name: '钢铁肠道', desc: '已挺过最难的阶段', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', selected: false },
+  { id: 7, category: '战神荣誉', icon: '🧘‍♂️', name: '禅定修心者', desc: '情绪稳定，百毒不侵', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200', selected: false },
+  { id: 8, category: '战神荣誉', icon: '🩸', name: '生物制剂老兵', desc: '抗体在血液中燃烧', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', selected: false },
+])
+
+// 计算当前已选的数量
+const selectedCount = computed(() => badgeLibrary.value.filter(b => b.selected).length)
+
+// 点击徽章的炫酷交互逻辑
+const toggleBadge = (badge) => {
+  if (badge.selected) {
+    badge.selected = false // 取消选中
+  } else {
+    if (selectedCount.value >= MAX_BADGES) {
+      // 如果超过3个，可以加个轻微的震动或者Toast提示 (这里简单return)
+      console.log('最多只能装备 3 枚徽章！')
+      return
+    }
+    badge.selected = true // 选中
+  }
+}
+const saveBadges = async () => {
+  // 1. 关闭全息舱弹窗
+  showBadgeSelector.value = false
+
+  // 2. 提取出所有被选中的徽章名字 (变成一个数组，比如：['克罗恩 V1 认证', '全栈架构师'])
+  const selectedNames = badgeLibrary.value
+      .filter(b => b.selected)
+      .map(b => b.name)
+
+  // 3. 组装 payload：后端 Java 里的 badges 字段如果是 String，我们就把它转成 JSON 字符串
+  const payload = {
+    badges: JSON.stringify(selectedNames)
+  }
+
+  try {
+    // 4. 给后端发送真枪实弹的请求 (注意路径跟你 Java 写的 Controller 对齐)
+    const res = await http.post('/center/update-badges', payload)
+
+    // 假设你后端统一定义的成功 code 是 200
+    if (res.data?.code === 200) {
+      showToast({ type: 'success', message: '荣誉徽章装备成功！' })
+      // 💡 提示：这里前端已经自动渲染 selected 的徽章了，不需要额外刷新页面！
+    } else {
+      showToast({ type: 'fail', message: res.message || '装备失败，请重试' })
+    }
+  } catch (error) {
+    console.error('装备徽章异常:', error)
+    showToast({ type: 'fail', message: '网络信号弱，装备同步失败' })
+  }
+}
+
 const currentEditType = ref(''); // 记录当前正在修改哪个模块 (phase/diet/gut)
 
-// 打开面板
-const openSheet = (type) => {
-  currentEditType.value = type;
-  if (type === 'phase') {
-    sheetTitle.value = '更新当前病程阶段';
-    sheetOptions.value = dicPhase;
-  } else if (type === 'diet') {
-    sheetTitle.value = '切换饮食协议';
-    sheetOptions.value = dicDiet;
-  } else if (type === 'gut') {
-    sheetTitle.value = '今日肠道反馈';
-    sheetOptions.value = dicGut;
-  }
-  showSheet.value = true;
-};
+
 // --- 响应式数据：对应 UserHealthProfile 大类 ---
 const userInfo = ref({
   nickname: '全栈架构师_小轩',
@@ -275,36 +414,143 @@ const afterRead = async (file) => {
  */
 const showEditName = ref(false);
 const tempNickname = ref('');
-
-
-const onSelectOption = (item) => {
-  // item 就是你点中的那个字典对象
-  if (currentEditType.value === 'phase') {
-    // 如果他切换了阶段，这里可以弹窗问他：“是否重新计算天数？”
-    currentPhase.value = { ...currentPhase.value, ...item, days: 1 }; // 模拟切换后天数重置为 1
-  } else if (currentEditType.value === 'diet') {
-    currentDiet.value = item;
-  } else if (currentEditType.value === 'gut') {
-    currentGut.value = item;
-  }
-  // Vant 设置了 close-on-click-action，选中后会自动关闭弹窗，无需手动 showSheet.value = false
-};
 const openEditName = () => {
   tempNickname.value = userInfo.value.nickname;
   showEditName.value = true;
 };
 import { onMounted } from 'vue';
+const activeSheetType = ref('')
 
+// 动态弹窗的标题字典
+const sheetTitles = {
+  phase: '诊断雷达：更新当前阶段',
+  diet:  '能量补给：切换饮食协议',
+  gut:   '生物反馈：记录肠道状态'
+}
+
+// 💥 状态武器库：未来你可以无限往里面加选项！
+const statusLibrary = ref({
+  phase: [
+    { id: 'p1', icon: '✨', name: '临床缓解期', desc: '指标正常，岁月静好', color: 'text-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+    { id: 'p2', icon: '🔥', name: '急性发作期', desc: '炎症风暴，需要支援', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' },
+    { id: 'p3', icon: '🛡️', name: '隐匿活动期', desc: '表面平静，暗流涌动', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { id: 'p4', icon: '🩹', name: '术后恢复期', desc: '重塑防线，稳步回血', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' }
+  ],
+  diet: [
+    { id: 'd1', icon: '🌿', name: '低FODMAP', desc: '精准避开产气雷区', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
+    { id: 'd2', icon: '💧', name: '全流食协议', desc: '肠道最高级别休眠', color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
+    { id: 'd3', icon: '🌾', name: '无麸质饮食', desc: '切断潜在致敏源头', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { id: 'd4', icon: '🍱', name: '常规探路', desc: '小心试探，逐步扩容', color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' }
+  ],
+  gut: [
+    { id: 'g1', icon: '🟢', name: '运行平稳', desc: '毫无波澜，完美吸收', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    { id: 'g2', icon: '🟡', name: '轻度波动', desc: '咕噜作响，偶有不适', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { id: 'g3', icon: '🔴', name: '警报拉响', desc: '拉肚子/腹痛加剧', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' }
+  ]
+})
+
+// 模拟你目前选中的状态（用来和卡片对比高亮）
+const currentSelectedIds = ref({
+  phase: 'p1', // 默认选中临床缓解期
+  diet: 'd1',  // 默认低FODMAP
+  gut: 'g1'    // 默认平稳
+})
+
+// 点击列表行时，打开对应类型的控制台
+const openMatrixSheet = (type) => {
+  activeSheetType.value = type
+}
+
+// 在控制台中点击选中某个卡片
+const selectStatus = (item) => {
+  // 1. 前端 UI 瞬间点亮（对号打上），给用户“秒响应”的快感
+  currentSelectedIds.value[activeSheetType.value] = item.id
+
+  // 2. 让外面主页的标签跟着变色、变字
+  if (activeSheetType.value === 'phase') currentPhase.value = item
+  if (activeSheetType.value === 'diet') currentDiet.value = item
+  if (activeSheetType.value === 'gut') currentGut.value = item
+
+  // 3. 组装发给后端的数据 (根据点击的不同类型，动态生成不同的 key)
+  const payload = {}
+  if (activeSheetType.value === 'phase') payload.healthPhase = item.name
+  if (activeSheetType.value === 'diet')  payload.dietStrategy = item.name
+  if (activeSheetType.value === 'gut')   payload.bowelStatus = item.name
+
+  // 4. 延迟 300ms 丝滑关闭抽屉
+  setTimeout(() => {
+    activeSheetType.value = ''
+  }, 300)
+
+  // 5. 🚀 无感发送请求！(这里不用 await，因为不阻塞 UI，让它在后台默默发)
+  http.post('/center/update-status', payload).then(res => {
+    // 可以静默成功，什么都不提示，或者在控制台打印一下
+    console.log(`[系统日志] ${item.name} 状态已同步至云端`)
+  }).catch(err => {
+    // 只有失败的时候才弹出来提醒用户
+    showToast({ type: 'fail', message: '状态同步失败，正在重试' })
+  })
+}
 // 1. 定义拉取函数
 const loadData = async () => {
-  // 调你之前写的获取全量信息的接口
-  const res = await http.get('/center/info');
-  if (res) {
-    // 把后端查出来的真实数据（包含最新的头像和昵称）直接同步给 userInfo
-    userInfo.value = res.data;
+  try {
+    const res = await http.get('/center/info');
+
+    // ⚠️ 注意：根据你的 ApiResponse 结构，如果数据包了一层，这里可能是 res.data.data
+    // 假设你的 axios 拦截器已经去掉了最外层，这里用 res.data
+    const profile = res.data?.data || res.data;
+
+    if (profile) {
+      // 1. 同步基础信息
+      userInfo.value.nickname = profile.nickname || '未命名特工';
+      userInfo.value.avatar = profile.avatar || 'https://picsum.photos/id/64/300/300';
+      userInfo.value.userId = profile.userId;
+
+      // 2. 匹配并点亮【当前阶段】
+      if (profile.healthPhase) {
+        // 在本地的 statusLibrary 里找到对应名字的那张卡片
+        const foundPhase = statusLibrary.value.phase.find(item => item.name === profile.healthPhase);
+        if (foundPhase) {
+          // 加上后端算好的天数！
+          currentPhase.value = { ...foundPhase, days: profile.maintainedDays || 0 };
+          currentSelectedIds.value.phase = foundPhase.id; // 让抽屉里的卡片高亮
+        }
+      }
+
+      // 3. 匹配并点亮【饮食协议】
+      if (profile.dietStrategy) {
+        const foundDiet = statusLibrary.value.diet.find(item => item.name === profile.dietStrategy);
+        if (foundDiet) {
+          currentDiet.value = foundDiet;
+          currentSelectedIds.value.diet = foundDiet.id;
+        }
+      }
+
+      // 4. 匹配并点亮【肠道反馈】
+      if (profile.bowelStatus) {
+        const foundGut = statusLibrary.value.gut.find(item => item.name === profile.bowelStatus);
+        if (foundGut) {
+          currentGut.value = foundGut;
+          currentSelectedIds.value.gut = foundGut.id;
+        }
+      }
+
+      // 5. 扫描并装备【荣誉徽章】
+      // 后端传过来的是 badgeCodes: ["克罗恩 V1 认证", "全栈架构师"]
+      if (profile.badgeCodes && Array.isArray(profile.badgeCodes)) {
+        badgeLibrary.value.forEach(badge => {
+          // 如果徽章的名字在后端的数组里，就设为 true (点亮)，否则为 false
+          badge.selected = profile.badgeCodes.includes(badge.name);
+        });
+      } else {
+        // 如果后端没传或者数组为空，全部卸下
+        badgeLibrary.value.forEach(badge => badge.selected = false);
+      }
+    }
+  } catch (error) {
+    console.error('获取个人档案失败:', error);
   }
 };
-
 // 2. 挂载时触发：这就是“拉取”真理的过程
 onMounted(() => {
   loadData();

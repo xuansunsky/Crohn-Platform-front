@@ -1,6 +1,5 @@
 <template>
-  <div class="relative -m-4 w-[calc(100%+2rem)] h-[calc(100vh-96px)] bg-slate-50 overflow-hidden">
-    <header class="mb-4 flex items-center justify-between px-2">
+  <div class="relative -m-4 w-[calc(100%+2rem)] h-[calc(100vh-96px)] bg-slate-50 overflow-hidden flex flex-col"> <header>
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-blue-200 shadow-lg">
           <i class="ri-government-fill text-xl"></i>
@@ -20,8 +19,7 @@
       </button>
     </header>
 
-    <main class="relative h-[85vh] w-full overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5">
-
+    <main class="flex-1 w-full h-full relative overflow-y-auto custom-scrollbar">
       <div v-show="!showDetailPanel" class="h-full w-full relative group">
         <div ref="chartRef" class="h-full w-full"></div>
 

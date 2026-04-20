@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24">
-
+  <div class="w-full pb-6 bg-transparent">
     <header class="bg-white sticky top-0 z-40 shadow-sm">
       <div class="px-4 py-3 flex justify-between items-center">
         <div class="flex items-center gap-2">
@@ -30,7 +29,7 @@
       </div>
     </header>
 
-    <main class="p-4 space-y-4">
+    <main class="space-y-4 mt-4">
       <div v-if="filteredList.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400">
         <i class="ri-inbox-line text-4xl mb-2"></i>
         <p class="text-sm">没有找到相关情报</p>
@@ -82,7 +81,7 @@
       </div>
     </main>
 
-    <div class="fixed bottom-6 right-6 z-30">
+    <div class="fixed bottom-10 right-6 z-30">
       <button
           @click="showUploadModal = true"
           class="w-14 h-14 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-full shadow-lg shadow-blue-600/30 flex items-center justify-center transition-all"
@@ -216,134 +215,105 @@
     </div>
 
 
-    <div v-if="showUploadModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div @click="showUploadModal = false"
-           class="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity"></div>
+    <div v-if="showUploadModal" class="fixed inset-0 z-[120] flex items-end sm:items-center justify-center">
+      <div @click="showUploadModal = false" class="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity"></div>
 
-      <div
-          class="bg-white/95 w-full sm:w-[480px] sm:rounded-2xl rounded-t-2xl p-6 relative z-10 animate-slide-up shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <div
-            class="flex justify-between items-center mb-6 sticky top-0 bg-white/90 backdrop-blur-sm z-10 py-2 border-b border-gray-100">
+      <div class="bg-white/95 w-full sm:w-[480px] sm:rounded-2xl rounded-t-2xl relative z-10 animate-slide-up shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+
+        <div class="shrink-0 flex justify-between items-center bg-white/90 backdrop-blur-sm z-20 px-6 py-4 border-b border-gray-100 shadow-sm">
           <h3 class="text-lg font-black text-gray-900 tracking-tight">发布实测情报</h3>
-          <button @click="showUploadModal = false"
-                  class="text-gray-400 hover:bg-gray-100 hover:text-gray-700 p-1.5 rounded-full transition-colors">
+          <button @click="showUploadModal = false" class="text-gray-400 hover:bg-gray-100 hover:text-gray-700 p-1.5 rounded-full transition-colors active:scale-90">
             <i class="ri-close-line text-xl"></i>
           </button>
         </div>
 
-        <div class="space-y-6">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1.5">品牌/餐厅</label>
-              <input v-model="formData.brand" type="text" placeholder="肯德基"
-                     class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1.5">食物单品</label>
-              <input v-model="formData.product" type="text" placeholder="吮指原味鸡"
-                     class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
-            </div>
-          </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
 
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1.5 flex justify-between">
-              <span>实测图片 (选填)</span>
-              <span v-if="isUploading" class="text-blue-500 animate-pulse"><i class="ri-loader-4-line animate-spin"></i> 上传中...</span>
-            </label>
-
-            <div @click="triggerFileInput"
-                 class="relative w-full h-32 bg-gray-50/50 border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden">
-              <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload" accept="image/*">
-
-              <div v-if="!formData.coverImg" class="text-center transition-transform group-hover:scale-105">
-                <i class="ri-image-add-line text-3xl text-gray-400 group-hover:text-blue-500 transition-colors"></i>
-                <p class="text-[11px] font-medium text-gray-400 mt-2">点击上传食物照片</p>
+          <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1.5">品牌/餐厅</label>
+                <input v-model="formData.brand" type="text" placeholder="肯德基" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
               </div>
-
-              <img v-else :src="formData.coverImg" class="absolute inset-0 w-full h-full object-cover"/>
-
-              <button v-if="formData.coverImg" @click.stop="formData.coverImg = ''"
-                      class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white rounded-full p-1.5 hover:bg-red-500 transition-colors">
-                <i class="ri-delete-bin-line text-sm"></i>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1.5">评论(您感觉吃了咋样？)</label>
-            <textarea v-model="formData.content" rows="2" placeholder="比如：我只要了微辣，吃完还是拉肚子了..."
-                      class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-2">身体反馈 (做个明白人)</label>
-            <div class="space-y-2.5">
-              <div v-for="level in levels" :key="level.val"
-                   @click="formData.level = level.val"
-                   :class="[
-             'flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none',
-             formData.level === level.val ? level.activeClass + ' shadow-md scale-[1.01]' : 'border-transparent bg-gray-50/80 hover:bg-gray-100'
-           ]">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm"
-                     :class="level.iconBg">{{ level.icon }}
-                </div>
-                <div class="flex-1">
-                  <div class="flex justify-between items-center mb-0.5">
-                    <span class="text-sm font-black text-gray-800">{{ level.name }}</span>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/50">{{ level.impact }}</span>
-                  </div>
-                  <p class="text-[11px] text-gray-500 font-medium">{{ level.desc }}</p>
-                </div>
-                <i v-if="formData.level === level.val" class="ri-checkbox-circle-fill text-2xl drop-shadow-sm"></i>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1.5">食物单品</label>
+                <input v-model="formData.product" type="text" placeholder="吮指原味鸡" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
               </div>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1.5">消费门店/位置 (周边美食扫描)</label>
-            <div class="relative">
-              <div class="flex gap-2 relative">
-                <i class="ri-map-pin-2-line absolute left-3 top-3 text-gray-400 z-10"></i>
-                <input
-                    v-model="formData.location"
-                    type="text"
-                    placeholder="点击右侧按钮扫描附近餐厅，或手动输入..."
-                    class="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none focus:bg-white focus:border-blue-500 transition-all"
-                >
-                <button @click="fetchNearby" :disabled="isLocating"
-                        class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-4 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 flex items-center gap-1.5 shadow-md shadow-blue-500/20 disabled:opacity-70">
-                  <i :class="isLocating ? 'ri-loader-4-line animate-spin' : 'ri-radar-line text-sm'"></i>
-                  {{ isLocating ? '扫描中' : '扫描附近' }}
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1.5 flex justify-between">
+                <span>实测图片 (选填)</span>
+                <span v-if="isUploading" class="text-blue-500 animate-pulse"><i class="ri-loader-4-line animate-spin"></i> 上传中...</span>
+              </label>
+              <div @click="triggerFileInput" class="relative w-full h-32 bg-gray-50/50 border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden">
+                <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload" accept="image/*">
+                <div v-if="!formData.coverImg" class="text-center transition-transform group-hover:scale-105">
+                  <i class="ri-image-add-line text-3xl text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                  <p class="text-[11px] font-medium text-gray-400 mt-2">点击上传食物照片</p>
+                </div>
+                <img v-else :src="formData.coverImg" class="absolute inset-0 w-full h-full object-cover"/>
+                <button v-if="formData.coverImg" @click.stop="formData.coverImg = ''" class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white rounded-full p-1.5 hover:bg-red-500 transition-colors">
+                  <i class="ri-delete-bin-line text-sm"></i>
                 </button>
               </div>
+            </div>
 
-              <div v-if="poiList.length > 0"
-                   class="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-56 overflow-y-auto custom-scrollbar animate-slide-up">
-                <div
-                    class="sticky top-0 bg-gray-50/90 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold text-gray-400 border-b border-gray-100 flex justify-between">
-                  <span>为你探测到以下门店</span>
-                  <span @click="poiList = []" class="text-blue-500 cursor-pointer hover:underline">关闭</span>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1.5">评论(您感觉吃了咋样？)</label>
+              <textarea v-model="formData.content" rows="2" placeholder="比如：我只要了微辣，吃完还是拉肚子了..." class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-2">身体反馈 (做个明白人)</label>
+              <div class="space-y-2.5">
+                <div v-for="level in levels" :key="level.val" @click="formData.level = level.val" :class="['flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none', formData.level === level.val ? level.activeClass + ' shadow-md scale-[1.01]' : 'border-transparent bg-gray-50/80 hover:bg-gray-100']">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm" :class="level.iconBg">{{ level.icon }}</div>
+                  <div class="flex-1">
+                    <div class="flex justify-between items-center mb-0.5">
+                      <span class="text-sm font-black text-gray-800">{{ level.name }}</span>
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/50">{{ level.impact }}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 font-medium">{{ level.desc }}</p>
+                  </div>
+                  <i v-if="formData.level === level.val" class="ri-checkbox-circle-fill text-2xl drop-shadow-sm"></i>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1.5">消费门店/位置 (周边美食扫描)</label>
+              <div class="relative">
+                <div class="flex gap-2 relative">
+                  <i class="ri-map-pin-2-line absolute left-3 top-3 text-gray-400 z-10"></i>
+                  <input v-model="formData.location" type="text" placeholder="点击右侧按钮扫描附近餐厅，或手动输入..." class="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none focus:bg-white focus:border-blue-500 transition-all">
+                  <button @click="fetchNearby" :disabled="isLocating" class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-4 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 flex items-center gap-1.5 shadow-md shadow-blue-500/20 disabled:opacity-70">
+                    <i :class="isLocating ? 'ri-loader-4-line animate-spin' : 'ri-radar-line text-sm'"></i>
+                    {{ isLocating ? '扫描中' : '扫描附近' }}
+                  </button>
                 </div>
 
-                <div
-                    v-for="poi in poiList" :key="poi.id"
-                    @click="selectPoi(poi)"
-                    class="p-3 border-b border-gray-50 hover:bg-blue-50/50 cursor-pointer transition-colors"
-                >
-                  <div class="font-bold text-sm text-gray-800">{{ poi.title }}</div>
-                  <div class="text-[11px] text-gray-400 mt-1 flex justify-between items-center">
-                    <span class="truncate pr-2">{{ poi.address }}</span>
-                    <span class="text-blue-500 font-bold bg-blue-50 px-1.5 py-0.5 rounded">距你 {{
-                        poi._distance
-                      }}m</span>
+                <div v-if="poiList.length > 0" class="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-56 overflow-y-auto custom-scrollbar animate-slide-up">
+                  <div class="sticky top-0 bg-gray-50/90 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold text-gray-400 border-b border-gray-100 flex justify-between">
+                    <span>为你探测到以下门店</span>
+                    <span @click="poiList = []" class="text-blue-500 cursor-pointer hover:underline">关闭</span>
+                  </div>
+                  <div v-for="poi in poiList" :key="poi.id" @click="selectPoi(poi)" class="p-3 border-b border-gray-50 hover:bg-blue-50/50 cursor-pointer transition-colors">
+                    <div class="font-bold text-sm text-gray-800">{{ poi.title }}</div>
+                    <div class="text-[11px] text-gray-400 mt-1 flex justify-between items-center">
+                      <span class="truncate pr-2">{{ poi.address }}</span>
+                      <span class="text-blue-500 font-bold bg-blue-50 px-1.5 py-0.5 rounded">距你 {{ poi._distance }}m</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            <button @click="submitForm" class="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white font-black py-4 rounded-xl mt-4 shadow-lg shadow-gray-900/20 hover:shadow-xl active:scale-[0.98] transition-all">
+              🚀 发布实测情报
+            </button>
           </div>
-          <button @click="submitForm"
-                  class="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white font-black py-4 rounded-xl mt-4 shadow-lg shadow-gray-900/20 hover:shadow-xl active:scale-[0.98] transition-all">
-            🚀 发布实测情报
-          </button>
+
         </div>
       </div>
     </div>

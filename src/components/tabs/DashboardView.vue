@@ -1,7 +1,7 @@
 <template>
   <div class="bg-gray-50 min-h-screen pb-[50px] font-sans text-gray-800">
 
-    <van-nav-bar fixed placeholder z-index="50" class="shadow-sm">
+    <van-nav-bar v-show="!isChatActive" fixed placeholder z-index="50" class="shadow-sm">
       <template #left>
         <div class="flex flex-col justify-center py-1">
           <div class="flex items-center gap-1 text-blue-600 font-bold text-lg leading-none">
@@ -47,11 +47,13 @@
 
       <transition name="van-fade" mode="out-in">
         <div :key="activeTab" class="w-full">
-          <CheckinTab v-if="activeTab === 'checkin'" />
+          <SocialTab v-if="activeTab === 'circle'" @chat-active="handleChatActive" />
+          <CheckinTab v-else-if="activeTab === 'checkin'" />
 
           <PolicyMapTab v-else-if="activeTab === 'policy'" />
 
-          <CircleTab v-else-if="activeTab === 'circle'" /> <LibraryTab v-else-if="activeTab === 'library'" />
+
+          <LibraryTab v-else-if="activeTab === 'library'" />
 
           <ProfileTab v-else-if="activeTab === 'profile'" />
 
@@ -65,8 +67,14 @@
       </transition>
     </main>
 
-    <van-tabbar v-model="activeTab" fixed route active-color="#2563EB" inactive-color="#94A3B8" class="shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] border-t border-gray-100">
+    <van-tabbar v-show="!isChatActive" v-model="activeTab" class="shadow-lg border-t border-gray-100">
 
+      <van-tabbar-item name="circle" icon="friends-o" badge="3">
+        <span>小队</span>
+        <template #icon>
+          <i class="ri-team-line text-xl"></i>
+        </template>
+      </van-tabbar-item>
       <van-tabbar-item name="checkin" icon="fire-o">
         <span>情报</span>
         <template #icon>
@@ -81,12 +89,7 @@
         </template>
       </van-tabbar-item>
 
-      <van-tabbar-item name="circle" icon="friends-o" badge="3">
-        <span>小队</span>
-        <template #icon>
-          <i class="ri-team-line text-xl"></i>
-        </template>
-      </van-tabbar-item>
+
 
       <van-tabbar-item name="library" icon="label-o">
         <span>金库</span>
@@ -126,18 +129,16 @@ import CheckinTab from "@/components/tabs/CheckinTab.vue";
 import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue";
 import AdminConsoleTab from "@/components/tabs/AdminConsoleTab.vue";
 import ProfileTab from "@/components/tabs/ProfileTab.vue";
-// import CircleTab from "@/components/tabs/CircleTab.vue"; // 暂时注释，除非你创建了这个文件
-
-// 备用组件
-// import DrugMapTab from "@/components/tabs/DrugMapTab.vue";
-// import HospitalTab from "@/components/tabs/HospitalTab.vue";
 
 import http from "@/api/http.js";
-import router from "@/router/index.js";
+import SocialTab from "@/components/tabs/SocialTab.vue";
 
 const roleId = ref(localStorage.getItem('roleId') || '0')
 const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
-
+const isChatActive = ref(false)
+const handleChatActive = (active) => {
+  isChatActive.value = active // 监听子组件的消息，更新状态
+}
 // 动态标题
 const currentTabLabel = computed(() => {
   const map = {
