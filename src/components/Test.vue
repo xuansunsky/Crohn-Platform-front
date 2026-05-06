@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils'
 
 interface AuroraBackgroundProps {
   radialGradient?: boolean;
@@ -42,8 +42,8 @@ interface AuroraBackgroundProps {
 }
 
 const props = withDefaults(defineProps<AuroraBackgroundProps>(), {
-  radialGradient: true,
-});
+  radialGradient: true
+})
 </script>
 
 <style scoped>

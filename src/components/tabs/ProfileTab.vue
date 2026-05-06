@@ -280,35 +280,28 @@
 </template>
 
 <script setup>
+import { computed, onMounted, ref } from 'vue'
+import { closeToast, showToast } from 'vant'
+import http from '@/api/http.js'
 
-import http from "@/api/http.js";
-
+// 应急操作
 const triggerRecovery = () => {
-  alert('【系统级降级预案已启动】\n小轩，立刻切换全流质模式！小轩为你护航！');
-};
+  alert('【系统级降级预案已启动】\n小轩，立刻切换全流质模式！小轩为你护航！')
+}
 
 const uploadMedicalRecord = () => {
-  alert('安全加密通道已开启，准备上传病历...');
-};// 模拟用户点击切换状态
+  alert('安全加密通道已开启，准备上传病历...')
+}
 
+// 当前状态展示
+const currentPhase = ref({ name: '临床缓解期', icon: '✨', days: 128, color: '#6b46c1', bgColor: 'rgba(107, 70, 193, 0.1)' })
+const currentDiet = ref({ name: '低 FODMAP', icon: '🌿', color: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' })
+const currentGut = ref({ name: '运行平稳', icon: '🟢', color: '#16a34a', bgColor: 'rgba(22, 163, 74, 0.1)' })
 
-import {closeToast, showLoadingToast, showToast} from "vant";
-// 注意：如果你的项目按需引入了 Vant，可能需要单独引入 ActionSheet 组件
-
-// --- 1. 响应式状态 (当前显示的数据) ---
-const currentPhase = ref({ name: '临床缓解期', icon: '✨', days: 128, color: '#6b46c1', bgColor: 'rgba(107, 70, 193, 0.1)' });
-const currentDiet = ref({ name: '低 FODMAP', icon: '🌿', color: '#0d9488', bgColor: 'rgba(13, 148, 136, 0.1)' });
-const currentGut = ref({ name: '运行平稳', icon: '🟢', color: '#16a34a', bgColor: 'rgba(22, 163, 74, 0.1)' });
-
-import { ref, computed } from 'vue'
-
-// 控制徽章选择舱的开关
 const showBadgeSelector = ref(false)
-
-// 限制最多只能选 3 个挂在主页
 const MAX_BADGES = 3
 
-// 💥 我们精心捏造的“荣誉武器库”数据
+// 荣誉徽章数据
 const badgeLibrary = ref([
   { id: 1, category: '官方身份', icon: '🛡️', name: '克罗恩 V1 认证', desc: '系统初代守护者', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', selected: true },
   { id: 2, category: '官方身份', icon: '⚙️', name: '全栈架构师', desc: '代码改变命运', color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-300', selected: true },
@@ -322,44 +315,36 @@ const badgeLibrary = ref([
   { id: 8, category: '战神荣誉', icon: '🩸', name: '生物制剂老兵', desc: '抗体在血液中燃烧', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', selected: false },
 ])
 
-// 计算当前已选的数量
 const selectedCount = computed(() => badgeLibrary.value.filter(b => b.selected).length)
 
-// 点击徽章的炫酷交互逻辑
 const toggleBadge = (badge) => {
   if (badge.selected) {
-    badge.selected = false // 取消选中
+    badge.selected = false
   } else {
     if (selectedCount.value >= MAX_BADGES) {
-      // 如果超过3个，可以加个轻微的震动或者Toast提示 (这里简单return)
       console.log('最多只能装备 3 枚徽章！')
       return
     }
-    badge.selected = true // 选中
+    badge.selected = true
   }
 }
+
 const saveBadges = async () => {
-  // 1. 关闭全息舱弹窗
   showBadgeSelector.value = false
 
-  // 2. 提取出所有被选中的徽章名字 (变成一个数组，比如：['克罗恩 V1 认证', '全栈架构师'])
   const selectedNames = badgeLibrary.value
       .filter(b => b.selected)
       .map(b => b.name)
 
-  // 3. 组装 payload：后端 Java 里的 badges 字段如果是 String，我们就把它转成 JSON 字符串
   const payload = {
     badges: JSON.stringify(selectedNames)
   }
 
   try {
-    // 4. 给后端发送真枪实弹的请求 (注意路径跟你 Java 写的 Controller 对齐)
     const res = await http.post('/center/update-badges', payload)
 
-    // 假设你后端统一定义的成功 code 是 200
     if (res.data?.code === 200) {
       showToast({ type: 'success', message: '荣誉徽章装备成功！' })
-      // 💡 提示：这里前端已经自动渲染 selected 的徽章了，不需要额外刷新页面！
     } else {
       showToast({ type: 'fail', message: res.message || '装备失败，请重试' })
     }
@@ -369,56 +354,42 @@ const saveBadges = async () => {
   }
 }
 
-const currentEditType = ref(''); // 记录当前正在修改哪个模块 (phase/diet/gut)
+const currentEditType = ref('')
 
-
-// --- 响应式数据：对应 UserHealthProfile 大类 ---
 const userInfo = ref({
   nickname: '全栈架构师_小轩',
   avatar: 'https://picsum.photos/id/64/300/300',
-  userId: null // 实际上是从后端 /info 接口加载出来的
-});
+  userId: null
+})
 
-/**
- * 逻辑 A：头像更新
- * 流程：先上传拿到 URL，再调用我们的“动态大接口”
- */
 const afterRead = async (file) => {
-  // 1. 创建标准表单对象
-  const formData = new FormData();
+  const formData = new FormData()
 
-  // 2. 这里的 key 必须叫 "file"，必须和后端 @RequestParam("file") 严格对应
-  formData.append('file', file.file);
+  formData.append('file', file.file)
   try {
-    // 1. 上传文件 (假设你的 http 封装处理了 FormData 剥壳)
-    const uploadRes = await http.post('/upload', formData);
-    const newAvatarUrl = uploadRes.data;
+    const uploadRes = await http.post('/upload', formData)
+    const newAvatarUrl = uploadRes.data
 
-    // 2. 调用动态大接口，只传 avatar，后端会用 <if> 自动匹配
     await http.post('/center/update-basic', {
       avatar: newAvatarUrl
-    });
+    })
 
-    // 3. 视图层无感更新
-    userInfo.value.avatar = newAvatarUrl;
-    showToast('头像已在位 🚀');
+    userInfo.value.avatar = newAvatarUrl
+    showToast('头像已在位 🚀')
   } catch (err) {
-    showToast('链路中断');
+    showToast('链路中断')
   } finally {
-    closeToast();
+    closeToast()
   }
-};
+}
 
-/**
- * 逻辑 B：昵称更新
- */
-const showEditName = ref(false);
-const tempNickname = ref('');
+const showEditName = ref(false)
+const tempNickname = ref('')
 const openEditName = () => {
-  tempNickname.value = userInfo.value.nickname;
-  showEditName.value = true;
-};
-import { onMounted } from 'vue';
+  tempNickname.value = userInfo.value.nickname
+  showEditName.value = true
+}
+
 const activeSheetType = ref('')
 
 // 动态弹窗的标题字典
@@ -428,7 +399,7 @@ const sheetTitles = {
   gut:   '生物反馈：记录肠道状态'
 }
 
-// 💥 状态武器库：未来你可以无限往里面加选项！
+// 状态选项库
 const statusLibrary = ref({
   phase: [
     { id: 'p1', icon: '✨', name: '临床缓解期', desc: '指标正常，岁月静好', color: 'text-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-200' },
@@ -482,7 +453,7 @@ const selectStatus = (item) => {
     activeSheetType.value = ''
   }, 300)
 
-  // 5. 🚀 无感发送请求！(这里不用 await，因为不阻塞 UI，让它在后台默默发)
+  // 后台同步状态，不阻塞当前交互
   http.post('/center/update-status', payload).then(res => {
     // 可以静默成功，什么都不提示，或者在控制台打印一下
     console.log(`[系统日志] ${item.name} 状态已同步至云端`)

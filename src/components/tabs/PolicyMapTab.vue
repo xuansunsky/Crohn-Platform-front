@@ -647,78 +647,75 @@
 </template>
 
 <script setup>
-// 👇 放在 <script setup> 里 👇
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import * as echarts from 'echarts'
+import chinaJson from '@/assets/map/china.json'
+import http from '@/api/http.js'
 
-// 1. 控制编辑抽屉的开关
+// 编辑抽屉状态
 const showEditDrawer = ref(false)
+const fileInputRef = ref(null)
 const drugOptions = [
   { key: 'rinvoq', name: '乌帕替尼 (Rinvoq)', icon: 'ri-capsule-fill', color: 'text-blue-600' },
   { key: 'adalimumab', name: '阿达木单抗 (修美乐等)', icon: 'ri-syringe-line', color: 'text-green-600' },
-  { key: 'stelara', name: '输液单抗 (乌斯奴/古塞奇尤)', icon: 'ri-drop-line', color: 'text-purple-600' }, // 这里的名字你可以按需改
+  { key: 'stelara', name: '输液单抗 (乌斯奴/古塞奇尤)', icon: 'ri-drop-line', color: 'text-purple-600' },
   { key: 'nutrition', name: '全肠内营养 (能全素/安素)', icon: 'ri-cup-line', color: 'text-orange-600' }
 ]
-// 2. 表单数据模型 (对应你后端的字段)
+
 const editForm = reactive({
-  mente: false,       // 门特病种 (布尔值)
-  dualChannel: false,        // 双通道 (布尔值)
-  dualRatio: 0,         // 报销比例 (数字)
+  mente: false,
+  dualChannel: false,
+  dualRatio: 0,
   summary: '',
   evidenceList: [],
   dualNote: '',
-  // 🔥 新增：复杂计算字段
-  deductible: 0,        // 起付线 (元)
-  nominalRatio: 80,     // 官方名义比例 (%)
-  hiddenSelfPay: 0,     // 隐形自付比例 (%, 也就是那个不能报的15%)
+  deductible: 0,
+  nominalRatio: 80,
+  hiddenSelfPay: 0,
   drugs: drugOptions.map(d => ({
     key: d.key,
     name: d.name,
-    icon: d.icon,    // ✅ 确保图标存在
-    color: d.color,  // ✅ 确保颜色存在
+    icon: d.icon,
+    color: d.color,
     status: 'unknown',
     phone: '',
     comment: ''
   }))
 })
+
 const calculatedRealRatio = computed(() => {
   const real = editForm.nominalRatio * (100 - editForm.hiddenSelfPay) / 100
-  return Math.round(real) // 取整
+  return Math.round(real)
 })
+
 const triggerUpload = () => {
   fileInputRef.value.click()
 }
 
-// 🔥 处理文件选择 (核心)
 const handleFileChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // 1. 限制大小 (5MB)
   if (file.size > 5 * 1024 * 1024) {
     alert('图片太大了，请上传 5MB 以内的图片')
     return
   }
 
-  // 2. 准备包裹
   const formData = new FormData()
-  formData.append('file', file) // 这里的 'file' 要跟后端 @RequestParam("file") 对应
+  formData.append('file', file)
 
   try {
-    // 🔥 3. 发送请求 (加上 await 等待结果)
     const res = await http.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
-console.log(res)
-    // 🔥 4. 解析后端返回的数据
-    // 假设后端结构是: { code: 200, data: { url: "http://..." } }
+    console.log(res)
+
     if (res.status === 200) {
-      // 拿到真链接！不是本地的假链接了
       const serverUrl = res.data
 
       console.log('上传成功，后端返回地址:', serverUrl)
-
-      // 5. 塞进数组，页面立马显示
       editForm.evidenceList.push(serverUrl)
     } else {
       alert('上传失败: ' + res.data.msg)
@@ -727,67 +724,49 @@ console.log(res)
     console.error('上传炸了:', error)
     alert('网络或者权限出了问题，看看控制台报错')
   } finally {
-    // 6. 无论成功失败，都把 input 清空，防止选同一张图没反应
     event.target.value = ''
   }
 }
-// 🔥 删除图片
+
 const removeImage = (index) => {
   editForm.evidenceList.splice(index, 1)
 }
+
 // 监听计算结果，自动同步给 dualRatio
 watch(calculatedRealRatio, (val) => {
   editForm.dualRatio = val
 })
-// 3. 打开编辑抽屉 (把当前数据填进去)
+
 const openEditDialog = () => {
   editForm.mente = currentPolicy.value.mente || false
   editForm.dualChannel = currentPolicy.value.dualChannel || false
   editForm.dualRatio = currentPolicy.value.dualRatio || 0
   editForm.summary = currentPolicy.value.summary || ''
   editForm.dualNote = currentPolicy.value.dualNote || ''
-  editForm.evidenceList=currentPolicy.value.evidenceList||''
-      editForm.deductible=currentPolicy.value.deductible||''
+  editForm.evidenceList = currentPolicy.value.evidenceList || ''
+  editForm.deductible = currentPolicy.value.deductible || ''
   showEditDrawer.value = true
 }
 
-// 4. 提交保存 (这里对接你后端的 API)
 const submitEdit = async () => {
-
-  // 1. 组装数据 payload
   const payload = {
-    // 📍 上下文定位
     cityName: selectedArea.name,
     policyType: activeType.value,
-
-    // 🕒 自动生成今天的时间
     updateTime: new Date().toISOString().split('T')[0],
-
-    // 👤 🔥 核心修改：编一个名字！
-    // 加个随机数，这样你在演示“历史版本”时，列表里会有不同的人，显得平台很火！
     nickname: '热心战友_' + Math.floor(Math.random() * 1000),
     userId: 0, // 游客 ID
-
-    // 📝 把表单里的数据 (报销比例、门特、图片...) 全部展开塞进去
     ...editForm
   }
 
-  // 2. 打印看看，心里有底
   console.log('🚀 准备发射数据:', payload)
 
   try {
-    // 🔥 发起真提交！POST /api/policy/save
     const res = await http.post('/policy/save', payload)
 
     if (res.code === 200) {
-      // 🎉 成功！
       alert('提交成功！你的贡献已被记录！')
-      showEditDrawer.value = false // 关掉编辑框
-
-      // ✨✨✨ 见证奇迹的时刻 ✨✨✨
-      // 马上重新拉取数据，页面上的报销比例、名字、时间瞬间变成你刚才填的！
+      showEditDrawer.value = false
       await loadPolicyData(selectedArea.name)
-
     } else {
       alert('提交失败: ' + res.msg)
     }
@@ -796,19 +775,13 @@ const submitEdit = async () => {
     alert('网络连接失败，请稍后再试')
   }
 }
-import {ref, onMounted, reactive, computed, watch} from 'vue'
-import * as echarts from 'echarts'
-import chinaJson from '@/assets/map/china.json'
-import http from "@/api/http.js";
-// 控制手机端聊天抽屉的开关
+
+// 地图与详情状态
 const showMobileChat = ref(false)
-// --- 状态 ---
 const chartRef = ref(null)
 let myChart = null
 const currentMap = ref('china')
 
-// 🔥 核心状态：是否显示详情面板
-// 当这个为 true 时，地图隐藏，显示详情页
 const showDetailPanel = ref(false)
 
 // 医保类型配置
@@ -819,7 +792,6 @@ const policyTypes = [
 ]
 const activeType = ref('employee')
 
-// 当前选中的区域信息
 const selectedArea = reactive({
   name: '',
   data: {
@@ -829,33 +801,25 @@ const selectedArea = reactive({
   }
 })
 
-// 计算属性
 const currentPolicy = ref({})
 
 const switchType = (key) => {
   activeType.value = key
-
-  // 👇 记得加这行！切换 Tab 时，重新去后端拉这个类型的数据
   loadPolicyData(selectedArea.name)
 }
 
-// 关闭详情页，回到地图（但不一定是回全国，可能是回省图）
 const closeDetailPanel = () => {
   showDetailPanel.value = false
-  // 此时地图容器 v-show 会变回 true，ECharts 依然健在
-  // 稍微延迟一下 resize，防止布局变化导致图表变形
   setTimeout(() => myChart && myChart.resize(), 100)
 }
 
-// 返回全国
 const backToChina = () => {
   currentMap.value = 'china'
   selectedArea.name = ''
-  showDetailPanel.value = false // 确保关闭详情
+  showDetailPanel.value = false
   renderMap('china')
 }
 
-// 数据加载逻辑 (和之前一样，不改动)
 const cleanData = (backendData) => {
   if (!backendData) return { hasData: false }
   return {
@@ -883,7 +847,6 @@ const loadPolicyData = async (areaName) => {
   currentPolicy.value = { hasData: false }
 
   try {
-    // 🔥 发起请求
     const res = await http.get('/policy/detail', {
       params: { city: areaName, type: type }
     })
@@ -981,8 +944,7 @@ const initMap = () => {
           console.log('✅ 下钻成功！')
 
         } catch (e) {
-          // 🔥 修正点：如果地图文件没有，不要直接弹窗，而是给个提示
-          // 这样你就知道是逻辑坏了，还是文件没了
+          // 地图文件缺失时，回退到政策详情
           console.error('❌ 下钻失败:', e)
           alert(`正在建设【${params.name}】的地图数据，暂为您展示政策列表。`)
 
@@ -1026,8 +988,6 @@ const renderMap = (mapName) => {
 
     geo: {
       map: mapName,
-
-      // 🔥🔥🔥 核心手感优化区 🔥🔥🔥
 
       // 1. 开启漫游 (缩放 + 平移)
       roam: true,
@@ -1158,12 +1118,11 @@ const openHistoryDrawer = async () => {
     console.error('网络请求炸了:', e);
   }
 }
-const fileInputRef = ref(null)
 // 简单的看图 (暂时用新窗口打开，省事)
 const previewImage = (url) => {
   window.open(url, '_blank')
 }
-// 🔥 核心动作：切换版本 (点击列表某一项)
+// 切换历史版本
 const switchVersion = async (item) => {
   console.log('正在切换到版本 ID:', item.id); // 打印一下，看看是不是那个 ID
 
@@ -1175,7 +1134,7 @@ const switchVersion = async (item) => {
     });
 
     if (res.code === 200 && res.data) {
-      // 2. 🔥 核心瞬间：把当前页面的数据，替换成查回来的旧版本数据
+      // 用历史版本数据替换当前详情
       currentPolicy.value = res.data
       console.log(currentPolicy)
       // 3. 关掉抽屉 (完事拂衣去)

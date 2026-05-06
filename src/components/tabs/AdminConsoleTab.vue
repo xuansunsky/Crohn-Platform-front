@@ -83,15 +83,14 @@
 </template>
 
 <script setup>
-// JS 逻辑完全保留，只需专注于样式重构
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
-import {getAllUsers, updaterole} from "@/api/user.js";
+import { getAllUsers, updaterole } from '@/api/user.js'
 
 const router = useRouter()
 const userList = ref([])
-const myId = ref(1) // 你自己的 ID
+const myId = ref(1)
 
 const fetchUsers = async () => {
   try {
@@ -115,5 +114,4 @@ const promote = (u) => updateRole(u.id, 1)
 const demote = (u) => updateRole(u.id, 2)
 
 onMounted(fetchUsers)
-
 </script>

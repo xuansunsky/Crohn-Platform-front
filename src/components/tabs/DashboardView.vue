@@ -120,30 +120,28 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { showConfirmDialog, showToast } from 'vant';
-
-// 引入组件 (确保路径对)
-import LibraryTab from "@/components/tabs/LibraryTab.vue";
-import CheckinTab from "@/components/tabs/CheckinTab.vue";
-import PolicyMapTab from "@/components/tabs/PolicyMapTab.vue";
-import AdminConsoleTab from "@/components/tabs/AdminConsoleTab.vue";
-import ProfileTab from "@/components/tabs/ProfileTab.vue";
-
-import http from "@/api/http.js";
-import SocialTab from "@/components/tabs/SocialTab.vue";
+import { computed, onMounted, ref, watch } from 'vue'
+import { showConfirmDialog, showToast } from 'vant'
+import LibraryTab from '@/components/tabs/LibraryTab.vue'
+import CheckinTab from '@/components/tabs/CheckinTab.vue'
+import PolicyMapTab from '@/components/tabs/PolicyMapTab.vue'
+import AdminConsoleTab from '@/components/tabs/AdminConsoleTab.vue'
+import ProfileTab from '@/components/tabs/ProfileTab.vue'
+import SocialTab from '@/components/tabs/SocialTab.vue'
+import http from '@/api/http.js'
 
 const roleId = ref(localStorage.getItem('roleId') || '0')
 const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
 const isChatActive = ref(false)
+
 const handleChatActive = (active) => {
-  isChatActive.value = active // 监听子组件的消息，更新状态
+  isChatActive.value = active
 }
-// 动态标题
+
 const currentTabLabel = computed(() => {
   const map = {
     checkin: '星光打卡',
-    policy: '医保地图', // 回来了！
+    policy: '医保地图',
     circle: '战术小队',
     library: '经验金库',
     profile: '个人中心',

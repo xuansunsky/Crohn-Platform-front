@@ -360,9 +360,13 @@
 </template>
 
 <script setup>
-// --- 💥 社交名片矩阵数据配置 ---
-const showProfileConfig = ref(false);
-// 1. 首要诉求 (单选)
+import { nextTick, onMounted, ref } from 'vue'
+import http from '@/api/http'
+
+const emit = defineEmits(['chat-active'])
+
+// 社交名片配置
+const showProfileConfig = ref(false)
 const mainPurposes = [
   { id: 'food', icon: '🍲', label: '找饭搭子' },
   { id: 'chat', icon: '🫂', label: '情绪树洞' },
@@ -371,7 +375,7 @@ const mainPurposes = [
 ]
 const selectedPurpose = ref('food')
 
-// 2. 兴趣状态网格 (类似 Soul 的大圆圈, 最多选3个)
+// 兴趣状态网格，最多选 3 个
 const lifeTags = [
   { id: 't1', icon: '✨', label: '临床缓解' },
   { id: 't2', icon: '🛡️', label: '造口战神' },
@@ -385,30 +389,26 @@ const lifeTags = [
 const selectedTags = ref(['t1', 't4'])
 const broadcastSign = ref('97年 · 金牛座 · 正在寻找能一起吃火锅的病友！')
 
-// 选择标签逻辑（控制在3个以内）
 const toggleTag = (id) => {
   const idx = selectedTags.value.indexOf(id)
   if (idx > -1) {
-    selectedTags.value.splice(idx, 1) // 取消选中
+    selectedTags.value.splice(idx, 1)
   } else {
     if (selectedTags.value.length >= 3) {
-      selectedTags.value.shift() // 满了3个，就把最早选的那个挤掉
+      selectedTags.value.shift()
     }
-    selectedTags.value.push(id) // 选中
+    selectedTags.value.push(id)
   }
 }
 
-// 你要在 script setup 里定义好这 5 种高级渐变色字符串
 const premiumsGradients = [
   'bg-gradient-to-br from-pink-500/80 to-purple-600/90', // 1: 霓虹夕阳
   'bg-gradient-to-br from-cyan-400 to-blue-600',       // 2: 冰蓝海岸
   'bg-gradient-to-br from-green-400 to-emerald-600',   // 3: 荧光竹林
   'bg-gradient-to-br from-orange-500 to-red-600',     // 4: 火焰珊瑚
   'bg-gradient-to-br from-indigo-500 to-pink-600',     // 5: 薰衣草之夜
-];
+]
 
-// 💥 替换你之前的 mockPatients，加上了 cover 高清大图
-// 💥 绝不吓人的高颜值假数据
 const mockPatients = [
   {
     id: 1,
@@ -452,15 +452,13 @@ const mockPatients = [
   }
 ]
 
-// 💥 替换你之前的 openRadar 函数，删掉 setTimeout，实现“闪电加载”
 const openRadar = () => {
   emit('chat-active', true)
   showRadarModal.value = true
   selectedPatient.value = null
-  // 不等了！直接把 mockPatients 赋值给 foundPatients，瞬间渲染瀑布流
   foundPatients.value = mockPatients
 }
-// 极具质感的假数据 (加入了 cover 背景大图)
+
 const foundPatients = ref([
   {
     id: 1,
@@ -501,27 +499,16 @@ const foundPatients = ref([
   }
 ])
 
-// 准备一波精选的高频表情包 (纯文本)
 const emojis = ['😀', '😂', '🤣', '😊', '😍', '😒', '😘', '😁', '😭', '😎', '😢', '😡', '👍', '🙏', '🎉', '❤️', '🔥', '💩', '👻', '💊']
 
-// 点击表情，直接塞进输入框
 const appendEmoji = (emoji) => {
   inputMsg.value += emoji
-  // 保持焦点，方便继续打字
 }
 
-import {nextTick, onMounted, ref} from 'vue'
-import http from '@/api/http'
-const emit = defineEmits(['chat-active'])
-
-// ... 保留你之前定义的 premiumsGradients, emojis 等常量 ...
-// 弹窗开关
-const isScanning = ref(true)      // 阶段一：是否正在扫描 // 阶段二：扫描到的病友列表
-const selectedPatient = ref(null) // 阶段三：当前点选的病友
-
-
-// 💥 1. 新增：控制当前处于哪个 Tab 页 (默认会话)
-const currentTab = ref('chat') // 可选值: 'chat', 'contacts', 'todo'
+// 雷达与聊天状态
+const isScanning = ref(true)
+const selectedPatient = ref(null)
+const currentTab = ref('chat')
 const showRadarModal = ref(false)
 const currentView = ref('list')
 const showFabMenu = ref(false)
@@ -533,14 +520,11 @@ const inputMsg = ref('')
 const chatHistory = ref([])
 let socket = null
 
-// 💥 2. 新增联络人相关状态
-const chatList = ref([]) // 我的好友列表
-const pendingRequests = ref([]) // 别人加我的申请列表
-const newFriendId = ref('') // 准备添加的特工 ID
+// 联络人状态
+const chatList = ref([])
+const pendingRequests = ref([])
+const newFriendId = ref('')
 
-// --- 后端接口对接区域 ---
-
-// 获取我的好友
 const loadFriends = async () => {
   try {
     const res = await http.get('/friend/list')
@@ -560,7 +544,6 @@ const loadFriends = async () => {
   }
 }
 
-// 💥 获取谁想加我 (申请列表)
 const loadPendingRequests = async () => {
   try {
     const res = await http.get('/friend/requests')
@@ -572,7 +555,6 @@ const loadPendingRequests = async () => {
   }
 }
 
-// 💥 发送好友申请
 const sendFriendRequest = async () => {
   if (!newFriendId.value) return
   try {
@@ -589,7 +571,6 @@ const sendFriendRequest = async () => {
   }
 }
 
-// 💥 同意好友申请
 const acceptRequest = async (id) => {
   try {
     console.log(id)
@@ -605,14 +586,12 @@ const acceptRequest = async (id) => {
   }
 }
 
-// ... 保留你原来的 openChat, closeChat, sendMessage, initWebSocket, scrollToBottom 等方法 ...
-
 onMounted(() => {
   initWebSocket()
   loadFriends()
-  loadPendingRequests() // 💥 页面加载时拉取申请列表
+  loadPendingRequests()
 })
-// 💥 2. 配置你的扩展功能列表（支持随时增删）
+
 const plusMenuItems = [
   { icon: 'ri-image-2-line', label: '相册', color: 'text-blue-500' },
   { icon: 'ri-camera-3-line', label: '拍摄', color: 'text-slate-700' },
@@ -692,7 +671,7 @@ const initWebSocket = () => {
         content: event.data,
         type: 'text'
       })
-        scrollToBottom()
+      scrollToBottom()
     }
   }
 

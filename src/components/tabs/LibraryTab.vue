@@ -107,11 +107,13 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import ExperienceCard from "@/components/ExperienceCard.vue"
-import {useAuth} from "@/components/useAuth.js";
-import {statsBuffer as currentUserId} from "motion-v";
+import ExperienceCard from '@/components/ExperienceCard.vue'
+import { useAuth } from '@/components/useAuth.js'
+import { statsBuffer as currentUserId } from 'motion-v'
+
 const { checkPermission } = useAuth()
-// === 1. 数据源 ===
+
+// 数据源
 const libraryItems = ref([
   {
     id: 1,
@@ -136,11 +138,8 @@ const libraryItems = ref([
   }
 ])
 const deleteCard = (id) => {
-  // 弹个窗确认一下，防止手滑
   if (!confirm('兄弟，确定要把这条经验从金库里移除吗？')) return
 
-  // 简单粗暴：把这个 id 的项过滤掉
-  // (如果是真实后端，这里要写 await axios.delete(`/posts/${id}`))
   libraryItems.value = libraryItems.value.filter(item => item.id !== id)
 }
 
@@ -148,32 +147,31 @@ const publishPost = () => {
   if (!newPost.title) return alert('兄弟，写个标题呗！')
 
   const postData = {
-    userId: currentUserId.value, // 告诉后端是谁写的
+    userId: currentUserId.value,
     title: newPost.title,
     summary: newPost.summary,
     icon: newPost.icon,
     theme: newPost.theme,
-    tags: newPost.tags, // 确保后端能存数组（或者转成逗号分隔字符串）
+    tags: newPost.tags,
   }
 
   libraryItems.value.unshift(newItem)
   closeModal()
 }
-// === 2. 弹窗控制 ===
+
 const showModal = ref(false)
 
-// === 3. 新建帖子的临时数据 (这是双向绑定的核心) ===
 const newPost = reactive({
   id: null,
-  theme: 'neon', // 默认选中 neon
+  theme: 'neon',
   title: '',
   summary: '',
   icon: '✍️',
-  tags: ['新故事'], // 暂时写死，后面可以做标签输入
+  tags: ['新故事'],
   date: '2025.12.23'
 })
 
-// === 4. 皮肤配置 (用于渲染选择器的小方块) ===
+// 皮肤配置
 const availableThemes = [
   { name: 'Neon', value: 'neon', bgPreview: '#0f172a', textColor: '#fff' },
   { name: 'Glass', value: 'glass', bgPreview: '#e2e8f0', textColor: '#334155' },
@@ -185,9 +183,7 @@ const availableThemes = [
   { name: 'DeepSea', value: 'deepsea', bgPreview: 'linear-gradient(to bottom, #164e63, #000)', textColor: '#67e8f9' },
 ]
 
-// === 5. 方法 ===
 const openModal = () => {
-  // 重置表单
   newPost.title = ''
   newPost.summary = ''
   newPost.theme = 'neon'

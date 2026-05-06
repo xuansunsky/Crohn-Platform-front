@@ -53,5 +53,5 @@
 </template>
 
 <script setup lang="ts">
-import { CardContainer, CardBody, CardItem } from "@/components/ui/card-3d";
+import { CardBody, CardContainer, CardItem } from '@/components/ui/card-3d'
 </script>
