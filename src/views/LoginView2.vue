@@ -84,13 +84,10 @@
 
 </template>
 <script setup>
-import {loginUser} from "@/api/user.js";
-
-const showSuccessAlert = ref(false)
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router' // 引入路由
-import axios from 'axios'
-import CyberAlert from "@/components/CyberAlert.vue"; // 引入 axios (确保你 npm install axios 了)
+import { useRouter } from 'vue-router'
+import { loginUser } from '@/api/user.js'
+import CyberAlert from '@/components/CyberAlert.vue'
 
 const router = useRouter()
 
@@ -102,6 +99,7 @@ const loading = ref(false)
 const error = ref('')
 const isHovered = ref(false)
 const heroHover = ref(false)
+const showSuccessAlert = ref(false)
 
 // 校验规则
 const canSubmit = computed(() =>
@@ -113,52 +111,40 @@ function goRegister() {
   router.push('/register')
 }
 
-// ✅ 真正的登录逻辑
+// 登录逻辑
 async function submit() {
   if (!canSubmit.value || loading.value) return
 
-  // 1. 重置状态
   error.value = ''
   loading.value = true
 
   try {
-    // 2. 发送请求给你的 Spring Boot 后端
-    // 注意：这里用 '/api' 是假设你配置了 vite 代理，如果没有，就写 'http://localhost:8080/users/login'
-    const response = await loginUser( {
-      phoneNumber: phone.value, // ⚠️ 关键：后端 User 对象里叫 phoneNumber，前端变量叫 phone，这里要对应上！
+    const response = await loginUser({
+      phoneNumber: phone.value,
       password: password.value
     })
 
-     // 拿到 ApiResponse
-
-    // 3. 判断后端返回的状态码 (假设你后端成功是 200)
     if (response.status === 200) {
-      // 🎉 登录成功！
-      // A. 把 Token 存进保险箱 (LocalStorage)
-      const res = response.data // 你的 ApiResponse 把 token 放在 data
+      const res = response.data
       localStorage.setItem('token', res.token)
       localStorage.setItem('roleId', res.roleId)
       localStorage.setItem('userId', res.userId)
-      localStorage.setItem('nickname',res.nickname)
+      localStorage.setItem('nickname', res.nickname)
       showSuccessAlert.value = true
       console.log("前端热更新成功")
 
-      // C. 穿越！前往仪表盘
       setTimeout(async () => {
         await router.push('/dashboard')
       }, 1500)
 
     } else {
-      // 😭 业务逻辑失败 (比如密码错了)
       error.value = response.message || '登录失败，请检查账号密码'
     }
 
   } catch (err) {
-    // 💥 网络崩了，或者后端报错 500
     console.error(err)
     error.value = '连接王国的通道拥堵，请稍后再试 (网络错误)'
   } finally {
-    // 4. 无论成功失败，都要停止转圈圈
     loading.value = false
   }
 }

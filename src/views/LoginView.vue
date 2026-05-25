@@ -14,8 +14,6 @@
         <p class="sub"><span class="clickable" @click="goToLoginView2">🌹点击进入！</span></p>
       </section>
 
-      <!-- 右侧：登录卡片 -->
-
     </main>
   </div>
 </template>
@@ -31,9 +29,12 @@ const showPass = ref(false)
 const loading = ref(false)
 const error = ref('')
 const year = new Date().getFullYear()
+
+// 跳转到新版登录页
 const goToLoginView2 = () => {
-  router.push({ name: 'LoginView2' })  // 跳转到 LoginView2
+  router.push({ name: 'LoginView2' })
 }
+
 const canSubmit = computed(() => phone.value.length === 11 && password.value.length > 0)
 
 async function submit () {
@@ -63,7 +64,7 @@ async function submit () {
 </script>
 
 <style scoped>
-/* 主题色（想换风格只改这里） */
+/* 主题色 */
 :root{
   --ink:#0f172a;           /* 深色文字 */
   --card-bg: rgba(255,255,255,1);
@@ -84,37 +85,25 @@ async function submit () {
   inset: 0;
   z-index: -2;
   background-color: #0b1220; /* 边缘留黑/深色基底 */
-  /* 删掉会让画面发软的小放大 */
-  /* transform: scale(1.02); */
 }
 
-/* 用伪元素放图：限制最大宽度 = 1080，不放大就不糊 */
+/* 背景图 */
 .bg::before{
   content: "";
   position: absolute; inset: 0;
   background: url("/img/bg-stars.png") center no-repeat;
+  background-size: cover;
+}
 
-  /* 把下面这行： */
-  /* background-size: clamp(320px, 100vw, 1080px) auto; */
-
-  /* 换成这行： */
-  background-size: cover;}
-
-  /* `margin: 0 auto;` 这一行现在也不需要了，可以删掉，cover 会自动处理居中 */
-  /* margin: 0 auto; */
-
-/* 暖色罩层：只做颜色，不做模糊（模糊会把后面的图一起糊掉） */
+/* 暖色罩层 */
 .overlay{
   position: fixed; inset: 0; z-index: -1;
   background:
       radial-gradient(1200px circle at 10% 20%, rgba(255,237,213,.55), transparent 60%),
       linear-gradient(120deg, rgba(255,184,108,.28), rgba(255,107,107,.18));
-  /* 不要 blur */
-  /* backdrop-filter: blur(2px); */
-  /* -webkit-backdrop-filter: blur(2px); */
 }
 
-/* 布局：两栏（左文案/右表单），小屏自动一栏居中 */
+/* 页面布局 */
 .wrap{
   display:grid;
   grid-template-columns: 1fr min(460px, 92vw);
@@ -132,11 +121,11 @@ async function submit () {
   transform:translate(300px,10px);
   text-align: center; /* 文本水平居中 */
   display: flex; /* 使用 flexbox 让内容居中 */
-  flex-direction: column; /* 垂直排列文字和图片 */
+  flex-direction: column;
   justify-content: center; /* 垂直居中 */
   align-items: center; /* 水平居中 */
   max-width: 720px;
-  margin: 0 auto; /* 确保它居中 */
+  margin: 0 auto;
   height: 100vh; /* 让容器高度充满屏幕 */
 }
 .hero-art{

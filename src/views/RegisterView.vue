@@ -91,7 +91,10 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerUser } from '@/api/user'
+
 const router = useRouter()
+
+// 表单状态
 const nickname = ref('')
 const phone = ref('')
 const password = ref('')
@@ -100,7 +103,7 @@ const showPass = ref(false)
 const loading = ref(false)
 const error = ref('')
 
-// 校验：昵称非空、手机号合法、密码一致且 ≥6 位
+// 校验规则
 const canSubmit = computed(() =>
     nickname.value &&
     /^1[3-9]\d{9}$/.test(phone.value) &&
@@ -111,27 +114,24 @@ const canSubmit = computed(() =>
 // 注册逻辑
 async function register() {
   if (!canSubmit.value || loading.value) return
+
   loading.value = true
   error.value = ''
 
   try {
-    // ✅ 真实后端请求
-    const resData  = await registerUser({
-      nickname: nickname.value,      // 👈 跟后端字段对上
+    const resData = await registerUser({
+      nickname: nickname.value,
       phoneNumber: phone.value,
       password: password.value
     })
 
-    // 成功
     if (resData.status === 200) {
       alert('注册成功！✨ 欢迎加入克罗恩王国')
       await router.push('/login2')
     } else {
-      // 后端返回错误信息
       error.value = resData.message || '注册失败，请稍后重试'
     }
   } catch (err) {
-    // 网络或服务器异常
     console.error('注册请求出错：', err)
     error.value = '网络异常，请稍后再试 ⚠️'
   } finally {
