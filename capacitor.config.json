@@ -1,0 +1,13 @@
+{
+  "appId": "com.xuan.crohnplatform",
+  "appName": "CrohnPlatform",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": false
+    }
+  },
+  "server": {
+    "androidScheme": "http"
+  }
+}

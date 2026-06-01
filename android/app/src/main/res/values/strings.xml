@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CrohnPlatform</string>
+    <string name="title_activity_main">CrohnPlatform</string>
+    <string name="package_name">com.xuan.crohnplatform</string>
+    <string name="custom_url_scheme">com.xuan.crohnplatform</string>
+</resources>
