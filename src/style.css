@@ -64,3 +64,59 @@
     --ring: 224.3 76.3% 48%;
   }
 }
+
+@layer utilities {
+  /* 暖风疗愈系毛玻璃拟态容器 */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(142, 156, 175, 0.12);
+  }
+
+  /* 暖柔色渐变背景，给患者视觉解压 */
+  .glass-bg {
+    background: linear-gradient(135deg, #fefcf6 0%, #f2f8f6 50%, #ebf3fe 100%);
+    min-height: 100vh;
+  }
+
+  /* 带有呼吸感的光晕背景装饰 */
+  .glass-glow {
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-glow::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(254, 215, 170, 0.4) 0%, rgba(254, 215, 170, 0) 70%);
+    top: -50px;
+    right: -100px;
+    filter: blur(40px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .glass-glow::after {
+    content: '';
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(147, 197, 253, 0.3) 0%, rgba(147, 197, 253, 0) 70%);
+    bottom: -100px;
+    left: -100px;
+    filter: blur(50px);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* 暗黑模式下的毛玻璃效果 */
+  .dark .glass-card {
+    background: rgba(20, 24, 35, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+}

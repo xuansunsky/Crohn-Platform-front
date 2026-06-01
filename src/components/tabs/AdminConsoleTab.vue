@@ -13,8 +13,45 @@
                    drop-shadow-[0_2px_10px_rgba(255,184,108,0.3)]">
           皇家名册
         </h1>
-        <p class="text-sm text-white/60 mt-2 tracking-widest uppercase">Kingdom Permission Control</p>
+        <p class="text-sm text-white/60 mt-2 tracking-widest uppercase">Paradise Permission Control</p>
       </header>
+
+      <!-- IBD 战友认证审核 -->
+      <section class="mb-10">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="ri-shield-check-fill text-[#ffb86c] text-lg"></i>
+          <h2 class="text-lg font-bold text-white/90">战友认证审核</h2>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#ffb86c]/20 text-[#ffb86c]">{{ pendingList.length }} 待审</span>
+        </div>
+
+        <p v-if="pendingList.length === 0" class="text-sm text-white/40 py-6 text-center">暂无待审核的认证申请</p>
+
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div v-for="v in pendingList" :key="v.userId"
+               class="rounded-2xl bg-black/20 border border-white/10 p-4 flex gap-4">
+            <a :href="v.proofImageUrl" target="_blank" class="shrink-0">
+              <img :src="v.proofImageUrl" class="w-24 h-24 rounded-xl object-cover bg-black/40 border border-white/10">
+            </a>
+            <div class="flex-1 min-w-0 flex flex-col">
+              <div class="flex items-center gap-2">
+                <img v-if="v.avatar" :src="v.avatar" class="w-6 h-6 rounded-full object-cover">
+                <span class="font-bold text-white/90 truncate">{{ v.nickname || ('用户 ' + v.userId) }}</span>
+              </div>
+              <p class="text-[11px] text-white/40 mt-1">点击左侧大图核验证明材料</p>
+              <div class="flex gap-2 mt-auto pt-3">
+                <button @click="review(v.userId, true)"
+                        class="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all">
+                  <i class="ri-check-line"></i> 通过
+                </button>
+                <button @click="review(v.userId, false)"
+                        class="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white transition-all">
+                  <i class="ri-close-line"></i> 驳回
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -85,12 +122,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import { getAllUsers, updaterole } from '@/api/user.js'
+import http from '@/api/http'
 
 const router = useRouter()
 const userList = ref([])
 const myId = ref(1)
+const pendingList = ref([])
 
 const fetchUsers = async () => {
   try {
@@ -113,5 +151,28 @@ const updateRole = async (userId, roleId) => {
 const promote = (u) => updateRole(u.id, 1)
 const demote = (u) => updateRole(u.id, 2)
 
-onMounted(fetchUsers)
+const fetchPending = async () => {
+  try {
+    const res = await http.get('/verify/pending')
+    if (res.status === 200 && res.data) pendingList.value = res.data
+  } catch (err) {
+    console.error('获取认证申请失败', err)
+  }
+}
+
+const review = async (userId, approve) => {
+  try {
+    const res = await http.post('/verify/review', { userId, approve })
+    if (res.status === 200) {
+      pendingList.value = pendingList.value.filter(v => v.userId !== userId)
+    }
+  } catch (err) {
+    console.error('审核失败', err)
+  }
+}
+
+onMounted(() => {
+  fetchUsers()
+  fetchPending()
+})
 </script>

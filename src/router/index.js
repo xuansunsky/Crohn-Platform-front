@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'
 import LoginView2 from '../views/LoginView2.vue'
 import RegisterView from '../views/RegisterView.vue'
 import DashboardView from '../components/tabs/DashboardView.vue'
@@ -11,8 +10,8 @@ import LiuShi666 from '@/components/ui/LiuShi666.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/login' },
-    { path: '/login', name: 'login', component: LoginView },
+    { path: '/', redirect: '/login2' },
+    { path: '/login', redirect: '/login2' },
     { path: '/login2', name: 'LoginView2', component: LoginView2 },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/dashboard', name: 'dashboard', component: DashboardView },

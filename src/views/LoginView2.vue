@@ -7,7 +7,7 @@
     <CyberAlert
         v-if="showSuccessAlert"
         title="身份验证通过"
-        msg="welcome back to Kingdom,Architect-Xuan！"
+        msg="welcome back to Paradise,Architect-Xuan！"
     />
     <!-- 登录卡片 -->
     <main class="login-card" :class="{ 'floating': isHovered }">
@@ -17,7 +17,7 @@
       </div>
 
       <h1 class="title">
-        <span class="gradient-text">Crohn Disease Kingdom</span>
+        <span class="gradient-text">Crohn Disease Paradise</span>
       </h1>
       <p class="sub">欢迎勇士，开启你的星辉之旅 ✨</p>
 
@@ -55,6 +55,19 @@
           </button>
         </div>
 
+        <!-- 记住密码 -->
+        <div class="options-row">
+          <label class="remember-me-label">
+            <input
+                type="checkbox"
+                v-model="rememberMe"
+                class="remember-checkbox"
+            />
+            <span class="custom-checkbox"></span>
+            <span class="remember-text">记住账号密码</span>
+          </label>
+        </div>
+
         <!-- 提交按钮 -->
         <button class="primary-btn" :disabled="!canSubmit || loading" type="submit">
           <span v-if="!loading" class="btn-text">
@@ -84,7 +97,7 @@
 
 </template>
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginUser } from '@/api/user.js'
 import CyberAlert from '@/components/CyberAlert.vue'
@@ -94,12 +107,26 @@ const router = useRouter()
 // 表单状态
 const phone = ref('')
 const password = ref('')
+const rememberMe = ref(true) // 默认勾选记住密码
 const showPass = ref(false)
 const loading = ref(false)
 const error = ref('')
 const isHovered = ref(false)
 const heroHover = ref(false)
 const showSuccessAlert = ref(false)
+
+// 页面加载时，尝试读取记住的密码
+onMounted(() => {
+  const savedPhone = localStorage.getItem('remember_phone')
+  const savedPassword = localStorage.getItem('remember_password')
+  if (savedPhone && savedPassword) {
+    phone.value = savedPhone
+    password.value = savedPassword
+    rememberMe.value = true
+  } else {
+    rememberMe.value = false // 如果没有记住，则默认不勾选，或者默认勾选也行，这里设为false
+  }
+})
 
 // 校验规则
 const canSubmit = computed(() =>
@@ -130,6 +157,16 @@ async function submit() {
       localStorage.setItem('roleId', res.roleId)
       localStorage.setItem('userId', res.userId)
       localStorage.setItem('nickname', res.nickname)
+
+      // 保存或清除记住的密码
+      if (rememberMe.value) {
+        localStorage.setItem('remember_phone', phone.value)
+        localStorage.setItem('remember_password', password.value)
+      } else {
+        localStorage.removeItem('remember_phone')
+        localStorage.removeItem('remember_password')
+      }
+
       showSuccessAlert.value = true
       console.log("前端热更新成功")
 
@@ -143,6 +180,9 @@ async function submit() {
 
   } catch (err) {
     console.error(err)
+    const detail = err?.message || '未知错误'
+    const url = err?.config?.baseURL || '无'
+    alert(`[调试] 请求失败\nbaseURL: ${url}\n错误: ${detail}`)
     error.value = '连接王国的通道拥堵，请稍后再试 (网络错误)'
   } finally {
     loading.value = false
@@ -354,6 +394,83 @@ async function submit() {
 
 .eye-toggle:hover {
   color: #fff;
+}
+
+/* 记住密码选项 */
+.options-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: -10px 0 20px;
+  padding: 0 2px;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.2s;
+}
+
+.remember-me-label:hover {
+  color: #fff;
+}
+
+/* 隐藏原生 checkbox */
+.remember-checkbox {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* 自定义 checkbox 外观 */
+.custom-checkbox {
+  position: relative;
+  height: 18px;
+  width: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.remember-me-label:hover .custom-checkbox {
+  border-color: var(--primary-1);
+}
+
+.remember-checkbox:checked ~ .custom-checkbox {
+  background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+  border-color: transparent;
+  box-shadow: 0 0 10px rgba(255, 184, 108, 0.4);
+}
+
+/* 勾勾符号 */
+.custom-checkbox::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.remember-checkbox:checked ~ .custom-checkbox::after {
+  display: block;
+}
+
+.remember-text {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* 登录按钮 */

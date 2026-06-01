@@ -5,20 +5,18 @@
 
     <header class="greeting-bar">
       <div class="greeting-text">
-        <span class="greeting-title">早上好 小轩，今天也要按时吃饭 🌼</span>
-        <span class="greeting-subtitle">Architect-xuan 专属守护</span>
+        <span class="greeting-subtitle">Crohn Paradise</span>
+        <span class="greeting-title">早上好，今天也要按时吃饭 🌼</span>
       </div>
     </header>
 
-    <!-- 身份卡（保持垂直徽章，已按你最新图片更新） -->
+    <!-- 身份卡 -->
     <div class="premium-glass-card">
       <div class="card-glow-bg"></div>
 
       <div class="profile-content">
         <div class="avatar-wrapper">
-          <div class="avatar-glow"></div>
-          <img class="avatar" :src="userInfo.avatar" alt="小轩头像" />
-          <div class="tech-ring"></div>
+          <img class="avatar" :src="userInfo.avatar" alt="头像" />
 
           <van-uploader
               :after-read="afterRead"
@@ -26,17 +24,17 @@
           >
             <div class="uploader-trigger"></div>
           </van-uploader>
-
-          <div class="status-indicator">
-            <span class="status-dot"></span>
-          </div>
         </div>
 
         <div class="profile-info">
           <div class="name-wrapper" @click="openEditName">
             <h2 class="vip-name">{{ userInfo.nickname }}</h2>
-            <div class="edit-dot"></div> </div>
-          <p class="title-tag">Architect-xuan 专属系统守护者</p>
+            <i class="ri-edit-line edit-pencil"></i>
+          </div>
+          <div class="member-chip">
+            <i class="ri-vip-crown-fill member-chip-icon"></i>
+            <span>Crohn Paradise 成员</span>
+          </div>
         </div>
 
         <van-popup
@@ -48,36 +46,31 @@
         >
           <div class="popup-header">
             <span class="cancel-btn" @click="showEditName = false">取消</span>
-            <span class="popup-title">修改身份标识</span>
+            <span class="popup-title">修改昵称</span>
             <span class="confirm-btn" @click="onConfirmName">保存</span>
           </div>
 
           <div class="popup-body">
             <van-field
                 v-model="tempNickname"
-                placeholder="请输入新的全栈昵称"
+                placeholder="请输入新昵称"
                 :border="false"
                 autofocus
                 class="app-input"
                 maxlength="15"
             />
-            <p class="input-tip">好的名字是架构成功的开始</p>
           </div>
         </van-popup>
 
       </div>
-          <!-- 垂直徽章列表（已更新为最新图片内容） -->
+      <!-- 徽章列表 -->
       <div class="badges-list relative group cursor-pointer" @click="showBadgeSelector = true">
-        <div class="absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800/10 backdrop-blur text-slate-500 p-1.5 rounded-full z-10 flex items-center justify-center shadow-sm">
-          <i class="ri-pencil-fill text-xs"></i>
-        </div>
-
         <div v-for="badge in badgeLibrary.filter(b => b.selected)" :key="badge.id" class="badge-item relative z-0">
           <span class="badge-icon">{{ badge.icon }}</span>
           <span class="badge-text">{{ badge.name }}</span>
         </div>
       </div>
-        </div>
+    </div>
 
 
 
@@ -132,13 +125,19 @@
         <span class="btn-icon">❤️💊</span>
         <span class="btn-text">启动战后修复协议</span>
       </button>
-      <p class="recovery-tip">别怕，吃错了我们马上降级，小轩的架构永远在线。</p>
+   
     </div>
 
-    <div class="glass-card menu-list">
-      <div class="menu-item">
+    <div class="glass-card menu-list animate-in fade-in slide-in-from-bottom-5 duration-300">
+      <div class="menu-item" @click="showCityPicker = true">
+        <span class="menu-icon">📍</span>
+        <span class="menu-text">我的城市</span>
+        <span class="menu-badge" style="background: rgba(59,130,246,0.1); color: rgb(59,130,246);">{{ userInfo.city || '未设置' }}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="menu-item" @click="emit('change-tab', 'circle')">
         <span class="menu-icon">💬</span>
-        <span class="menu-text">克罗恩病友圈</span>
+        <span class="menu-text">密友圈</span>
         <span class="menu-badge">2条新战报</span>
       </div>
       <div class="divider"></div>
@@ -147,12 +146,57 @@
         <span class="menu-text">我的温和饮食清单</span>
       </div>
       <div class="divider"></div>
+      <div class="menu-item" @click="emit('change-tab', 'drugmap')">
+        <span class="menu-icon">💊</span>
+        <span class="menu-text">常用药物图谱 & 闹钟守护</span>
+        <span class="menu-badge" style="background: rgba(16, 185, 129, 0.12); color: rgb(16, 185, 129);">安全配药</span>
+      </div>
+      <div class="divider"></div>
+      <div class="menu-item" @click="emit('change-tab', 'hospital')">
+        <span class="menu-icon">🏥</span>
+        <span class="menu-text">顶级推荐专科与就诊绿道</span>
+      </div>
+      <div class="divider"></div>
       <div class="menu-item" @click="uploadMedicalRecord">
         <span class="menu-icon">🔐</span>
         <span class="menu-text">病例上传与权限解锁</span>
       </div>
     </div>
   </div>
+
+  <!-- 城市选择弹窗 -->
+  <van-popup v-model:show="showCityPicker" position="bottom" round teleport="body">
+    <div class="city-picker">
+      <div class="city-picker-header">
+        <span class="city-picker-title">选择你的城市</span>
+        <button @click="showCityPicker = false" class="city-picker-close">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <div class="city-search-wrap">
+        <i class="ri-search-line city-search-icon"></i>
+        <input
+          v-model="citySearch"
+          type="text"
+          class="city-search-input"
+          placeholder="搜索城市，如 北京、上海、杭州"
+        />
+        <i v-if="citySearch" class="ri-close-circle-fill city-search-clear" @click="citySearch = ''"></i>
+      </div>
+
+      <div class="city-grid">
+        <button
+          v-for="c in filteredCityList" :key="c"
+          @click="onSelectCity(c)"
+          class="city-chip"
+          :class="{ 'city-chip-active': userInfo.city === c }"
+        >{{ c }}</button>
+        <p v-if="filteredCityList.length === 0" class="city-empty">没找到「{{ citySearch }}」，换个关键词试试</p>
+      </div>
+    </div>
+  </van-popup>
+
   <transition name="van-slide-up">
   <div v-if="showBadgeSelector" class="fixed inset-0 z-[150] flex flex-col justify-end">
 
@@ -281,8 +325,11 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { areaList } from '@vant/area-data'
 import { closeToast, showToast } from 'vant'
 import http from '@/api/http.js'
+
+const emit = defineEmits(['change-tab'])
 
 // 应急操作
 const triggerRecovery = () => {
@@ -343,7 +390,7 @@ const saveBadges = async () => {
   try {
     const res = await http.post('/center/update-badges', payload)
 
-    if (res.data?.code === 200) {
+    if (res.status === 200 || res.code === 200) {
       showToast({ type: 'success', message: '荣誉徽章装备成功！' })
     } else {
       showToast({ type: 'fail', message: res.message || '装备失败，请重试' })
@@ -359,7 +406,8 @@ const currentEditType = ref('')
 const userInfo = ref({
   nickname: '全栈架构师_小轩',
   avatar: 'https://picsum.photos/id/64/300/300',
-  userId: null
+  userId: null,
+  city: ''
 })
 
 const afterRead = async (file) => {
@@ -476,6 +524,7 @@ const loadData = async () => {
       userInfo.value.nickname = profile.nickname || '未命名特工';
       userInfo.value.avatar = profile.avatar || 'https://picsum.photos/id/64/300/300';
       userInfo.value.userId = profile.userId;
+      userInfo.value.city = profile.city || '';
 
       // 2. 匹配并点亮【当前阶段】
       if (profile.healthPhase) {
@@ -541,93 +590,146 @@ const onConfirmName = async () => {
   showEditName.value = false;
   showToast({ message: '标识已重构', icon: 'success' });
 };
+
+// === 城市选择 ===
+const showCityPicker = ref(false)
+const citySearch = ref('')
+
+// areaList 是一个对象（province_list/city_list/county_list），不能直接 v-for。
+// 这里把直辖市/特别行政区（在 province_list 中）与地级市（在 city_list 中）
+// 合并成一个中文城市名数组，去重后供选择。
+const cityList = (() => {
+  const names = new Set()
+  const directCities = ['北京市', '天津市', '上海市', '重庆市', '香港特别行政区', '澳门特别行政区']
+  Object.values(areaList.province_list || {}).forEach(p => {
+    if (directCities.includes(p)) names.add(p.replace(/(市|特别行政区)$/, ''))
+  })
+  Object.values(areaList.city_list || {}).forEach(c => {
+    names.add(c.replace(/(市|地区|自治州|盟)$/, ''))
+  })
+  return Array.from(names).filter(Boolean)
+})()
+
+const filteredCityList = computed(() => {
+  const kw = citySearch.value.trim()
+  if (!kw) return cityList
+  return cityList.filter(c => c.includes(kw))
+})
+
+const onSelectCity = async (city) => {
+  try {
+    await http.post('/center/update-basic', { city })
+    userInfo.value.city = city
+    showCityPicker.value = false
+    citySearch.value = ''
+    showToast({ message: '城市已更新', icon: 'success' })
+  } catch (e) {
+    showToast('更新失败')
+  }
+}
 </script>
 
 <style scoped>
-.tag-dynamic {
-  font-size: 13px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 10px;
-  transition: all 0.3s ease; /* 颜色切换时加个柔和的过渡动画 */
-}
-/* 全局保持不变（只微调了间距让整体更舒服） */
+/* 适配新的 App Shell 布局：父级 main 负责滚动，这里不再 min-h 也不再 overflow:hidden */
 .xuan-care-container {
-  min-height: 100vh;
-  background-color: #f0f4f8;
+  background-color: #FBF9F5;
   position: relative;
-  overflow: hidden;
-  padding: 14px 12px;
+  padding: 14px 16px 32px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: #4a5568;
   max-width: 440px;
   margin: 0 auto;
 }
 
-.bg-shape { position: absolute; border-radius: 50%; filter: blur(60px); z-index: 0; opacity: 0.45; }
+.bg-shape { position: absolute; border-radius: 50%; filter: blur(70px); z-index: 0; opacity: 0.3; }
 .shape-1 { width: 160px; height: 160px; background: #b39ddb; top: -30px; right: -30px; }
 .shape-2 { width: 200px; height: 200px; background: #ff8e8b; bottom: 60px; left: -70px; }
 
 .greeting-bar { margin-bottom: 16px; }
+.greeting-text { display: flex; flex-direction: column; gap: 2px; }
+.greeting-subtitle { font-size: 11px; color: #7ba4c9; opacity: 0.9; font-weight: 700; letter-spacing: 1px; }
 .greeting-title { font-size: 17px; font-weight: 600; color: #2d3748; }
-.greeting-subtitle { font-size: 12px; color: #7ba4c9; opacity: 0.9; }
 
-/* 身份卡保持高端 */
+/* 身份卡 */
 .premium-glass-card {
   position: relative;
   overflow: hidden;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.9);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(255,255,255,0.95);
-  border-radius: 24px;
-  padding: 20px 18px;
-  margin-bottom: 18px;
-  box-shadow: 0 18px 36px -8px rgba(123,164,201,0.15);
+  border-radius: 20px;
+  padding: 18px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px -8px rgba(123,164,201,0.12);
 }
 .card-glow-bg {
   position: absolute;
   inset: -60%;
-  background: radial-gradient(circle at 30% 20%, rgba(179,157,219,0.18) 0%, transparent 55%);
+  background: radial-gradient(circle at 30% 20%, rgba(179,157,219,0.12) 0%, transparent 55%);
   animation: slow-rotate 28s linear infinite;
 }
 
 .profile-content { position: relative; z-index: 1; display: flex; align-items: center; }
-.avatar-wrapper { position: relative; width: 76px; height: 76px; margin-right: 16px; flex-shrink: 0; }
-.avatar { width: 76px; height: 76px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 10px 24px rgba(0,0,0,0.12); z-index: 3; }
-.vip-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(90deg, #1e2937, #475569); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.verified-badge { width: 19px; height: 19px; background: linear-gradient(135deg, #22d3ee, #67e8f9); color: white; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(103,232,249,0.4); }
-.title-tag { font-size: 13.5px; color: #64748b; margin-bottom: 8px; font-weight: 500; }
+.avatar-wrapper { position: relative; width: 72px; height: 72px; margin-right: 14px; flex-shrink: 0; }
+.avatar { width: 72px; height: 72px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.1); z-index: 3; }
+.vip-name { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(90deg, #1e2937, #475569); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.name-wrapper { display: flex; align-items: center; cursor: pointer; }
+.edit-pencil {
+  margin-left: 7px;
+  font-size: 13px;
+  color: #b0b8c4;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.25s ease;
+}
+.name-wrapper:hover .edit-pencil,
+.name-wrapper:active .edit-pencil { opacity: 1; transform: translateX(0); }
 
-/* 垂直徽章（干净工整） */
-.badges-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b45309;
+  background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.12));
+  border: 1px solid rgba(245,158,11,0.25);
+}
+.member-chip-icon { font-size: 13px; color: #f59e0b; }
+.verified-badge { width: 19px; height: 19px; background: linear-gradient(135deg, #22d3ee, #67e8f9); color: white; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(103,232,249,0.4); }
+.title-tag { font-size: 13px; color: #64748b; margin-bottom: 8px; font-weight: 500; }
+
+/* 垂直徽章 */
+.badges-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .badge-item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   background: rgba(255,255,255,0.75);
   border-radius: 9999px;
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 5px 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #4338ca;
-  box-shadow: 0 2px 6px rgba(123,164,201,0.1);
+  box-shadow: 0 1px 4px rgba(123,164,201,0.08);
 }
-.badge-icon { font-size: 16px; }
+.badge-icon { font-size: 15px; }
 
-/* 🔥 全新健康状态卡（超级工整版） */
-
-/* 其余部分保持一致 */
-.recovery-section { margin-bottom: 18px; text-align: center; }
+/* 健康状态卡 */
+.recovery-section { margin-bottom: 14px; text-align: center; }
 .btn-recovery {
   width: 100%;
   border: none;
   background: linear-gradient(90deg, #a855f7, #ec4899);
   color: white;
-  padding: 17px 20px;
+  padding: 15px 20px;
   border-radius: 9999px;
-  font-size: 15.5px;
+  font-size: 15px;
   font-weight: 700;
-  box-shadow: 0 10px 25px rgba(168, 85, 247, 0.3);
+  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -635,46 +737,46 @@ const onConfirmName = async () => {
   cursor: pointer;
 }
 .btn-recovery:active { transform: scale(0.97); }
-.btn-icon { font-size: 22px; }
-.recovery-tip { font-size: 12px; color: #94a3b8; margin-top: 10px; }
+.btn-icon { font-size: 20px; }
+.recovery-tip { font-size: 12px; color: #94a3b8; margin-top: 8px; }
 
-.glass-card { background: rgba(255,255,255,0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.8); border-radius: 22px; padding: 8px 16px; margin-bottom: 16px; }
-.menu-item { display: flex; align-items: center; padding: 14px 0; }
-.menu-icon { font-size: 21px; margin-right: 14px; }
-.menu-text { flex: 1; font-size: 15px; font-weight: 500; }
-.menu-badge { font-size: 12px; color: #ff8e8b; background: rgba(255,142,139,0.12); padding: 3px 9px; border-radius: 9999px; }
-/* --- 极致工整的卡片面板样式 --- */
+.glass-card { background: rgba(255,255,255,0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.85); border-radius: 18px; padding: 6px 14px; margin-bottom: 14px; }
+.menu-item { display: flex; align-items: center; padding: 13px 0; }
+.menu-icon { font-size: 20px; margin-right: 12px; }
+.menu-text { flex: 1; font-size: 14.5px; font-weight: 500; }
+.menu-badge { font-size: 11.5px; color: #ff8e8b; background: rgba(255,142,139,0.12); padding: 3px 9px; border-radius: 9999px; }
+
+/* 状态面板 */
 .clean-panel {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 0; /* 留白交给内部 row */
-  margin-bottom: 18px;
-  box-shadow: 0 8px 24px rgba(123, 164, 201, 0.08);
-  overflow: hidden; /* 保证圆角不被破坏 */
+  border-radius: 18px;
+  padding: 0;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(123, 164, 201, 0.06);
+  overflow: hidden;
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 18px 8px;
+  padding: 14px 16px 8px;
 }
 
 .panel-title {
-  font-size: 15px;
+  font-size: 14.5px;
   color: #2d3748;
   margin: 0;
   font-weight: 700;
 }
 
 .edit-hint {
-  font-size: 12px;
+  font-size: 11.5px;
   color: #a0aec0;
 }
 
-/* 列表行样式 (绝对对齐) */
 .status-list {
   display: flex;
   flex-direction: column;
@@ -684,13 +786,13 @@ const onConfirmName = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
+  padding: 13px 16px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .status-row:active {
-  background-color: rgba(0, 0, 0, 0.03); /* 点击时的反馈 */
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 .row-label {
@@ -702,9 +804,8 @@ const onConfirmName = async () => {
 .row-value {
   display: flex;
   align-items: center;
-  gap: 8px; /* 元素间距绝对固定 */
+  gap: 8px;
 }
-
 
 .sub-text {
   font-size: 12px;
@@ -712,62 +813,110 @@ const onConfirmName = async () => {
   font-family: 'SF Mono', monospace;
 }
 
+.arrow {
+  font-size: 18px;
+  color: #cbd5e1;
+  margin-left: 4px;
+  font-family: monospace;
+}
 
-.panel-header {
+.line-divider {
+  height: 1px;
+  background-color: rgba(226, 232, 240, 0.6);
+  margin: 0 16px;
+}
+
+.tag-dynamic {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 9px;
+  transition: all 0.3s ease;
+}
+
+/* 城市选择弹窗 */
+.city-picker { padding: 4px 0 calc(env(safe-area-inset-bottom) + 16px); }
+.city-picker-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 18px 8px;
-}
-
-.panel-title {
-  font-size: 15px;
-  color: #2d3748;
-  margin: 0;
-  font-weight: 700;
-}
-
-.edit-hint {
-  font-size: 12px;
-  color: #a0aec0;
-}
-
-/* 列表行样式 (绝对对齐) */
-.status-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.status-row {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 14px 18px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  padding: 18px 20px 14px;
 }
-
-.status-row:active {
-  background-color: rgba(0, 0, 0, 0.03); /* 点击时的反馈 */
+.city-picker-title { font-size: 16px; font-weight: 800; color: #1e293b; }
+.city-picker-close {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 50%;
+  background: #f1f5f9; color: #94a3b8; font-size: 18px;
+  cursor: pointer; transition: all 0.2s;
 }
+.city-picker-close:active { transform: scale(0.9); background: #e2e8f0; }
 
-.row-label {
+.city-search-wrap {
+  position: relative;
+  margin: 0 20px 14px;
+}
+.city-search-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: #cbd5e1; font-size: 16px; pointer-events: none;
+}
+.city-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 36px 11px 38px;
+  border: 1.5px solid #eef2f7;
+  border-radius: 14px;
+  background: #f8fafc;
   font-size: 14px;
-  color: #4a5568;
-  font-weight: 500;
+  color: #334155;
+  outline: none;
+  transition: all 0.2s;
 }
-/* 昵称旁的小点点，暗示可点 */
-.edit-dot {
-  width: 6px;
-  height: 6px;
-  background: #22d3ee;
-  border-radius: 50%;
-  margin-left: 8px;
-  box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+.city-search-input:focus { border-color: #3b82f6; background: #fff; }
+.city-search-clear {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: #cbd5e1; font-size: 17px; cursor: pointer;
+}
+
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 20px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.city-chip {
+  padding: 11px 6px;
+  border: 1.5px solid #eef2f7;
+  border-radius: 13px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.city-chip:active { transform: scale(0.95); }
+.city-chip-active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: #2563eb;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(37,99,235,0.25);
+}
+.city-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 24px 0;
 }
 
 .app-edit-popup {
-  padding-bottom: env(safe-area-inset-bottom); /* 适配全面屏 */
+  padding-bottom: env(safe-area-inset-bottom);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
 }
@@ -799,67 +948,24 @@ const onConfirmName = async () => {
   margin-top: 12px;
   text-align: center;
 }
-.row-value {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* 元素间距绝对固定 */
-}
 
-
-.sub-text {
-  font-size: 12px;
-  color: #718096;
-  font-family: 'SF Mono', monospace;
-}
-
-.arrow {
-  font-size: 18px;
-  color: #cbd5e1;
-  margin-left: 4px;
-  font-family: monospace;
-}
-
-.line-divider {
-  height: 1px;
-  background-color: rgba(226, 232, 240, 0.6);
-  margin: 0 18px; /* 左右留白，类似微信设置页的分割线 */
-}
-.arrow {
-  font-size: 18px;
-  color: #cbd5e1;
-  margin-left: 4px;
-  font-family: monospace;
-}
-/* 1. 确保父容器是定位基准 */
-.avatar-wrapper {
-  position: relative; /* 必须有这个，否则 uploader 会飞到页面顶端 */
-  width: 76px;
-  height: 76px;
-}
-
-/* 2. 让上传组件完全盖在头像图层之上 */
+/* 头像上传 */
 .avatar-uploader {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 10; /* 确保在所有装饰元素（tech-ring等）的最顶层 */
-  opacity: 0;  /* 保持透明，不破坏你的高阶审美 */
+  z-index: 10;
+  opacity: 0;
 }
 
-/* 3. 核心：必须给内部 trigger 一个确定的宽高，否则点击区域是 0 */
 .uploader-trigger {
-  width: 76px;
-  height: 76px;
+  width: 72px;
+  height: 72px;
   cursor: pointer;
 }
 
-.line-divider {
-  height: 1px;
-  background-color: rgba(226, 232, 240, 0.6);
-  margin: 0 18px; /* 左右留白，类似微信设置页的分割线 */
-}
 /* 动画 */
 @keyframes slow-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>

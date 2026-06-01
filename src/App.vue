@@ -1,18 +1,12 @@
 <template>
   <div id="app">
+    <SplashScreen />
     <router-view />
   </div>
 </template>
 
-<script>
-import BackgroundMusic from './components/BackgroundMusic.vue'
-
-export default {
-  name: 'App',
-  components: {
-    BackgroundMusic
-  }
-}
+<script setup>
+import SplashScreen from './components/SplashScreen.vue'
 </script>
 
 <style>

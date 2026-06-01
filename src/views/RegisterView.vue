@@ -10,7 +10,7 @@
         <div class="glow"></div>
       </div>
 
-      <h1 class="title"><span class="gradient-text">加入 Crohn Kingdom</span></h1>
+      <h1 class="title"><span class="gradient-text">加入 Crohn Paradise</span></h1>
       <p class="sub">注册一个属于你的星光身份 🌠</p>
 
       <form @submit.prevent="register" class="form">

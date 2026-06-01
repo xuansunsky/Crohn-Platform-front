@@ -1,320 +1,488 @@
 <template>
-  <div class="w-full pb-6 bg-transparent">
-    <header class="bg-white sticky top-0 z-40 shadow-sm">
-      <div class="px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-            B
+  <div class="w-full pb-8 bg-[#FBF9F5]">
+
+    <!-- Premium Header -->
+    <header class="relative px-5 pt-6 pb-4 overflow-hidden">
+      <div class="absolute -top-16 -right-16 w-64 h-64 bg-blue-100/30 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute top-20 -left-20 w-56 h-56 bg-emerald-100/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative flex items-center justify-between mb-5">
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="text-[10px] font-black tracking-[0.1em] text-blue-600 uppercase">Crohn Paradise</span>
+            <span class="w-1 h-1 rounded-full bg-blue-400"></span>
           </div>
-          <div>
-            <h1 class="text-base font-bold text-gray-900 leading-tight">BioHazard</h1>
-            <p class="text-[10px] text-gray-500">IBD 饮食情报库</p>
-          </div>
+          <h1 class="text-[24px] font-black tracking-tight text-slate-900 leading-none">
+            晚上好，<span class="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">Xuan</span>
+          </h1>
+          <p class="text-[12px] text-slate-400 font-medium mt-1.5">今天的肠子还好吗？我们一起翻翻情报。</p>
         </div>
-        <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Xuan" alt="User">
+        <div class="relative shrink-0">
+          <div class="absolute -inset-1 bg-gradient-to-br from-blue-500/20 to-violet-500/20 rounded-full blur opacity-60"></div>
+          <div class="relative w-11 h-11 rounded-full bg-white overflow-hidden border-2 border-white shadow-md">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Xuan" alt="User" class="w-full h-full">
+          </div>
+          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></span>
         </div>
       </div>
 
-      <div class="px-4 pb-3">
-        <div class="relative">
-          <i class="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
-          <input
-              v-model="keyword"
-              type="text"
-              placeholder="搜索品牌或食物 (如: KFC)"
-              class="w-full bg-gray-100 text-gray-900 text-sm rounded-lg py-2.5 pl-10 pr-4 outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all border border-transparent focus:border-blue-500"
-          >
-        </div>
+      <!-- 搜索条 -->
+      <div class="relative">
+        <i class="ri-search-line absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+        <input
+            v-model="keyword"
+            type="text"
+            placeholder="搜索品牌或食物 · 如 KFC / 火锅"
+            class="w-full bg-white/90 backdrop-blur-xl text-slate-900 text-[13px] font-medium rounded-2xl py-3 pl-10 pr-20 outline-none border border-white shadow-[0_4px_16px_-8px_rgba(15,23,42,0.08)] focus:bg-white focus:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.12)] focus:border-blue-200 transition-all placeholder-slate-400"
+        >
+        <button class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-[11px] font-black rounded-xl shadow-sm hover:bg-slate-800 active:scale-95 transition-all">
+          雷达
+        </button>
       </div>
     </header>
 
-    <main class="space-y-4 mt-4">
-      <div v-if="filteredList.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400">
-        <i class="ri-inbox-line text-4xl mb-2"></i>
-        <p class="text-sm">没有找到相关情报</p>
-      </div>
+    <main class="px-5 space-y-5 mt-2">
 
-      <div v-for="item in filteredList" :key="item.id"
-           @click="openDetail(item)"
-           class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:scale-[0.99] transition-transform duration-200 cursor-pointer">
-
-        <div class="flex gap-4">
-          <div class="w-20 h-20 bg-gray-100 rounded-lg shrink-0 overflow-hidden relative">
-            <img :src="item.image" class="w-full h-full object-cover">
-            <div v-if="item.type === 'danger'"
-                 class="absolute top-0 left-0 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-br-lg font-bold">高危
+      <!-- 战术金刚区 -->
+      <section class="grid grid-cols-2 gap-3">
+        <!-- 药物图谱 -->
+        <button
+            @click="emit('change-tab', 'drugmap')"
+            class="relative overflow-hidden rounded-[24px] p-5 text-left bg-gradient-to-br from-emerald-500 via-emerald-500 to-teal-700 text-white shadow-[0_12px_32px_-12px_rgba(16,185,129,0.5)] cursor-pointer active:scale-[0.97] hover:-translate-y-0.5 transition-all duration-300 group"
+        >
+          <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-white/15 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
+          <div class="absolute top-3 right-3 text-[60px] opacity-10 leading-none">💊</div>
+          <div class="relative flex items-center justify-between mb-4">
+            <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center">
+              <i class="ri-capsule-fill text-lg"></i>
             </div>
+            <i class="ri-arrow-right-up-line text-base opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"></i>
+          </div>
+          <h3 class="text-[15px] font-black tracking-tight leading-tight">前沿药物图谱</h3>
+          <p class="text-[10.5px] text-white/80 mt-1 font-medium">瑞福 · 喜达诺 · 英夫利昔</p>
+        </button>
+
+        <!-- 顶级专科 -->
+        <button
+            @click="emit('change-tab', 'hospital')"
+            class="relative overflow-hidden rounded-[24px] p-5 text-left bg-gradient-to-br from-amber-500 via-amber-500 to-orange-700 text-white shadow-[0_12px_32px_-12px_rgba(245,158,11,0.5)] cursor-pointer active:scale-[0.97] hover:-translate-y-0.5 transition-all duration-300 group"
+        >
+          <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-white/15 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
+          <div class="absolute top-3 right-3 text-[60px] opacity-10 leading-none">🏥</div>
+          <div class="relative flex items-center justify-between mb-4">
+            <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center">
+              <i class="ri-hospital-fill text-lg"></i>
+            </div>
+            <i class="ri-arrow-right-up-line text-base opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"></i>
+          </div>
+          <h3 class="text-[15px] font-black tracking-tight leading-tight">顶级专科中心</h3>
+          <p class="text-[10.5px] text-white/80 mt-1 font-medium">本地绿道 · 避坑宝典</p>
+        </button>
+      </section>
+
+      <!-- 今日推荐 / Hero -->
+      <section v-if="todayPick" class="relative overflow-hidden rounded-[28px] bg-slate-900 cursor-pointer group active:scale-[0.99] transition-all" @click="openDetail(todayPick)">
+        <div class="relative h-44">
+          <img :src="todayPick.image" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700">
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+
+          <!-- 顶部标签 -->
+          <div class="absolute top-4 left-4 flex items-center gap-1.5">
+            <span class="text-[10px] font-black tracking-[0.25em] text-amber-300 uppercase px-2.5 py-1 bg-amber-300/15 backdrop-blur-md rounded-full border border-amber-300/30">
+              ✦ Today Pick
+            </span>
           </div>
 
-          <div class="flex-1 min-w-0">
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="text-base font-bold text-gray-900 truncate pr-2">{{ item.product }}</h3>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">{{ item.brand }}</p>
-              </div>
-              <div class="flex flex-col items-end">
-                 <span class="text-lg font-bold"
-                       :class="item.type === 'danger' ? 'text-red-500' : (item.type === 'safe' ? 'text-emerald-500' : 'text-amber-500')">
-                   {{ item.safeRate }}%
-                 </span>
-                <span class="text-[9px] text-gray-400">安全率</span>
-              </div>
-            </div>
+          <!-- 右上角评分 -->
+          <div class="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20">
+            <span class="text-[11px] font-black text-white">{{ todayPick.safeRate }}%</span>
+            <span class="text-[9px] font-bold text-white/70">SAFE</span>
+          </div>
 
-            <p class="text-xs text-gray-600 mt-2 line-clamp-1 bg-gray-50 p-1.5 rounded">
-              {{ item.desc }}
-            </p>
-
-            <div class="flex justify-between items-center mt-3">
-              <div class="flex gap-1.5">
-                <span v-for="tag in item.tags" :key="tag"
-                      class="text-[10px] px-1.5 py-0.5 rounded border"
-                      :class="getBadgeStyle(item.type)">
-                  {{ tag }}
-                </span>
-              </div>
-              <span class="text-[10px] text-gray-400"><i class="ri-group-line"></i> {{ item.voteCount }}人评</span>
-            </div>
+          <!-- 底部内容 -->
+          <div class="absolute bottom-0 left-0 right-0 p-5">
+            <p class="text-[10.5px] font-bold text-white/60 tracking-wider mb-1">{{ todayPick.brand }}</p>
+            <h2 class="text-white text-[22px] font-black tracking-tight leading-none mb-2">{{ todayPick.product }}</h2>
+            <p class="text-white/70 text-[12px] line-clamp-1">{{ todayPick.desc }}</p>
           </div>
         </div>
+      </section>
+
+      <!-- 列表标题 -->
+      <div class="flex items-end justify-between pt-2">
+        <div>
+          <h3 class="text-[18px] font-black tracking-tight text-slate-900">情报库</h3>
+          <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ filteredList.length }} 条实测情报 · 持续更新</p>
+        </div>
+        <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1">
+          <button
+              v-for="f in filters"
+              :key="f.id"
+              @click="activeFilter = f.id"
+              :class="[
+              'px-3 py-1.5 rounded-full text-[11px] font-bold transition-all',
+              activeFilter === f.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+            ]"
+          >
+            {{ f.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-if="filteredList.length === 0" class="flex flex-col items-center justify-center py-16 text-slate-300">
+        <div class="w-16 h-16 mb-3 rounded-2xl bg-slate-50 flex items-center justify-center">
+          <i class="ri-inbox-line text-2xl"></i>
+        </div>
+        <p class="text-[13px] font-medium">没有找到相关情报</p>
+      </div>
+
+      <!-- 食物卡片 -->
+      <div class="space-y-3">
+        <article
+            v-for="item in filteredList"
+            :key="item.id"
+            @click="openDetail(item)"
+            class="group relative bg-white rounded-[24px] p-3.5 border border-slate-100 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_32px_-12px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-300 cursor-pointer"
+        >
+          <div class="flex gap-3.5">
+            <!-- 图片 -->
+            <div class="relative w-[88px] h-[88px] rounded-2xl overflow-hidden shrink-0 bg-slate-100">
+              <img :src="item.image" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+              <div
+                  v-if="item.type === 'danger'"
+                  class="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-rose-500 text-white text-[9px] font-black rounded-md tracking-wider"
+              >
+                高危
+              </div>
+              <div
+                  v-else-if="item.type === 'safe'"
+                  class="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-black rounded-md tracking-wider"
+              >
+                安全
+              </div>
+            </div>
+
+            <!-- 内容 -->
+            <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="text-[10.5px] font-bold text-slate-400 tracking-wide truncate">{{ item.brand }}</p>
+                    <h3 class="text-[15.5px] font-black text-slate-900 tracking-tight truncate mt-0.5">{{ item.product }}</h3>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div
+                        class="text-[20px] font-black leading-none tracking-tighter"
+                        :class="item.type === 'danger' ? 'text-rose-500' : (item.type === 'safe' ? 'text-emerald-500' : 'text-amber-500')"
+                    >
+                      {{ item.safeRate }}<span class="text-[10px] opacity-70">%</span>
+                    </div>
+                    <div class="text-[8.5px] font-bold text-slate-400 tracking-widest mt-0.5">SAFE</div>
+                  </div>
+                </div>
+                <p class="text-[11.5px] text-slate-500 mt-1.5 line-clamp-1 leading-snug">
+                  {{ item.desc }}
+                </p>
+              </div>
+
+              <div class="flex items-center justify-between mt-2">
+                <div class="flex gap-1.5">
+                  <span
+                      v-for="tag in (item.tags || []).slice(0, 2)"
+                      :key="tag"
+                      class="text-[9.5px] font-bold px-2 py-0.5 rounded-md"
+                      :class="getBadgeStyle(item.type)"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+                <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                  <i class="ri-group-line"></i> {{ item.voteCount }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
     </main>
 
-    <div class="fixed bottom-10 right-6 z-30">
-      <button
-          @click="showUploadModal = true"
-          class="w-14 h-14 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-full shadow-lg shadow-blue-600/30 flex items-center justify-center transition-all"
-      >
-        <i class="ri-add-line text-2xl"></i>
-      </button>
-    </div>
+    <!-- 浮动新增按钮 -->
+    <button
+        @click="showUploadModal = true"
+        class="fixed bottom-[78px] right-5 z-30 w-14 h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-[0_12px_28px_-8px_rgba(15,23,42,0.5)] flex items-center justify-center active:scale-90 transition-all group"
+    >
+      <i class="ri-add-line text-2xl group-hover:rotate-90 transition-transform duration-300"></i>
+      <span class="absolute -inset-1 rounded-full bg-blue-500/30 blur-md -z-10 opacity-60 group-hover:opacity-100 transition-opacity"></span>
+    </button>
 
+    <!-- 详情 Modal -->
     <div v-if="showDetailModal && currentFood" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div @click="showDetailModal = false" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <div @click="showDetailModal = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
 
-      <div
-          class="bg-gray-50 w-full sm:w-[500px] h-[90vh] sm:rounded-2xl rounded-t-2xl relative z-10 animate-slide-up shadow-2xl flex flex-col overflow-hidden">
+      <div class="bg-slate-50 w-full sm:w-[520px] h-[92vh] sm:h-[88vh] sm:rounded-[32px] rounded-t-[32px] relative z-10 animate-slide-up shadow-2xl flex flex-col overflow-hidden">
 
-        <div class="bg-white flex justify-between items-center p-4 border-b border-gray-100 shrink-0">
-          <div class="flex flex-col">
-            <h3 class="text-lg font-bold text-gray-900">{{ currentFood.brand }} - {{ currentFood.product }}</h3>
+        <!-- 抓手 -->
+        <div class="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/40 rounded-full z-30"></div>
+
+        <!-- Hero 图 -->
+        <div class="relative h-56 sm:h-64 shrink-0">
+          <img
+              :src="currentFood.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80'"
+              class="w-full h-full object-cover"
+          >
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-slate-900/20"></div>
+
+          <!-- 关闭按钮 -->
+          <button
+              @click="showDetailModal = false"
+              class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/15 backdrop-blur-xl border border-white/20 text-white hover:bg-white/25 flex items-center justify-center transition-all active:scale-90 z-20"
+          >
+            <i class="ri-close-line text-lg"></i>
+          </button>
+
+          <!-- 信息层 -->
+          <div class="absolute bottom-0 left-0 right-0 p-5 text-white">
+            <span
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider backdrop-blur-md border mb-2"
+                :class="currentFood.type === 'danger' ? 'bg-rose-500/30 border-rose-400/50 text-rose-100' : (currentFood.type === 'safe' ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-100' : 'bg-amber-500/30 border-amber-400/50 text-amber-100')"
+            >
+              <i :class="currentFood.type === 'danger' ? 'ri-fire-fill' : (currentFood.type === 'safe' ? 'ri-leaf-fill' : 'ri-error-warning-fill')"></i>
+              {{ currentFood.type === 'danger' ? '高危雷区' : (currentFood.type === 'safe' ? '安全白名单' : '薛定谔的屎') }}
+            </span>
+            <p class="text-[11px] font-bold text-white/70 tracking-wide">{{ currentFood.brand }}</p>
+            <h3 class="text-[26px] font-black tracking-tight leading-tight">{{ currentFood.product }}</h3>
           </div>
-          <button @click="showDetailModal = false" class="text-gray-400 bg-gray-100 p-1.5 rounded-full"><i
-              class="ri-close-line text-xl"></i></button>
         </div>
 
-        <div class="overflow-y-auto flex-1 p-0 pb-6 custom-scrollbar">
+        <!-- 滚动区 -->
+        <div class="overflow-y-auto flex-1 px-5 pt-5 pb-6 custom-scrollbar space-y-4">
+          <!-- 综合评分卡 -->
+          <div class="bg-white p-5 rounded-[24px] border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">综合安全评估</p>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span
+                      class="text-[36px] font-black tracking-tighter leading-none"
+                      :class="currentFood.type === 'danger' ? 'text-rose-500' : (currentFood.type === 'safe' ? 'text-emerald-500' : 'text-amber-500')"
+                  >
+                    {{ currentFood.safeRate }}%
+                  </span>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase">总测评</p>
+                <p class="text-[20px] font-black text-slate-900 mt-1 leading-none">
+                  {{ currentFood.voteCount }}<span class="text-[11px] font-medium text-slate-400 ml-0.5">人</span>
+                </p>
+              </div>
+            </div>
 
-          <div class="relative h-48 sm:h-56 w-full bg-gray-200">
-            <img
-                :src="currentFood.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80'"
-                class="w-full h-full object-cover" alt="商品图片">
-
-            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-
-            <div class="absolute bottom-6 left-4 right-4 text-white">
-              <h3 class="text-2xl font-black tracking-tight drop-shadow-lg mb-1">{{
-                  currentFood.name || '未命名食物'
-                }}</h3>
-              <div class="flex items-center gap-2">
-        <span class="px-2 py-0.5 rounded text-[10px] font-bold backdrop-blur-md bg-white/20 border border-white/10"
-              :class="currentFood.type === 'danger' ? 'text-red-200' : (currentFood.type === 'safe' ? 'text-emerald-200' : 'text-amber-200')">
-          <i :class="currentFood.type === 'danger' ? 'ri-fire-fill' : (currentFood.type === 'safe' ? 'ri-leaf-fill' : 'ri-error-warning-fill')"></i>
-          {{ currentFood.type === 'danger' ? '高危雷区' : (currentFood.type === 'safe' ? '安全白名单' : '薛定谔的屎') }}
-        </span>
+            <div class="space-y-2.5 border-t border-slate-50 pt-4">
+              <p class="text-[10px] font-black text-slate-700 mb-3 tracking-widest uppercase">身体反馈分布</p>
+              <div v-for="level in levels" :key="level.val" class="flex items-center gap-3 text-[12px]">
+                <span class="w-16 text-right text-slate-500 font-medium truncate">{{ level.name.split('·')[0] }}</span>
+                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                      class="h-full rounded-full transition-all duration-700"
+                      :class="level.bgClass"
+                      :style="`width: ${ (getLevelCount(level.val) / currentFood.voteCount) * 100 || 0 }%`"
+                  ></div>
+                </div>
+                <span class="w-7 text-slate-900 font-black text-right">{{ getLevelCount(level.val) }}</span>
               </div>
             </div>
           </div>
 
-          <div class="px-4 relative z-10 -mt-4 space-y-4">
-            <div class="bg-white p-4 rounded-xl shadow-lg shadow-gray-200/50 border border-gray-100">
-              <div class="flex items-center justify-between mb-4">
-                <div>
-                  <p class="text-xs font-bold text-gray-400">综合安全评估</p>
-                  <div class="flex items-baseline gap-1 mt-0.5">
-             <span class="text-3xl font-black tracking-tighter"
-                   :class="currentFood.type === 'danger' ? 'text-red-500' : (currentFood.type === 'safe' ? 'text-emerald-500' : 'text-amber-500')">
-               {{ currentFood.safeRate }}%
-             </span>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="text-xs font-bold text-gray-400">总计测评</p>
-                  <p class="text-lg font-black text-gray-800">{{ currentFood.voteCount }} <span
-                      class="text-xs font-normal text-gray-500">人</span></p>
-                </div>
-              </div>
+          <!-- 战报区 -->
+          <div>
+            <h4 class="flex items-center justify-between mb-3 px-1">
+              <span class="text-[14px] font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+                <i class="ri-message-3-fill text-blue-500"></i>
+                实测战报
+              </span>
+              <span class="text-[10px] font-bold text-slate-400 tracking-wider">{{ currentFoodReports.length }} REPORTS</span>
+            </h4>
 
-              <div class="space-y-2.5 mt-2 border-t border-gray-50 pt-4">
-                <p class="text-[11px] font-black text-gray-800 mb-3 tracking-wider">身体反馈分布</p>
-                <div v-for="level in levels" :key="level.val" class="flex items-center gap-3 text-xs">
-                  <span class="w-14 text-right text-gray-500 font-medium truncate">{{ level.name.split('·')[0] }}</span>
-                  <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full transition-all duration-500"
-                         :class="level.bgClass"
-                         :style="`width: ${ (getLevelCount(level.val) / currentFood.voteCount) * 100 || 0 }%`">
-                    </div>
-                  </div>
-                  <span class="w-6 text-gray-800 font-bold text-right">{{ getLevelCount(level.val) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="pt-2">
-              <h4 class="text-sm font-black text-gray-800 mb-3 flex items-center gap-1.5 pl-1">
-                <i class="ri-message-3-fill text-blue-500"></i> 最新实测战报 ({{ currentFoodReports.length }})
-              </h4>
-
-              <div class="space-y-3">
-                <div v-for="report in currentFoodReports" :key="report.id"
-                     class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div class="flex justify-between items-start mb-2">
-                    <div class="flex items-center gap-3">
-                      <img :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${report.userName}`"
-                           class="w-9 h-9 rounded-full bg-gray-50 shrink-0 border border-gray-100">
-
-                      <div class="flex flex-col gap-0.5">
-                        <div class="flex items-center gap-2">
-                          <span class="text-xs font-bold text-gray-800">{{ report.userName }}</span>
-                          <div class="px-1.5 py-0.5 rounded text-[9px] font-black tracking-tighter"
-                               :class="getLevelStyle(report.levelId)">
-                            {{ getLevelInfo(report.levelId).name.split('·')[1] }}
-                          </div>
+            <div class="space-y-2.5">
+              <div
+                  v-for="report in currentFoodReports"
+                  :key="report.id"
+                  class="bg-white p-4 rounded-[20px] border border-slate-100 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)] hover:shadow-md transition-all"
+              >
+                <div class="flex justify-between items-start mb-2">
+                  <div class="flex items-center gap-2.5">
+                    <img
+                        :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${report.userName}`"
+                        class="w-9 h-9 rounded-full bg-slate-50 shrink-0 border border-white shadow-sm"
+                    >
+                    <div class="flex flex-col gap-0.5">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[12px] font-black text-slate-800">{{ report.userName }}</span>
+                        <div
+                            class="px-1.5 py-0.5 rounded text-[9px] font-black tracking-tight"
+                            :class="getLevelStyle(report.levelId)"
+                        >
+                          {{ getLevelInfo(report.levelId).name.split('·')[1] }}
                         </div>
-
-                        <span v-if="report.location" class="text-[9px] text-gray-400 font-medium">
-                  <i class="ri-map-pin-2-fill text-blue-400"></i> {{ report.location }}
-                </span>
                       </div>
+                      <span v-if="report.location" class="text-[9.5px] text-slate-400 font-medium flex items-center gap-0.5">
+                        <i class="ri-map-pin-2-fill text-blue-400"></i> {{ report.location }}
+                      </span>
                     </div>
-                    <span class="text-[10px] font-medium text-gray-400">{{ report.time }}</span>
                   </div>
-
-                  <p class="text-xs text-gray-600 leading-relaxed pl-[3rem] mt-1.5">
-                    {{ report.content }}
-                  </p>
+                  <span class="text-[10px] font-medium text-slate-400">{{ report.time }}</span>
                 </div>
 
-                <div v-if="currentFoodReports.length === 0"
-                     class="text-center py-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-                  <p class="text-gray-400 text-xs font-medium">还没有病友留下文字战报，快来抢首发！</p>
-                </div>
+                <p class="text-[12px] text-slate-600 leading-relaxed pl-[44px]">
+                  {{ report.content }}
+                </p>
+              </div>
+
+              <div
+                  v-if="currentFoodReports.length === 0"
+                  class="text-center py-10 bg-white/60 rounded-[20px] border border-dashed border-slate-200"
+              >
+                <p class="text-slate-400 text-[12px] font-medium">还没有病友留下文字战报，快来抢首发！</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-3 border-t border-gray-100 shrink-0">
-          <button @click="openUploadFromDetail"
-                  class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl active:scale-[0.98] transition-all">
-            我也吃过，来写战报
+        <!-- 底部 CTA -->
+        <div class="px-4 py-3 border-t border-slate-100 bg-white/90 backdrop-blur-xl shrink-0">
+          <button
+              @click="openUploadFromDetail"
+              class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-3.5 rounded-2xl text-[14px] active:scale-[0.98] transition-all shadow-[0_8px_20px_-6px_rgba(15,23,42,0.4)] flex items-center justify-center gap-2"
+          >
+            我也吃过 · 写战报 <i class="ri-arrow-right-up-line"></i>
           </button>
         </div>
       </div>
     </div>
 
-
+    <!-- 上传 Modal -->
     <div v-if="showUploadModal" class="fixed inset-0 z-[120] flex items-end sm:items-center justify-center">
-      <div @click="showUploadModal = false" class="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity"></div>
+      <div @click="showUploadModal = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
 
-      <div class="bg-white/95 w-full sm:w-[480px] sm:rounded-2xl rounded-t-2xl relative z-10 animate-slide-up shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="bg-white w-full sm:w-[500px] sm:rounded-[32px] rounded-t-[32px] relative z-10 animate-slide-up shadow-2xl max-h-[92vh] flex flex-col overflow-hidden">
 
-        <div class="shrink-0 flex justify-between items-center bg-white/90 backdrop-blur-sm z-20 px-6 py-4 border-b border-gray-100 shadow-sm">
-          <h3 class="text-lg font-black text-gray-900 tracking-tight">发布实测情报</h3>
-          <button @click="showUploadModal = false" class="text-gray-400 hover:bg-gray-100 hover:text-gray-700 p-1.5 rounded-full transition-colors active:scale-90">
-            <i class="ri-close-line text-xl"></i>
+        <div class="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
+
+        <header class="shrink-0 flex justify-between items-center px-6 pt-7 pb-4 border-b border-slate-100">
+          <div>
+            <div class="text-[10px] font-black text-blue-600 tracking-[0.25em] uppercase mb-1">New Report</div>
+            <h3 class="text-[20px] font-black text-slate-900 tracking-tight">发布实测情报</h3>
+          </div>
+          <button @click="showUploadModal = false" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center active:scale-90 transition-all">
+            <i class="ri-close-line text-lg"></i>
           </button>
-        </div>
+        </header>
 
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+        <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-6 space-y-5">
 
-          <div class="space-y-6">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1.5">品牌/餐厅</label>
-                <input v-model="formData.brand" type="text" placeholder="肯德基" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1.5">食物单品</label>
-                <input v-model="formData.product" type="text" placeholder="吮指原味鸡" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
-              </div>
-            </div>
-
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1.5 flex justify-between">
-                <span>实测图片 (选填)</span>
-                <span v-if="isUploading" class="text-blue-500 animate-pulse"><i class="ri-loader-4-line animate-spin"></i> 上传中...</span>
-              </label>
-              <div @click="triggerFileInput" class="relative w-full h-32 bg-gray-50/50 border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden">
-                <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload" accept="image/*">
-                <div v-if="!formData.coverImg" class="text-center transition-transform group-hover:scale-105">
-                  <i class="ri-image-add-line text-3xl text-gray-400 group-hover:text-blue-500 transition-colors"></i>
-                  <p class="text-[11px] font-medium text-gray-400 mt-2">点击上传食物照片</p>
-                </div>
-                <img v-else :src="formData.coverImg" class="absolute inset-0 w-full h-full object-cover"/>
-                <button v-if="formData.coverImg" @click.stop="formData.coverImg = ''" class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white rounded-full p-1.5 hover:bg-red-500 transition-colors">
-                  <i class="ri-delete-bin-line text-sm"></i>
-                </button>
-              </div>
+              <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">品牌/餐厅</label>
+              <input v-model="formData.brand" type="text" placeholder="肯德基" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3 text-[13.5px] font-medium outline-none focus:bg-white focus:border-slate-900 transition-all">
             </div>
-
             <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1.5">评论(您感觉吃了咋样？)</label>
-              <textarea v-model="formData.content" rows="2" placeholder="比如：我只要了微辣，吃完还是拉肚子了..." class="w-full bg-gray-50/50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+              <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">食物单品</label>
+              <input v-model="formData.product" type="text" placeholder="吮指原味鸡" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3 text-[13.5px] font-medium outline-none focus:bg-white focus:border-slate-900 transition-all">
             </div>
-
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-2">身体反馈 (做个明白人)</label>
-              <div class="space-y-2.5">
-                <div v-for="level in levels" :key="level.val" @click="formData.level = level.val" :class="['flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none', formData.level === level.val ? level.activeClass + ' shadow-md scale-[1.01]' : 'border-transparent bg-gray-50/80 hover:bg-gray-100']">
-                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm" :class="level.iconBg">{{ level.icon }}</div>
-                  <div class="flex-1">
-                    <div class="flex justify-between items-center mb-0.5">
-                      <span class="text-sm font-black text-gray-800">{{ level.name }}</span>
-                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/50">{{ level.impact }}</span>
-                    </div>
-                    <p class="text-[11px] text-gray-500 font-medium">{{ level.desc }}</p>
-                  </div>
-                  <i v-if="formData.level === level.val" class="ri-checkbox-circle-fill text-2xl drop-shadow-sm"></i>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1.5">消费门店/位置 (周边美食扫描)</label>
-              <div class="relative">
-                <div class="flex gap-2 relative">
-                  <i class="ri-map-pin-2-line absolute left-3 top-3 text-gray-400 z-10"></i>
-                  <input v-model="formData.location" type="text" placeholder="点击右侧按钮扫描附近餐厅，或手动输入..." class="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none focus:bg-white focus:border-blue-500 transition-all">
-                  <button @click="fetchNearby" :disabled="isLocating" class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-4 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 flex items-center gap-1.5 shadow-md shadow-blue-500/20 disabled:opacity-70">
-                    <i :class="isLocating ? 'ri-loader-4-line animate-spin' : 'ri-radar-line text-sm'"></i>
-                    {{ isLocating ? '扫描中' : '扫描附近' }}
-                  </button>
-                </div>
-
-                <div v-if="poiList.length > 0" class="absolute z-20 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-56 overflow-y-auto custom-scrollbar animate-slide-up">
-                  <div class="sticky top-0 bg-gray-50/90 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold text-gray-400 border-b border-gray-100 flex justify-between">
-                    <span>为你探测到以下门店</span>
-                    <span @click="poiList = []" class="text-blue-500 cursor-pointer hover:underline">关闭</span>
-                  </div>
-                  <div v-for="poi in poiList" :key="poi.id" @click="selectPoi(poi)" class="p-3 border-b border-gray-50 hover:bg-blue-50/50 cursor-pointer transition-colors">
-                    <div class="font-bold text-sm text-gray-800">{{ poi.title }}</div>
-                    <div class="text-[11px] text-gray-400 mt-1 flex justify-between items-center">
-                      <span class="truncate pr-2">{{ poi.address }}</span>
-                      <span class="text-blue-500 font-bold bg-blue-50 px-1.5 py-0.5 rounded">距你 {{ poi._distance }}m</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button @click="submitForm" class="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white font-black py-4 rounded-xl mt-4 shadow-lg shadow-gray-900/20 hover:shadow-xl active:scale-[0.98] transition-all">
-              🚀 发布实测情报
-            </button>
           </div>
 
+          <div>
+            <label class="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5 flex justify-between items-center">
+              <span>实测图片 · 选填</span>
+              <span v-if="isUploading" class="text-blue-500 animate-pulse normal-case tracking-normal flex items-center gap-1">
+                <i class="ri-loader-4-line animate-spin"></i> 上传中...
+              </span>
+            </label>
+            <div
+                @click="triggerFileInput"
+                class="relative w-full h-32 bg-slate-50 border-2 border-dashed border-slate-200 hover:border-slate-900 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all group overflow-hidden"
+            >
+              <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload" accept="image/*">
+              <div v-if="!formData.coverImg" class="text-center transition-transform group-hover:scale-105">
+                <i class="ri-image-add-line text-3xl text-slate-300 group-hover:text-slate-900 transition-colors"></i>
+                <p class="text-[11px] font-bold text-slate-400 mt-2 tracking-wide">点击上传食物照片</p>
+              </div>
+              <img v-else :src="formData.coverImg" class="absolute inset-0 w-full h-full object-cover">
+              <button v-if="formData.coverImg" @click.stop="formData.coverImg = ''" class="absolute top-2 right-2 bg-slate-900/70 backdrop-blur-md text-white rounded-full p-1.5 hover:bg-rose-500 transition-colors">
+                <i class="ri-delete-bin-line text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">评论 · 你的感受</label>
+            <textarea v-model="formData.content" rows="3" placeholder="比如：我只要了微辣，吃完还是拉肚子了..." class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3 text-[13px] outline-none focus:bg-white focus:border-slate-900 transition-all resize-none leading-relaxed"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-2">身体反馈 · 做个明白人</label>
+            <div class="space-y-2">
+              <div
+                  v-for="level in levels"
+                  :key="level.val"
+                  @click="formData.level = level.val"
+                  :class="[
+                  'flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer select-none active:scale-[0.99]',
+                  formData.level === level.val ? level.activeClass + ' shadow-md' : 'border-transparent bg-slate-50 hover:bg-slate-100'
+                ]"
+              >
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm shrink-0" :class="level.iconBg">{{ level.icon }}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex justify-between items-center mb-0.5 gap-2">
+                    <span class="text-[13.5px] font-black tracking-tight truncate">{{ level.name }}</span>
+                    <span class="text-[9.5px] font-black px-2 py-0.5 rounded-full bg-white/60 shrink-0 tracking-wider">{{ level.impact }}</span>
+                  </div>
+                  <p class="text-[11px] font-medium opacity-70">{{ level.desc }}</p>
+                </div>
+                <i v-if="formData.level === level.val" class="ri-checkbox-circle-fill text-xl shrink-0"></i>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">消费门店 · 周边美食扫描</label>
+            <div class="relative">
+              <div class="flex gap-2 relative">
+                <i class="ri-map-pin-2-line absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+                <input v-model="formData.location" type="text" placeholder="点击右侧扫描，或手动输入..." class="flex-1 bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-3 py-3 text-[13px] outline-none focus:bg-white focus:border-slate-900 transition-all">
+                <button @click="fetchNearby" :disabled="isLocating" class="bg-slate-900 hover:bg-slate-800 text-white px-4 rounded-xl text-[11.5px] font-black active:scale-95 transition-all shrink-0 flex items-center gap-1.5 disabled:opacity-70">
+                  <i :class="isLocating ? 'ri-loader-4-line animate-spin' : 'ri-radar-line text-sm'"></i>
+                  {{ isLocating ? '扫描中' : '扫描' }}
+                </button>
+              </div>
+
+              <div v-if="poiList.length > 0" class="absolute z-20 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-56 overflow-y-auto custom-scrollbar animate-slide-up">
+                <div class="sticky top-0 bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-500 border-b border-slate-100 flex justify-between tracking-widest uppercase">
+                  <span>探测到以下门店</span>
+                  <span @click="poiList = []" class="text-blue-500 cursor-pointer">关闭</span>
+                </div>
+                <div v-for="poi in poiList" :key="poi.id" @click="selectPoi(poi)" class="p-3 border-b border-slate-50 hover:bg-blue-50/40 cursor-pointer transition-colors">
+                  <div class="font-bold text-[13px] text-slate-800">{{ poi.title }}</div>
+                  <div class="text-[10.5px] text-slate-400 mt-1 flex justify-between items-center">
+                    <span class="truncate pr-2">{{ poi.address }}</span>
+                    <span class="text-blue-500 font-black bg-blue-50 px-1.5 py-0.5 rounded">{{ poi._distance }}m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <footer class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white/80 backdrop-blur-xl flex items-center justify-end gap-3">
+          <button @click="showUploadModal = false" class="px-5 py-3 rounded-xl text-[13.5px] font-bold text-slate-500 hover:bg-slate-100 transition-all">
+            取消
+          </button>
+          <button @click="submitForm" class="px-6 py-3 rounded-xl text-[14px] font-black text-white bg-slate-900 hover:bg-slate-800 shadow-[0_8px_20px_-6px_rgba(15,23,42,0.4)] active:scale-95 transition-all flex items-center gap-2">
+            发布情报 <i class="ri-arrow-right-up-line"></i>
+          </button>
+        </footer>
       </div>
     </div>
   </div>
@@ -323,6 +491,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import http from '@/api/http.js'
+
+const emit = defineEmits(['change-tab'])
 
 const fileInput = ref(null)
 
@@ -382,20 +552,16 @@ const fetchNearby = () => {
         alert("定位失败！请确保你给浏览器开了【获取位置】的权限！")
         isLocating.value = false
       },
-      {enableHighAccuracy: true, timeout: 5000} // 开启高精度模式
+      {enableHighAccuracy: true, timeout: 5000}
   )
 }
 
-// 选中列表里的一家店
 const selectPoi = (poi) => {
-  // 把店名填进输入框
   formData.value.location = poi.title
-  // 选完之后关闭列表
   poiList.value = []
 }
-// ==========================================
-// 1. 分级常量定义 (新增了 bgClass 用于渲染进度条)
-// ==========================================
+
+// 分级常量定义
 const levels = [
   {
     val: 1,
@@ -459,37 +625,29 @@ const levels = [
   }
 ]
 
-// ==========================================
-// 2. 核心数据 (Mock Data) - 模拟拆表后的数据
-// ==========================================
-// 表1模拟：食物大盘表
+// 核心数据
 const foodList = ref([])
 const fetchFoodList = async () => {
   try {
-    // 呼叫咱们刚写的后端接口
     const res = await http.get('/diet/list')
     console.log("你好", res)
-    // 假设你的 axios 拦截器返回的是 res.data，如果没拦截器直接是 res，你自己微调一下
     const rawData = res
 
-    // 🌟 狸猫换太子：把后端 Java 的字段，拼装成你 HTML 模板里需要的样子！
     foodList.value = rawData.map(dbItem => {
-      // 算一下颜色：安全率大于80算绿区(safe)，低于40算红区(danger)，中间算黄区(warning)
       let currentType = 'warning'
       if (dbItem.safeRate >= 80) currentType = 'safe'
       if (dbItem.safeRate <= 40) currentType = 'danger'
 
       return {
         id: dbItem.id,
-        brand: dbItem.brandName,      // 对应 Java 的 brandName
-        product: dbItem.foodName,     // 对应 Java 的 foodName
+        brand: dbItem.brandName,
+        product: dbItem.foodName,
         type: currentType,
-        image: dbItem.coverImg || 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80', // 如果没图，先搞张假网图顶着
+        image: dbItem.coverImg || 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80',
         safeRate: dbItem.safeRate,
         voteCount: dbItem.totalVotes,
-        tags: dbItem.tagsJson ? JSON.parse(dbItem.tagsJson) : [], // 解析标签
+        tags: dbItem.tagsJson ? JSON.parse(dbItem.tagsJson) : [],
         desc: dbItem.summaryDesc || '这道菜暂无描述，全是实战数据！',
-        // 把各个区间的票数全塞进来，给详情页的进度条用
         levelStats: {
           1: dbItem.level1Votes, 2: dbItem.level2Votes,
           3: dbItem.level3Votes, 4: dbItem.level4Votes,
@@ -502,41 +660,46 @@ const fetchFoodList = async () => {
   }
 }
 
-// ==========================================
-// 3. 状态控制与交互逻辑
-// ==========================================
+// 状态控制
 const keyword = ref('')
 const showUploadModal = ref(false)
 const showDetailModal = ref(false)
 const currentFood = ref(null)
+const activeFilter = ref('all')
+
+const filters = [
+  { id: 'all', label: '全部' },
+  { id: 'safe', label: '安全' },
+  { id: 'warning', label: '警告' },
+  { id: 'danger', label: '高危' }
+]
 
 const formData = ref({
   brand: '', product: '', content: '', level: 1, location: '',
   coverImg: ''
 })
+
 const triggerFileInput = () => {
   if (!formData.value.coverImg) {
     fileInput.value.click()
   }
 }
+
 const isUploading = ref(false)
-// 核心：把图片塞进 FormData 扔给后端
+
 const handleFileUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
   isUploading.value = true
   const uploadData = new FormData()
-  uploadData.append('file', file) // 这里的 'file' 必须和你后端 Controller 接收的名字一样！
+  uploadData.append('file', file)
 
   try {
-    // 呼叫你刚刚跑通的后端腾讯云 COS 接口
     const res = await http.post('/upload', uploadData, {
       headers: {'Content-Type': 'multipart/form-data'}
     })
 
-    // 拿到真实图片 URL，页面瞬间显示预览！
-    // 🚨 注意：根据你之前的 ApiResponse 结构，这里大概率要写 res.data
     formData.value.coverImg = res.data
     console.log("图片上传成功！直链：", formData.value.coverImg)
   } catch (error) {
@@ -544,79 +707,76 @@ const handleFileUpload = async (event) => {
     alert("上传失败，请检查网络或秘钥配置")
   } finally {
     isUploading.value = false
-    // 清空 input 的值，保证下次传同一张图也能触发 change 事件
     event.target.value = ''
   }
 }
+
 // 首页列表过滤
 const filteredList = computed(() => {
-  // 注意：这里必须加上 .value，因为它是 ref() 定义的响应式数据！
-  if (!keyword.value) return foodList.value;
-
-  const k = keyword.value.toLowerCase().trim();
-  return foodList.value.filter(item =>
-      item.brand.toLowerCase().includes(k) ||
-      item.product.toLowerCase().includes(k)
-  );
+  let list = foodList.value
+  if (activeFilter.value !== 'all') {
+    list = list.filter(item => item.type === activeFilter.value)
+  }
+  if (keyword.value) {
+    const k = keyword.value.toLowerCase().trim()
+    list = list.filter(item =>
+        item.brand.toLowerCase().includes(k) ||
+        item.product.toLowerCase().includes(k)
+    )
+  }
+  return list
 })
-// 获取当前食物的战报列表
-// 获取当前食物的战报列表 (临时安全版)
+
+// 今日推荐 · 拿安全率最高 + 评测数最多的
+const todayPick = computed(() => {
+  if (foodList.value.length === 0) return null
+  return [...foodList.value]
+      .sort((a, b) => (b.safeRate * 0.6 + b.voteCount * 0.4) - (a.safeRate * 0.6 + a.voteCount * 0.4))[0]
+})
+
+// 当前食物战报列表
 const currentFoodReports = ref([])
 const fetchReports = async (foodId) => {
   try {
     const res = await http.get(`/diet/reports/${foodId}`)
     console.log("你好,2", res.data)
-    // 狸猫换太子：把后端的字段，适配成咱们 HTML 模板需要的名字！
     currentFoodReports.value = res.data.map(dbItem => {
       return {
         id: dbItem.id,
-        userName: '病友_' + (dbItem.userId || '神秘人'), // 以后做了用户系统再换真名字
-        levelId: dbItem.reactionLevel,    // 映射：后端的 reactionLevel -> 前端的 levelId
+        userName: '病友_' + (dbItem.userId || '神秘人'),
+        levelId: dbItem.reactionLevel,
         location: dbItem.location || '未知战场',
         content: dbItem.content || '该病友什么也没留，只留下了一个打分...',
-        time: dbItem.createTime || '刚刚' // 如果你的实体类有 createTime 字段就填这个
+        time: dbItem.createTime || '刚刚'
       }
     })
   } catch (error) {
     console.error("获取战报失败：", error)
   }
 }
-// 打开详情页
+
 const openDetail = (item) => {
   currentFood.value = item
   showDetailModal.value = true
-
-  // 弹窗一开，立刻拉取该食物的战报！
   fetchReports(item.id)
 }
 
-// 从详情页打开上传弹窗 (自动带入品牌和商品)
 const openUploadFromDetail = () => {
   formData.value.brand = currentFood.value.brand
   formData.value.product = currentFood.value.product
   showUploadModal.value = true
 }
 
-// 提交表单 (新增：写入临时 Mock 数据看效果)
-// 注意：如果你的 http 是在别的文件定义的，记得在最上面 import 进来
-// import http from '@/utils/http'
-// 📍 --- 自动定位逻辑 ---
 const isLocating = ref(false)
 
 const autoLocate = () => {
   isLocating.value = true
 
-  // 调用浏览器的底层 GPS/IP 定位接口
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
         (position) => {
-          // 成功拿到经纬度！
           const lat = position.coords.latitude.toFixed(4)
           const lng = position.coords.longitude.toFixed(4)
-
-          // 【架构师提示】：原生 H5 只能拿到经纬度。要变成"内江市万达广场"，
-          // 后续需要接入腾讯地图/高德地图的“逆地址解析 API”。
-          // 这里咱们先展示经纬度，让你感受全栈打通的快感！
           formData.value.location = `经度: ${lng}, 纬度: ${lat} (本地定位)`
           isLocating.value = false
         },
@@ -625,57 +785,47 @@ const autoLocate = () => {
           formData.value.location = "定位失败，请手动输入"
           isLocating.value = false
         },
-        {timeout: 5000} // 最多等5秒
+        {timeout: 5000}
     )
   } else {
     formData.value.location = "浏览器不支持定位"
     isLocating.value = false
   }
 }
-const submitForm = async () => { // 🌟 重点 1：加上 async，因为咱们要发网络请求了
+
+const submitForm = async () => {
   try {
-    // 🛑 拦截一下：如果连名字都没填，直接打回去，别浪费后端资源
     if (!formData.value.brand || !formData.value.product) {
       alert("兄弟，品牌和单品名字得填啊！")
       return
     }
 
-    // 提交当前表单数据
     const res = await http.post('/diet/publish', formData.value)
     console.log("你好，", res)
-    // 如果走到这里，说明后端没报错，完美入库了！
     alert(`牛逼！战报发布成功！`)
 
-    // 关掉弹窗
     showUploadModal.value = false
 
-    // 清空表单，为下次发布做准备 (别忘了把你加的 location 也清空)
-    formData.value = {brand: '', product: '', content: '', location: '', level: 1}
+    formData.value = {brand: '', product: '', content: '', location: '', level: 1, coverImg: ''}
 
-    // 💡 导师小提示：因为咱们现在首页的 mockFoodDB 还是假数据，
-    // 所以你发完之后页面上暂时不会多出一条。
-    // 等咱们这步跑通了，下一步把首页列表也换成真实接口，就能实时看见了！
     fetchFoodList()
   } catch (error) {
-    // 万一 Token 过期了或者后端报错了，这里能接住
     console.error("战报发布失败：", error)
     alert("发布失败了兄弟，按 F12 看看控制台报啥错？")
   }
 }
 
-// ==========================================
-// 4. 工具函数
-// ==========================================
+// 工具函数
 const getBadgeStyle = (type) => {
   switch (type) {
     case 'danger':
-      return 'bg-red-50 text-red-600 border-red-100'
+      return 'bg-rose-50 text-rose-600'
     case 'warning':
-      return 'bg-amber-50 text-amber-600 border-amber-100'
+      return 'bg-amber-50 text-amber-600'
     case 'safe':
-      return 'bg-emerald-50 text-emerald-600 border-emerald-100'
+      return 'bg-emerald-50 text-emerald-600'
     default:
-      return 'bg-gray-50 text-gray-600 border-gray-100'
+      return 'bg-slate-50 text-slate-600'
   }
 }
 
@@ -691,23 +841,21 @@ const getLevelStyle = (val) => {
 }
 </script>
 
-<style>
-/* 保持你的原有样式即可 */
+<style scoped>
 @keyframes slide-up {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+</style>
+
+<style>
 @import url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css');
-body {
-  background-color: #f9fafb;
-}
 </style>

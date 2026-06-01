@@ -1,82 +1,112 @@
 <template>
-  <div :class="[
-    'relative w-full max-w-[20rem] cursor-pointer transition-all duration-300 group font-sans',
-    containerClasses[theme]
-  ]">
-
-    <div v-if="theme === 'neon'" class="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
-
-    <div v-if="theme === 'sunset'" class="absolute inset-0 rounded-2xl overflow-hidden z-0">
-      <div class="absolute inset-0 bg-gradient-to-b from-pink-400 via-orange-300 to-orange-200"></div>
-      <div class="absolute top-10 left-8 w-16 h-16 bg-white/40 rounded-full blur-[2px] shadow-[0_0_20px_rgba(255,255,255,0.6)]"></div>
-      <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-rose-900/20 rounded-full mix-blend-multiply"></div>
-      <div class="absolute -bottom-16 -left-10 w-72 h-72 bg-rose-900/30 rounded-full mix-blend-multiply"></div>
+  <article
+      :class="[
+      'group relative w-full overflow-hidden cursor-pointer font-sans transition-all duration-500',
+      'rounded-[24px] border',
+      'shadow-[0_2px_16px_-4px_rgba(15,23,42,0.06)] hover:shadow-[0_16px_40px_-12px_rgba(15,23,42,0.16)]',
+      'hover:-translate-y-0.5 active:scale-[0.99]',
+      themeWrap[theme] || themeWrap.editorial
+    ]"
+  >
+    <!-- 背景层（动效/渐变） -->
+    <div v-if="theme === 'midnight'" class="absolute inset-0 pointer-events-none">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.35),transparent_60%)]"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.25),transparent_55%)]"></div>
     </div>
 
-    <div v-if="theme === 'deepsea'" class="absolute inset-0 rounded-2xl overflow-hidden z-0 bg-slate-900">
-      <div class="absolute inset-0 bg-gradient-to-b from-cyan-900 via-blue-900 to-black opacity-90"></div>
-      <div class="absolute bottom-4 left-10 w-4 h-4 border border-cyan-400/30 rounded-full animate-bounce duration-[3000ms]"></div>
-      <div class="absolute bottom-12 left-20 w-2 h-2 border border-cyan-400/20 rounded-full animate-bounce duration-[5000ms]"></div>
-      <div class="absolute top-0 right-0 w-full h-2/3 bg-gradient-to-bl from-cyan-400/10 to-transparent"></div>
+    <div v-if="theme === 'sunrise'" class="absolute inset-0 pointer-events-none">
+      <div class="absolute inset-0 bg-gradient-to-br from-amber-100 via-rose-100 to-orange-200"></div>
+      <div class="absolute -top-10 -right-8 w-44 h-44 rounded-full bg-white/40 blur-3xl"></div>
+      <div class="absolute -bottom-10 -left-10 w-56 h-56 rounded-full bg-rose-300/30 blur-3xl"></div>
     </div>
 
+    <div v-if="theme === 'aurora'" class="absolute inset-0 pointer-events-none">
+      <div class="absolute inset-0 bg-gradient-to-br from-emerald-50 via-sky-50 to-violet-50"></div>
+      <div class="absolute -top-20 right-0 w-72 h-72 rounded-full bg-emerald-200/40 blur-3xl"></div>
+      <div class="absolute -bottom-20 left-0 w-72 h-72 rounded-full bg-violet-200/40 blur-3xl"></div>
+    </div>
 
-    <div :class="[
-      'relative h-full flex flex-col justify-between overflow-hidden transition-all duration-300 z-10',
-      contentClasses[theme]
-    ]">
+    <!-- 故事配图 -->
+    <div v-if="coverImage" class="relative z-10 px-3 pt-3">
+      <img :src="coverImage" class="w-full h-36 object-cover rounded-[18px]" />
+    </div>
 
-      <div class="flex items-start justify-between">
-        <div :class="(theme === 'sunset' || theme === 'deepsea') ? 'text-white drop-shadow-md' : ''">
-          <div :class="['text-3xl transition-transform duration-300 group-hover:scale-110', iconClasses[theme]]">{{ icon || '💊' }}</div>
-          <h3 :class="['text-lg leading-tight mt-2', titleColor[theme]]">
-            {{ title || '默认标题' }}
-          </h3>
-        </div>
+      <!-- 内容主体 -->
+      <div class="relative z-10 flex flex-col h-full px-5 pt-5 pb-4">
+        <!-- 顶部：图标徽章 + 日期 -->
+        <header class="flex items-start justify-between mb-4">
+          <div
+              :class="[
+              'w-10 h-10 rounded-[14px] flex items-center justify-center text-[20px] backdrop-blur-md shadow-sm',
+              iconBadge[theme]
+            ]"
+          >
+            {{ icon || '✦' }}
+          </div>
+          <div :class="['flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase', metaColor[theme]]">
+            <span class="w-1 h-1 rounded-full" :class="dotColor[theme]"></span>
+            {{ formatDate(date) }}
+          </div>
+        </header>
 
-        <div v-if="theme === 'sunset'" class="text-right text-white drop-shadow-md">
-          <p class="text-xs font-bold opacity-80">2025.12.23</p>
-          <p class="text-3xl font-black">24°C</p>
-        </div>
-        <div v-else-if="theme === 'deepsea'" class="text-right text-cyan-200 drop-shadow-md">
-          <p class="text-xs font-bold opacity-60">DEPTH</p>
-          <p class="text-3xl font-black tracking-widest">-3000m</p>
-        </div>
-        <p v-else :class="['text-xs mt-1', dateColor[theme]]">2025.12.16</p>
-      </div>
+        <!-- 标题 -->
+        <h3
+            :class="[
+            'text-[18px] leading-[1.3] tracking-tight mb-2.5',
+            titleColor[theme]
+          ]"
+        >
+          {{ title || '默认标题' }}
+        </h3>
 
-      <p :class="['text-sm mt-4 line-clamp-3 leading-relaxed', (theme === 'sunset' || theme === 'deepsea') ? 'text-white/90 font-medium drop-shadow-sm' : textColor[theme]]">
-        {{ summary || '兄弟，这里是摘要内容...' }}
-      </p>
+        <!-- 摘要 -->
+        <p
+            :class="[
+            'text-[13px] leading-[1.65] line-clamp-3 mb-4 flex-1',
+            summaryColor[theme]
+          ]"
+        >
+          {{ summary || '兄弟，这里是摘要内容...' }}
+        </p>
 
-      <div v-if="theme === 'sunset'" class="mt-5 -mx-7 px-7 py-4 bg-white/90 backdrop-blur-sm border-t border-white/50">
-        <div class="flex flex-wrap gap-2">
-            <span v-for="tag in tags" :key="tag" class="text-xs font-bold text-slate-600">
-              ● {{ tag }}
-            </span>
-        </div>
-      </div>
-
-      <div v-else-if="theme === 'deepsea'" class="mt-5 pt-4 border-t border-cyan-500/30">
-        <div class="flex flex-wrap gap-2">
-            <span v-for="tag in tags" :key="tag" class="text-xs px-2 py-0.5 border border-cyan-500/50 text-cyan-300 bg-cyan-900/40 rounded-full">
+        <!-- 底部：标签 + 互动 -->
+        <footer class="flex items-center justify-between pt-3.5" :class="dividerColor[theme]">
+          <div class="flex flex-wrap gap-1.5">
+            <span
+                v-for="tag in (tags || []).slice(0, 2)"
+                :key="tag"
+                :class="[
+                'text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide',
+                tagStyle[theme]
+              ]"
+            >
               {{ tag }}
             </span>
-        </div>
+          </div>
+          <div :class="['flex items-center gap-3 text-[11px] font-bold', metaColor[theme]]">
+            <span class="flex items-center gap-1">
+              <i class="ri-heart-3-line text-[13px]"></i> {{ likes ?? 0 }}
+            </span>
+            <span class="flex items-center gap-1">
+              <i class="ri-chat-3-line text-[13px]"></i> {{ comments ?? 0 }}
+            </span>
+          </div>
+        </footer>
       </div>
 
-      <div v-else class="flex flex-wrap gap-2 mt-5">
-        <span v-for="tag in tags" :key="tag" :class="['text-xs px-2 py-0.5 border', tagClasses[theme]]">
-          {{ tagPrefix[theme] }}{{ tag }}
-        </span>
-      </div>
-      <div v-if="canEdit" class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-        <button class="bg-red-500 text-white p-1 rounded hover:bg-red-600" @click.stop="$emit('delete')">
-          <i class="ri-delete-bin-line"></i>
-        </button>
-      </div>
+    <!-- 编辑层 -->
+    <div
+        v-if="canEdit"
+        class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20"
+    >
+      <button
+          @click.stop="$emit('delete')"
+          class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-xl shadow-md text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all active:scale-90"
+      >
+        <i class="ri-delete-bin-line text-sm"></i>
+      </button>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup>
@@ -85,104 +115,79 @@ defineProps({
   title: String,
   summary: String,
   icon: String,
-  theme: String,
+  theme: { type: String, default: 'editorial' },
   date: String,
   tags: Array,
-
-  // 👇 关键：接收权限开关！
-  canEdit: {
-    type: Boolean,
-    default: false
-  }
+  coverImage: { type: String, default: '' },
+  likes: { type: Number, default: 0 },
+  comments: { type: Number, default: 0 },
+  canEdit: { type: Boolean, default: false }
 })
-
-// 👇 声明我们要抛出的事件，告诉父组件“我要删这个！”
 defineEmits(['delete'])
 
-// === 🎨 皮肤配置中心 ===
-
-const containerClasses = {
-  neon: 'rounded-lg hover:-translate-y-2',
-  glass: 'rounded-xl shadow-lg hover:shadow-cyan-500/30 hover:-translate-y-2',
-  pop: 'rounded-xl hover:-translate-y-1',
-  cyber: 'rounded-sm hover:-translate-y-1',
-  paper: 'rounded-sm rotate-1 hover:rotate-0 hover:scale-105',
-  aurora: 'rounded-2xl hover:scale-[1.02]',
-  sunset: 'rounded-2xl shadow-xl shadow-orange-500/20 hover:-translate-y-2',
-  deepsea: 'rounded-2xl shadow-lg shadow-cyan-900/50 hover:shadow-cyan-500/40 hover:-translate-y-2'
+const formatDate = (date) => {
+  if (!date) return ''
+  return date.replace(/^\d{4}\./, '').replace(/\./g, '/')
 }
 
-const contentClasses = {
-  neon: 'bg-slate-900 text-slate-100 rounded-lg px-7 py-6',
-  glass: 'bg-white/10 backdrop-blur-md border border-white/20 shadow-inner rounded-xl px-7 py-6',
-  pop: 'bg-yellow-400 border-2 border-black text-black rounded-xl px-7 py-6',
-  cyber: 'bg-black border border-green-500/50 rounded-sm px-7 py-6',
-  paper: 'bg-[#fffdf5] border border-stone-200 shadow-md text-stone-800 rounded-sm px-7 py-6',
-  aurora: 'bg-slate-900 border border-slate-700/50 rounded-2xl px-7 py-6',
-  sunset: 'bg-transparent px-7 pt-6 pb-0', // 修复了底部被切的问题
-  deepsea: 'bg-transparent px-7 py-6'
+// === 4 个克制高级主题 ===
+// editorial: 杂志风 · 白底克制
+// midnight: 深夜模式 · 深空蓝紫
+// sunrise: 朝霞 · 暖色温柔
+// aurora: 极光 · 清透柔光
+const themeWrap = {
+  editorial: 'bg-white border-slate-100/80',
+  midnight: 'bg-slate-900 border-slate-800/50',
+  sunrise: 'bg-transparent border-orange-200/60',
+  aurora: 'bg-transparent border-white/80'
 }
 
-// 标题颜色
+const iconBadge = {
+  editorial: 'bg-slate-50 border border-slate-100 text-slate-700',
+  midnight: 'bg-white/10 border border-white/20 text-white',
+  sunrise: 'bg-white/70 border border-white/80 text-rose-700',
+  aurora: 'bg-white/70 border border-white/80 text-slate-700'
+}
+
 const titleColor = {
-  neon: 'text-white font-bold',
-  glass: 'text-slate-800 font-extrabold',
-  pop: 'text-black font-black uppercase',
-  cyber: 'text-green-400 font-mono tracking-tighter font-bold',
-  paper: 'text-stone-800 font-serif font-bold italic',
-  aurora: 'text-transparent bg-clip-text bg-gradient-to-r from-rose-300 to-indigo-300 font-bold',
-  sunset: 'text-white font-bold text-2xl drop-shadow-lg',
-  deepsea: 'text-cyan-100 font-bold tracking-widest drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]'
+  editorial: 'text-slate-900 font-black',
+  midnight: 'text-white font-black',
+  sunrise: 'text-slate-900 font-black',
+  aurora: 'text-slate-900 font-black'
 }
 
-// 正文颜色
-const textColor = {
-  neon: 'text-slate-400',
-  glass: 'text-slate-600 font-medium',
-  pop: 'text-slate-900 font-bold',
-  cyber: 'text-green-600/80 font-mono text-xs',
-  paper: 'text-stone-600 font-serif',
-  aurora: 'text-slate-400',
-  sunset: 'text-white',
-  deepsea: 'text-cyan-200/80'
+const summaryColor = {
+  editorial: 'text-slate-500',
+  midnight: 'text-slate-300',
+  sunrise: 'text-slate-700/90',
+  aurora: 'text-slate-600'
 }
 
-// 日期颜色
-const dateColor = {
-  neon: 'text-slate-500',
-  glass: 'text-slate-500',
-  pop: 'text-slate-700 font-mono',
-  cyber: 'text-green-800 font-mono text-[10px]',
-  paper: 'text-stone-400 font-serif italic',
-  aurora: 'text-slate-500',
-  sunset: 'text-white',
-  deepsea: 'text-cyan-500'
+const metaColor = {
+  editorial: 'text-slate-400',
+  midnight: 'text-slate-400',
+  sunrise: 'text-slate-600/80',
+  aurora: 'text-slate-500'
 }
 
-// 图标样式
-const iconClasses = {
-  cyber: 'grayscale contrast-200 drop-shadow-[0_0_5px_rgba(34,197,94,0.8)]',
-  paper: 'opacity-80',
-  aurora: 'grayscale-0',
-  sunset: 'text-white drop-shadow-md text-4xl',
-  deepsea: 'text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] text-4xl'
+const dotColor = {
+  editorial: 'bg-blue-500',
+  midnight: 'bg-sky-400',
+  sunrise: 'bg-rose-500',
+  aurora: 'bg-violet-500'
 }
 
-// 标签样式 (Sunset/Deepsea 在 template 特殊处理)
-const tagClasses = {
-  neon: 'text-pink-500 border-pink-500 rounded-full',
-  glass: 'text-blue-600 border-blue-200 bg-blue-50/50 rounded-full',
-  pop: 'text-black border-black bg-white font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-full',
-  cyber: 'text-green-400 border-green-900 bg-green-900/20 font-mono text-[10px] rounded-none',
-  paper: 'text-stone-500 border-stone-300 bg-stone-100 rounded-sm font-serif',
-  aurora: 'text-white border-white/10 bg-white/5 rounded-full backdrop-blur-sm',
-  sunset: '',
-  deepsea: ''
+const dividerColor = {
+  editorial: 'border-t border-slate-100',
+  midnight: 'border-t border-white/10',
+  sunrise: 'border-t border-orange-200/60',
+  aurora: 'border-t border-white/70'
 }
 
-// 标签前缀
-const tagPrefix = {
-  neon: '#', glass: '#', pop: '',
-  cyber: '>', paper: '', aurora: '✦ ', sunset: '', deepsea: ''
+const tagStyle = {
+  editorial: 'bg-slate-100 text-slate-700',
+  midnight: 'bg-white/10 text-white/90 border border-white/15',
+  sunrise: 'bg-white/70 text-rose-700 border border-white/80',
+  aurora: 'bg-white/70 text-violet-700 border border-white/80'
 }
 </script>

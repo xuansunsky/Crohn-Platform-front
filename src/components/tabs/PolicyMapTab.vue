@@ -1,12 +1,12 @@
 <template>
-  <div class="relative -m-4 w-[calc(100%+2rem)] h-[calc(100vh-96px)] bg-slate-50 overflow-hidden flex flex-col"> <header>
-      <div class="flex items-center gap-3">
-        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-blue-200 shadow-lg">
+  <div class="relative w-full h-full bg-slate-50 overflow-hidden flex flex-col"> <header class="px-4 pt-4 pb-3">
+      <div class="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-blue-200 shadow-lg">
           <i class="ri-government-fill text-xl"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold text-slate-800 tracking-tight">全国医保政策 & 避坑指南</h1>
-          <p class="text-xs text-slate-400">Crohn Kingdom Policy Database</p>
+          <h1 class="text-lg font-bold text-slate-800 tracking-tight">全国医保政策 & 避坑指南</h1>
+          <p class="text-xs text-slate-400">Crohn Paradise Policy Database</p>
         </div>
       </div>
 
@@ -40,7 +40,7 @@
       </div>
       <div v-if="showDetailPanel" class="absolute inset-0 z-20 flex flex-col bg-slate-50">
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 bg-white px-4 py-4 md:px-6 shadow-sm gap-4 shrink-0 z-20 relative">
+        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 bg-white px-4 py-4 md:px-6 shadow-sm gap-4 shrink-0 z-20 relative mx-4 mt-4 rounded-2xl">
           <div class="flex items-center gap-3 w-full md:w-auto">
             <button @click="closeDetailPanel" class="rounded-full p-2 hover:bg-slate-100 text-slate-400"><i class="ri-arrow-left-line text-xl"></i></button>
             <div class="flex-1 min-w-0">
