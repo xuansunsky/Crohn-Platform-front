@@ -19,11 +19,8 @@
               <button @click="openPaperBoat" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="情绪解压纸船">
                 <i class="ri-ship-line text-base"></i>
               </button>
-              <button @click="openComposer" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all">
+              <button @click="openComposer" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="发布动态">
                 <i class="ri-camera-line text-base"></i>
-              </button>
-              <button @click="showFabMenu = !showFabMenu" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" :class="{ 'rotate-45': showFabMenu }">
-                <i class="ri-add-line text-base"></i>
               </button>
             </div>
           </div>
@@ -39,14 +36,6 @@
             </button>
           </div>
 
-          <!-- FAB 菜单浮层 -->
-          <transition name="fade-up">
-            <div v-if="showFabMenu" class="absolute top-14 right-4 bg-white/95 backdrop-blur-2xl rounded-[20px] shadow-[0_20px_40px_rgba(0,0,0,0.18)] p-1.5 w-36 border border-white z-30">
-              <button @click="openFriendPicker" class="w-full text-left px-3.5 py-2.5 text-[13px] hover:bg-slate-50 rounded-[14px] transition-all text-slate-800 font-bold flex items-center gap-2"><i class="ri-chat-private-line text-blue-500"></i> 发起密聊</button>
-              <button @click="openCreateGroup" class="w-full text-left px-3.5 py-2.5 text-[13px] hover:bg-slate-50 rounded-[14px] transition-all text-slate-800 font-bold flex items-center gap-2"><i class="ri-team-line text-violet-500"></i> 创建小队</button>
-              <button @click="openBroadcast" class="w-full text-left px-3.5 py-2.5 text-[13px] hover:bg-slate-50 rounded-[14px] transition-all text-slate-800 font-bold flex items-center gap-2"><i class="ri-broadcast-line text-rose-500"></i> 群发广播</button>
-            </div>
-          </transition>
         </div>
 
         <!-- 头像悬浮 -->
@@ -62,9 +51,6 @@
       <!-- ============ Tab Pills ============ -->
       <div class="sticky top-0 shrink-0 px-5 pt-8 pb-3 z-30 bg-[#FBF9F5]/90 backdrop-blur-xl border-b border-stone-200/40">
         <div class="flex bg-white/70 backdrop-blur-xl p-1 rounded-full shadow-[0_4px_20px_rgba(15,23,42,0.04)] border border-white/80 gap-0.5">
-          <button @click="currentTab = 'moments'" :class="currentTab === 'moments' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
-            动态
-          </button>
           <button @click="currentTab = 'status'" :class="currentTab === 'status' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
             状态
           </button>
@@ -75,6 +61,9 @@
           <button @click="currentTab = 'contacts'" :class="currentTab === 'contacts' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
             联络人
           </button>
+          <button @click="currentTab = 'moments'" :class="currentTab === 'moments' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
+            动态
+          </button>
         </div>
       </div>
 
@@ -82,127 +71,115 @@
 
         <!-- ============ 状态墙 ============ -->
         <div v-show="currentTab === 'status'" class="-mx-5">
-          <StatusBoard />
+          <StatusBoard>
+            <!-- 痛痛共鸣舱：插在「拉响警报」那一排下面 -->
+            <template #after-stats>
+              <div class="px-5 pt-4">
+                <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50/80 via-white to-pink-50/50 rounded-[28px] p-5 border border-indigo-100/50 shadow-[0_8px_30px_rgba(99,102,241,0.06)] backdrop-blur-xl">
+                  <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-300/10 rounded-full blur-2xl"></div>
+                  <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-300/10 rounded-full blur-2xl"></div>
+
+                  <div class="relative z-10">
+                    <div class="flex flex-col gap-1.5 mb-3">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black tracking-[0.15em] text-indigo-600 uppercase px-2.5 py-1 bg-indigo-50 rounded-full border border-indigo-100/80">
+                          ✦ 痛痛共鸣舱
+                        </span>
+                        <span class="text-[11px] font-black text-rose-500 flex items-center gap-1 shrink-0">
+                          <i class="ri-heart-pulse-fill animate-pulse"></i> {{ warmthPoints }} 暖心值
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 class="text-[15px] font-black text-slate-800 tracking-tight mb-1">肚子抽痛或感到孤独？</h3>
+                    <p class="text-[12px] text-slate-500 leading-relaxed mb-4">一键向附近的战友发送微光信号，无言守护，默默陪伴。</p>
+
+                    <!-- 交互按钮区域 -->
+                    <div class="flex gap-2.5">
+                      <button
+                        @click="triggerPainRescue"
+                        :disabled="isBroadcasting"
+                        class="flex-1 py-3 px-4 rounded-2xl text-[12px] font-black text-white bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:from-slate-400 disabled:to-slate-500"
+                      >
+                        <i class="ri-heart-add-fill" :class="{ 'animate-pulse': isBroadcasting }"></i>
+                        {{ isBroadcasting ? '信号广播中...' : '一键痛痛呼救 🩹' }}
+                      </button>
+
+                      <button
+                        @click="openPatrolSignal"
+                        class="py-3 px-4 rounded-2xl text-[12px] font-black text-slate-700 bg-white border border-stone-200 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1"
+                      >
+                        <i class="ri-radar-line text-indigo-500 animate-pulse"></i>
+                        暖暖他人 🫂
+                      </button>
+                    </div>
+
+                    <!-- 广播时涟漪雷达效果 -->
+                    <div v-if="isBroadcasting" class="mt-4 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-100 flex flex-col items-center justify-center relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                      <div class="relative w-16 h-16 flex items-center justify-center mb-2">
+                        <span class="absolute w-12 h-12 rounded-full bg-indigo-500/20 animate-ping"></span>
+                        <span class="absolute w-8 h-8 rounded-full bg-pink-500/30 animate-pulse"></span>
+                        <i class="ri-radar-line text-indigo-600 text-2xl z-10 relative"></i>
+                      </div>
+                      <p class="text-[11.5px] font-bold text-indigo-700 animate-pulse">痛痛微光已向全网放飞... 别怕，有我们在</p>
+                      <div class="text-[10px] text-slate-400 mt-1">深呼吸，吸气... 呼气... 🍂</div>
+                    </div>
+
+                    <!-- 接收反馈的浮窗气泡 -->
+                    <transition-group name="fade-up">
+                      <div
+                        v-for="comfort in incomingComforts"
+                        :key="comfort.id"
+                        class="mt-2.5 p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11.5px] font-bold flex items-center gap-2 shadow-md shadow-emerald-500/10"
+                      >
+                        <i class="ri-sparkling-fill"></i>
+                        <span>{{ comfort.text }}</span>
+                      </div>
+                    </transition-group>
+
+                    <!-- 查看他人痛痛求助 -->
+                    <transition name="fade-up">
+                      <div v-if="showPatrol" class="mt-4 p-4 rounded-2xl bg-white border border-stone-150 space-y-3 animate-in fade-in duration-300">
+                        <h4 class="text-[12px] font-black text-slate-700 flex items-center gap-1">
+                          <i class="ri-notification-fill text-amber-500"></i> 附近的痛苦共鸣信号
+                        </h4>
+
+                        <div v-if="patrolPatients.length === 0" class="text-center py-2 text-[11px] text-slate-400 font-bold">
+                          目前天空晴朗，没有战友在难受 🌤️
+                        </div>
+
+                        <div
+                          v-for="p in patrolPatients"
+                          :key="p.id"
+                          class="flex items-center justify-between p-2.5 rounded-xl bg-stone-50 border border-stone-100 animate-in fade-in duration-300"
+                        >
+                          <div>
+                            <div class="flex items-center gap-1">
+                              <span class="text-[12px] font-black text-slate-800">{{ p.name }}</span>
+                              <span class="text-[9px] bg-red-100 text-red-600 px-1 py-0.2 rounded font-bold">{{ p.dist }}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-0.5">{{ p.sign }}</p>
+                          </div>
+
+                          <button
+                            @click="sendWarmthTo(p)"
+                            :disabled="p.warmed"
+                            class="px-3 py-1.5 rounded-full text-[10.5px] font-black text-white bg-slate-900 shadow-sm active:scale-95 transition-all disabled:bg-emerald-500 disabled:text-white"
+                          >
+                            {{ p.warmed ? '已送暖 🩹' : '揉揉暖腹 🩹' }}
+                          </button>
+                        </div>
+                      </div>
+                    </transition>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </StatusBoard>
         </div>
 
-        <!-- ============ 动态 Feed ============ -->
-        <div v-show="currentTab === 'moments'" class="space-y-3.5">
-
-          <!-- 痛痛抱抱舱 Pain Cabin -->
-          <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50/80 via-white to-pink-50/50 rounded-[28px] p-5 border border-indigo-100/50 shadow-[0_8px_30px_rgba(99,102,241,0.06)] backdrop-blur-xl mb-3.5">
-            <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-300/10 rounded-full blur-2xl"></div>
-            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-300/10 rounded-full blur-2xl"></div>
-            
-            <div class="relative z-10">
-              <div class="flex flex-col gap-1.5 mb-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-[10px] font-black tracking-[0.15em] text-indigo-600 uppercase px-2.5 py-1 bg-indigo-50 rounded-full border border-indigo-100/80">
-                    ✦ 痛痛共鸣舱
-                  </span>
-                  <span class="text-[11px] font-black text-rose-500 flex items-center gap-1 shrink-0">
-                    <i class="ri-heart-pulse-fill animate-pulse"></i> {{ warmthPoints }} 暖心值
-                  </span>
-                </div>
-              </div>
-              
-              <h3 class="text-[15px] font-black text-slate-800 tracking-tight mb-1">肚子抽痛或感到孤独？</h3>
-              <p class="text-[12px] text-slate-500 leading-relaxed mb-4">一键向附近的战友发送微光信号，无言守护，默默陪伴。</p>
-              
-              <!-- 交互按钮区域 -->
-              <div class="flex gap-2.5">
-                <button 
-                  @click="triggerPainRescue" 
-                  :disabled="isBroadcasting"
-                  class="flex-1 py-3 px-4 rounded-2xl text-[12px] font-black text-white bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:from-slate-400 disabled:to-slate-500"
-                >
-                  <i class="ri-heart-add-fill" :class="{ 'animate-pulse': isBroadcasting }"></i>
-                  {{ isBroadcasting ? '信号广播中...' : '一键痛痛呼救 🩹' }}
-                </button>
-                
-                <button 
-                  @click="openPatrolSignal"
-                  class="py-3 px-4 rounded-2xl text-[12px] font-black text-slate-700 bg-white border border-stone-200 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1"
-                >
-                  <i class="ri-radar-line text-indigo-500 animate-pulse"></i>
-                  暖暖他人 🫂
-                </button>
-              </div>
-              
-              <!-- 广播时涟漪雷达效果 -->
-              <div v-if="isBroadcasting" class="mt-4 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-100 flex flex-col items-center justify-center relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                <div class="relative w-16 h-16 flex items-center justify-center mb-2">
-                  <span class="absolute w-12 h-12 rounded-full bg-indigo-500/20 animate-ping"></span>
-                  <span class="absolute w-8 h-8 rounded-full bg-pink-500/30 animate-pulse"></span>
-                  <i class="ri-radar-line text-indigo-600 text-2xl z-10 relative"></i>
-                </div>
-                <p class="text-[11.5px] font-bold text-indigo-700 animate-pulse">痛痛微光已向全网放飞... 别怕，有我们在</p>
-                <div class="text-[10px] text-slate-400 mt-1">深呼吸，吸气... 呼气... 🍂</div>
-              </div>
-              
-              <!-- 接收反馈的浮窗气泡 -->
-              <transition-group name="fade-up">
-                <div 
-                  v-for="comfort in incomingComforts" 
-                  :key="comfort.id"
-                  class="mt-2.5 p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11.5px] font-bold flex items-center gap-2 shadow-md shadow-emerald-500/10"
-                >
-                  <i class="ri-sparkling-fill"></i>
-                  <span>{{ comfort.text }}</span>
-                </div>
-              </transition-group>
-
-              <!-- 查看他人痛痛求助 -->
-              <transition name="fade-up">
-                <div v-if="showPatrol" class="mt-4 p-4 rounded-2xl bg-white border border-stone-150 space-y-3 animate-in fade-in duration-300">
-                  <h4 class="text-[12px] font-black text-slate-700 flex items-center gap-1">
-                    <i class="ri-notification-fill text-amber-500"></i> 附近的痛苦共鸣信号
-                  </h4>
-                  
-                  <div v-if="patrolPatients.length === 0" class="text-center py-2 text-[11px] text-slate-400 font-bold">
-                    目前天空晴朗，没有战友在难受 🌤️
-                  </div>
-                  
-                  <div 
-                    v-for="p in patrolPatients" 
-                    :key="p.id"
-                    class="flex items-center justify-between p-2.5 rounded-xl bg-stone-50 border border-stone-100 animate-in fade-in duration-300"
-                  >
-                    <div>
-                      <div class="flex items-center gap-1">
-                        <span class="text-[12px] font-black text-slate-800">{{ p.name }}</span>
-                        <span class="text-[9px] bg-red-100 text-red-600 px-1 py-0.2 rounded font-bold">{{ p.dist }}</span>
-                      </div>
-                      <p class="text-[10px] text-slate-400 mt-0.5">{{ p.sign }}</p>
-                    </div>
-                    
-                    <button 
-                      @click="sendWarmthTo(p)"
-                      :disabled="p.warmed"
-                      class="px-3 py-1.5 rounded-full text-[10.5px] font-black text-white bg-slate-900 shadow-sm active:scale-95 transition-all disabled:bg-emerald-500 disabled:text-white"
-                    >
-                      {{ p.warmed ? '已送暖 🩹' : '揉揉暖腹 🩹' }}
-                    </button>
-                  </div>
-                </div>
-              </transition>
-
-            </div>
-          </div>
-
-          <!-- 今日心情快速发布卡 -->
-          <div class="bg-white rounded-[24px] p-4 border border-stone-100 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)]">
-            <div class="flex items-center gap-3">
-              <img :src="myCard.avatar" class="w-10 h-10 rounded-2xl border border-white shadow-sm shrink-0" />
-              <button @click="openComposer" class="flex-1 text-left text-[13px] text-slate-400 font-medium bg-stone-50 hover:bg-stone-100 transition-colors px-4 py-2.5 rounded-full">
-                今天的肠子还好吗？说点什么...
-              </button>
-            </div>
-            <div class="flex items-center justify-around mt-3 pt-3 border-t border-stone-50">
-              <button v-for="qa in quickActions" :key="qa.label" class="flex items-center gap-1.5 text-[11.5px] font-bold text-slate-500 hover:text-slate-900 active:scale-95 transition-all px-2 py-1">
-                <i :class="qa.icon + ' text-base ' + qa.color"></i> {{ qa.label }}
-              </button>
-            </div>
-          </div>
+        <!-- ============ 动态 Feed（纯净列表流）============ -->
+        <div v-show="currentTab === 'moments'" class="space-y-3.5 pt-1">
 
           <!-- Feed -->
           <article
@@ -234,21 +211,31 @@
             <!-- 文本内容 -->
             <p class="text-[13.5px] text-slate-700 leading-[1.7] whitespace-pre-line mb-3">{{ post.content }}</p>
 
-            <!-- 图片 -->
+            <!-- 图片 / 视频（朋友圈九宫格） -->
             <div v-if="post.images && post.images.length" :class="imageGridClass(post.images.length)" class="grid gap-1 mb-3">
               <div
                   v-for="(img, i) in post.images"
                   :key="i"
                   :class="post.images.length === 1 ? 'aspect-[4/3] max-h-[280px]' : 'aspect-square'"
-                  class="overflow-hidden rounded-xl bg-stone-100 cursor-pointer hover:opacity-95 transition-opacity"
+                  class="relative overflow-hidden rounded-xl bg-stone-100 hover:opacity-95 transition-opacity"
               >
-                <img :src="img" class="w-full h-full object-cover" loading="lazy" />
+                <video v-if="isVideo(img)" :src="img" class="w-full h-full object-cover" controls playsinline preload="metadata"></video>
+                <img v-else :src="img" class="w-full h-full object-cover cursor-pointer" loading="lazy" />
+                <span v-if="isVideo(img) && post.images.length > 1" class="absolute top-1.5 left-1.5 text-[9px] font-black text-white bg-black/45 px-1.5 py-0.5 rounded-full pointer-events-none">
+                  <i class="ri-play-mini-fill"></i> 视频
+                </span>
               </div>
             </div>
 
-            <!-- 位置标签 -->
-            <div v-if="post.location" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md mb-3">
-              <i class="ri-map-pin-2-fill text-[12px]"></i> {{ post.location }}
+            <!-- 位置标签 + 可见范围 -->
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <div v-if="post.location" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
+                <i class="ri-map-pin-2-fill text-[12px]"></i> {{ post.location }}
+              </div>
+              <div v-if="post.visibility && post.visibility !== 'public'" class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md" :class="post.visibility === 'private' ? 'text-slate-500 bg-slate-100' : 'text-emerald-600 bg-emerald-50'">
+                <i :class="post.visibility === 'private' ? 'ri-lock-2-fill' : 'ri-shield-check-fill'" class="text-[12px]"></i>
+                {{ post.visibility === 'private' ? '仅自己' : '仅战友' }}
+              </div>
             </div>
 
             <!-- Actions -->
@@ -349,6 +336,22 @@
         </div>
 
         <div v-show="currentTab === 'contacts'" class="space-y-5">
+          <!-- 快捷操作：发起密聊 / 创建小队 / 群发广播 -->
+          <div class="grid grid-cols-3 gap-2.5">
+            <button @click="openFriendPicker" class="flex flex-col items-center gap-1.5 py-3.5 bg-white border border-slate-100 rounded-2xl shadow-[0_4px_16px_-6px_rgba(15,23,42,0.06)] active:scale-95 transition-all">
+              <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center"><i class="ri-chat-private-line text-lg"></i></span>
+              <span class="text-[11.5px] font-black text-slate-700">发起密聊</span>
+            </button>
+            <button @click="openCreateGroup" class="flex flex-col items-center gap-1.5 py-3.5 bg-white border border-slate-100 rounded-2xl shadow-[0_4px_16px_-6px_rgba(15,23,42,0.06)] active:scale-95 transition-all">
+              <span class="w-9 h-9 rounded-xl bg-violet-50 text-violet-500 flex items-center justify-center"><i class="ri-team-line text-lg"></i></span>
+              <span class="text-[11.5px] font-black text-slate-700">创建小队</span>
+            </button>
+            <button @click="openBroadcast" class="flex flex-col items-center gap-1.5 py-3.5 bg-white border border-slate-100 rounded-2xl shadow-[0_4px_16px_-6px_rgba(15,23,42,0.06)] active:scale-95 transition-all">
+              <span class="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center"><i class="ri-broadcast-line text-lg"></i></span>
+              <span class="text-[11.5px] font-black text-slate-700">群发广播</span>
+            </button>
+          </div>
+
           <div class="relative overflow-hidden bg-white p-5 rounded-[28px] border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.05)] mb-5">
             <div class="absolute -right-4 -top-4 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-2xl"></div>
 
@@ -812,50 +815,168 @@
       </div>
     </transition>
 
-    <!-- ============ 发布动态 Composer ============ -->
-    <transition name="fade-up">
-      <div v-if="showComposer" class="fixed inset-0 z-[140] bg-slate-900/60 backdrop-blur-md flex flex-col justify-end">
-        <div class="bg-white rounded-t-[36px] p-6 max-h-[85vh] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.1)] relative">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
+    <!-- ============ 发布动态 Composer · 全屏沉浸（小红书布局）============ -->
+    <transition name="page-slide">
+      <div v-if="showComposer" class="fixed inset-0 z-[140] bg-white flex flex-col">
 
-          <div class="flex justify-between items-center mb-5 mt-4 shrink-0">
-            <h2 class="text-slate-900 text-[20px] font-black tracking-tight">发布动态</h2>
-            <button @click="showComposer = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 active:scale-90 transition-all">
-              <i class="ri-close-line text-lg"></i>
-            </button>
-          </div>
+        <!-- 顶栏：返回 -->
+        <header class="shrink-0 flex items-center h-14 px-2.5 border-b border-slate-50">
+          <button @click="showComposer = false" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-slate-100 transition-all">
+            <i class="ri-arrow-left-line text-[26px] text-slate-800"></i>
+          </button>
+        </header>
 
-          <div class="flex-1 overflow-y-auto custom-scroll">
-            <textarea
-              v-model="composerText"
-              rows="5"
-              placeholder="今天的肠子还好吗？记录此刻的心情、战报或求助..."
-              class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-800 text-[14px] font-medium outline-none focus:border-blue-400 focus:bg-white transition-all resize-none"
-            ></textarea>
-
-            <!-- 已选图片 -->
-            <div v-if="composerImages.length" class="grid grid-cols-3 gap-2 mt-3">
-              <div v-for="(img, i) in composerImages" :key="i" class="relative aspect-square rounded-xl overflow-hidden bg-stone-100">
-                <img :src="img" class="w-full h-full object-cover">
-                <button @click="removeComposerImage(i)" class="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-sm active:scale-90">
-                  <i class="ri-close-line"></i>
-                </button>
-              </div>
+        <!-- 内容滚动区 -->
+        <div class="flex-1 overflow-y-auto custom-scroll px-5 pt-4 pb-6">
+          <!-- 带序号的九宫格 -->
+          <div class="grid grid-cols-3 gap-2.5 mb-5">
+            <div
+              v-for="(media, i) in composerImages"
+              :key="i"
+              class="relative aspect-square rounded-2xl overflow-hidden bg-stone-100 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.12)]"
+            >
+              <video v-if="isVideo(media)" :src="media" class="w-full h-full object-cover" muted></video>
+              <img v-else :src="media" class="w-full h-full object-cover" />
+              <!-- 序号徽章 -->
+              <span class="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-slate-900/55 backdrop-blur text-white text-[11px] font-black flex items-center justify-center pointer-events-none">{{ i + 1 }}</span>
+              <span v-if="isVideo(media)" class="absolute bottom-1.5 left-1.5 text-[10px] font-bold text-white bg-black/45 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 pointer-events-none">
+                <i class="ri-play-mini-fill"></i> 视频
+              </span>
+              <button @click="removeComposerImage(i)" class="absolute top-1.5 right-1.5 w-6 h-6 bg-slate-900/70 backdrop-blur text-white rounded-full flex items-center justify-center text-[13px] active:scale-90 shadow">
+                <i class="ri-close-line"></i>
+              </button>
             </div>
 
-            <button @click="pickComposerImage" class="mt-3 flex items-center gap-2 text-[13px] font-bold text-blue-600 active:scale-95 transition-all">
-              <i class="ri-image-add-line text-lg"></i> 添加图片
+            <!-- 添加块 -->
+            <button
+              v-if="composerImages.length < MAX_MEDIA"
+              @click="pickComposerImage"
+              class="aspect-square rounded-2xl bg-[#f4f4f6] hover:bg-[#ececf0] active:scale-95 transition-all flex flex-col items-center justify-center text-slate-400"
+            >
+              <i :class="mediaUploading ? 'ri-loader-4-line animate-spin text-3xl' : 'ri-add-line text-[34px] font-thin'"></i>
+              <span class="text-[11px] font-bold mt-0.5">{{ mediaUploading ? '上传中' : composerImages.length + '/' + MAX_MEDIA }}</span>
             </button>
-            <input id="composer-image-input" type="file" accept="image/*" class="hidden" @change="onComposerImage" />
           </div>
 
-          <div class="shrink-0 pt-4 mt-2 border-t border-slate-100">
-            <button @click="publishMoment" :disabled="isPublishing" class="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-black text-[15px] py-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2">
-              <i class="ri-send-plane-fill" :class="{ 'animate-pulse': isPublishing }"></i>
-              {{ isPublishing ? '发布中...' : '发布到密友圈' }}
+          <!-- 标题（选填） -->
+          <input
+            v-model="composerTitle"
+            type="text"
+            maxlength="30"
+            placeholder="添加标题"
+            class="w-full bg-transparent text-slate-900 text-[19px] font-black tracking-tight outline-none placeholder-slate-300 pb-2"
+          />
+          <div class="h-px bg-slate-100"></div>
+
+          <!-- 正文 -->
+          <textarea
+            v-model="composerText"
+            rows="6"
+            placeholder="添加正文…  这一刻的想法、今天的肠子还好吗～"
+            class="w-full bg-transparent text-slate-700 text-[15.5px] font-medium leading-[1.8] outline-none resize-none placeholder-slate-300 pt-3"
+          ></textarea>
+
+          <p class="text-[11px] text-slate-300 font-medium mb-2">最多 9 张图片 / 视频 · 可一次多选（部分手机/微信内置浏览器需逐张点 +）</p>
+          <input id="composer-image-input" type="file" accept="image/*,video/*" multiple class="hidden" @change="onComposerImage" />
+
+          <!-- 功能行：标记地点 / 谁可见 -->
+          <div class="mt-4 border-t border-slate-100">
+            <button @click="openLocationSheet" class="w-full flex items-center justify-between py-4 active:bg-slate-50 transition-all">
+              <span class="flex items-center gap-3 text-[14px] font-bold text-slate-700">
+                <i class="ri-map-pin-2-line text-[19px]" :class="composerLocation ? 'text-rose-500' : 'text-slate-400'"></i> 标记地点
+              </span>
+              <span class="flex items-center gap-1 text-[13px] font-medium" :class="composerLocation ? 'text-rose-500' : 'text-slate-400'">
+                <span class="max-w-[150px] truncate">{{ composerLocation || '添加位置' }}</span>
+                <i v-if="composerLocation" @click.stop="clearComposerLocation" class="ri-close-circle-fill text-base text-slate-300 ml-0.5"></i>
+                <i v-else class="ri-arrow-right-s-line text-lg"></i>
+              </span>
+            </button>
+            <div class="h-px bg-slate-50"></div>
+            <button @click="showVisibilitySheet = true" class="w-full flex items-center justify-between py-4 active:bg-slate-50 transition-all">
+              <span class="flex items-center gap-3 text-[14px] font-bold text-slate-700">
+                <i class="ri-lock-2-line text-[19px] text-slate-400"></i> 谁可见
+              </span>
+              <span class="flex items-center gap-1 text-[13px] text-slate-500 font-bold">
+                {{ visibilityLabel }} <i class="ri-arrow-right-s-line text-lg text-slate-400"></i>
+              </span>
             </button>
           </div>
         </div>
+
+        <!-- 底栏：存草稿 / 发布 -->
+        <footer class="shrink-0 flex items-center gap-3 px-5 pt-3 pb-7 border-t border-slate-100 bg-white">
+          <button @click="showComposer = false" class="px-6 py-3.5 rounded-full text-[14px] font-bold text-slate-600 bg-slate-100 active:scale-95 transition-all">
+            存草稿
+          </button>
+          <button
+            @click="publishMoment"
+            :disabled="isPublishing || mediaUploading"
+            class="flex-1 py-3.5 rounded-full text-[15px] font-black text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 shadow-lg active:scale-[0.98] transition-all flex justify-center items-center gap-2"
+          >
+            <i class="ri-send-plane-fill" :class="{ 'animate-pulse': isPublishing }"></i>
+            {{ isPublishing ? '发布中...' : '发布到密友圈' }}
+          </button>
+        </footer>
+
+        <!-- 标记地点：底部浮层 -->
+        <transition name="fade-up">
+          <div v-if="showLocationSheet" class="absolute inset-0 z-[10] bg-slate-900/40 backdrop-blur-sm flex flex-col justify-end" @click.self="showLocationSheet = false">
+            <div class="bg-white rounded-t-[28px] max-h-[75%] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.15)]">
+              <div class="shrink-0 px-5 pt-5 pb-3">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-[17px] font-black text-slate-900">所在位置</h3>
+                  <button @click="showLocationSheet = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-100 rounded-full px-4 py-2.5">
+                  <i class="ri-search-line text-slate-400"></i>
+                  <input v-model="locationKeyword" @keydown.enter="searchNearbyPoi" type="text" placeholder="搜索地点（餐厅 / 医院 / 商场…）" class="flex-1 bg-transparent text-[14px] outline-none placeholder-slate-400" />
+                  <button @click="searchNearbyPoi" class="text-[13px] font-bold text-blue-600 active:scale-95">搜索</button>
+                </div>
+              </div>
+              <div class="flex-1 overflow-y-auto custom-scroll px-5 pb-6">
+                <div v-if="locationLoading" class="flex items-center justify-center py-12 text-slate-400 gap-2">
+                  <i class="ri-loader-4-line animate-spin text-xl"></i> 正在定位附近地点…
+                </div>
+                <template v-else>
+                  <button @click="pickPoi({ title: '' })" class="w-full flex items-center gap-3 py-3.5 border-b border-slate-50 active:bg-slate-50">
+                    <i class="ri-forbid-line text-[20px] text-slate-400"></i>
+                    <span class="text-[14px] font-bold text-slate-500">不显示位置</span>
+                  </button>
+                  <button v-for="poi in poiResults" :key="poi.id" @click="pickPoi(poi)" class="w-full flex items-start gap-3 py-3.5 border-b border-slate-50 text-left active:bg-slate-50">
+                    <i class="ri-map-pin-2-fill text-[20px] text-rose-400 mt-0.5 shrink-0"></i>
+                    <div class="min-w-0">
+                      <p class="text-[14px] font-bold text-slate-800 truncate">{{ poi.title }}</p>
+                      <p class="text-[11.5px] text-slate-400 truncate">{{ poi.address }}</p>
+                    </div>
+                  </button>
+                  <div v-if="!poiResults.length" class="text-center py-12 text-slate-300 text-[13px] font-bold">附近没搜到地点，换个关键词试试</div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </transition>
+
+        <!-- 谁可见：底部浮层 -->
+        <transition name="fade-up">
+          <div v-if="showVisibilitySheet" class="absolute inset-0 z-[10] bg-slate-900/40 backdrop-blur-sm flex flex-col justify-end" @click.self="showVisibilitySheet = false">
+            <div class="bg-white rounded-t-[28px] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.15)] pb-7">
+              <div class="px-5 pt-5 pb-2 flex items-center justify-between">
+                <h3 class="text-[17px] font-black text-slate-900">谁可以看</h3>
+                <button @click="showVisibilitySheet = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90"><i class="ri-close-line"></i></button>
+              </div>
+              <button v-for="o in visibilityOptions" :key="o.value" @click="pickVisibility(o.value)" class="w-full flex items-center gap-3.5 px-5 py-4 active:bg-slate-50 transition-all">
+                <span class="w-10 h-10 rounded-2xl flex items-center justify-center" :class="composerVisibility === o.value ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'">
+                  <i :class="o.icon" class="text-[19px]"></i>
+                </span>
+                <div class="flex-1 text-left">
+                  <p class="text-[14.5px] font-black text-slate-800">{{ o.label }}</p>
+                  <p class="text-[11.5px] text-slate-400 font-medium">{{ o.desc }}</p>
+                </div>
+                <i v-if="composerVisibility === o.value" class="ri-check-line text-xl text-slate-900"></i>
+              </button>
+            </div>
+          </div>
+        </transition>
       </div>
     </transition>
 
@@ -1342,7 +1463,7 @@ const appendEmoji = (emoji) => {
 // 雷达与聊天状态
 const isScanning = ref(true)
 const selectedPatient = ref(null)
-const currentTab = ref('moments')
+const currentTab = ref('status')
 
 // ============ 我的朋友圈封面 ============
 const myCard = ref({
@@ -1351,12 +1472,6 @@ const myCard = ref({
   avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Xuan',
   cover: 'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1200&q=80'
 })
-
-const quickActions = [
-  { label: '今日打卡', icon: 'ri-checkbox-circle-line', color: 'text-emerald-500' },
-  { label: '上传战报', icon: 'ri-camera-2-line', color: 'text-blue-500' },
-  { label: '广播信号', icon: 'ri-radar-line', color: 'text-violet-500' }
-]
 
 const moments = ref([])
 
@@ -1375,6 +1490,7 @@ const loadMoments = async () => {
         time: m.createdAt ? new Date(m.createdAt).toLocaleString('zh-CN') : '',
         device: m.device || '',
         location: m.location || '',
+        visibility: m.visibility || 'public',
         content: m.content,
         images: m.imagesJson ? JSON.parse(m.imagesJson) : [],
         liked: m.liked,
@@ -1416,34 +1532,138 @@ const toggleLike = async (post) => {
   }
 }
 
-// ============ 发布动态 ============
+// ============ 发布动态（全屏沉浸 · 小红书布局）============
 const showComposer = ref(false)
 const composerText = ref('')
-const composerImages = ref([])
+const composerTitle = ref('')          // 标题（选填）
+const composerImages = ref([])          // 图片 / 视频 URL 混存，最多 9 条
+const composerLocation = ref('')        // 标记地点（POI 名称）
+const composerVisibility = ref('public') // public / comrade / private
 const isPublishing = ref(false)
+const mediaUploading = ref(false)
+const MAX_MEDIA = 9
+
+// 可见范围三档
+const visibilityOptions = [
+  { value: 'public', label: '公开可见', desc: '所有病友都能看到', icon: 'ri-earth-line' },
+  { value: 'comrade', label: '仅战友可见', desc: '只有已认证的 IBD 战友能看', icon: 'ri-shield-check-line' },
+  { value: 'private', label: '仅自己可见', desc: '只有你自己能看到', icon: 'ri-lock-2-line' }
+]
+const showVisibilitySheet = ref(false)
+const visibilityLabel = computed(() => {
+  const v = visibilityOptions.find(o => o.value === composerVisibility.value)
+  return v ? v.label : '公开可见'
+})
+const pickVisibility = (v) => {
+  composerVisibility.value = v
+  showVisibilitySheet.value = false
+}
+
+// 按扩展名判断是不是视频
+const isVideo = (url) => /\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(url || '')
 
 const openComposer = () => {
   showComposer.value = true
   composerText.value = ''
+  composerTitle.value = ''
   composerImages.value = []
+  composerLocation.value = ''
+  composerVisibility.value = 'public'
+}
+
+// ---- 标记地点（复用腾讯地图 POI 附近搜索）----
+const showLocationSheet = ref(false)
+const locationLoading = ref(false)
+const locationKeyword = ref('')
+const poiResults = ref([])
+
+const openLocationSheet = () => {
+  showLocationSheet.value = true
+  poiResults.value = []
+  searchNearbyPoi()
+}
+
+const searchNearbyPoi = () => {
+  if (!navigator.geolocation) {
+    alert('当前设备不支持定位，无法获取附近地点')
+    return
+  }
+  locationLoading.value = true
+  poiResults.value = []
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+      const tencentKey = 'PBBBZ-R7ZKM-W5X6A-6PYR4-Z3XB6-PFFGM'
+      const callbackName = 'jsonp_poi_' + Date.now()
+      window[callbackName] = (res) => {
+        if (res.status === 0) {
+          poiResults.value = res.data || []
+        } else {
+          alert('拉取附近地点失败：' + res.message)
+        }
+        locationLoading.value = false
+        delete window[callbackName]
+      }
+      const keyword = locationKeyword.value ? encodeURIComponent(locationKeyword.value) : encodeURIComponent('附近')
+      const script = document.createElement('script')
+      script.src = `https://apis.map.qq.com/ws/place/v1/search?keyword=${keyword}&boundary=nearby(${lat},${lng},2000)&key=${tencentKey}&output=jsonp&callback=${callbackName}`
+      document.body.appendChild(script)
+      script.onload = () => document.body.removeChild(script)
+      script.onerror = () => {
+        alert('网络请求被拦截，请检查网络')
+        locationLoading.value = false
+        document.body.removeChild(script)
+      }
+    },
+    (error) => {
+      console.warn(error)
+      alert('定位失败！请给浏览器开启【获取位置】权限')
+      locationLoading.value = false
+    },
+    { enableHighAccuracy: true, timeout: 8000 }
+  )
+}
+
+const pickPoi = (poi) => {
+  composerLocation.value = poi.title
+  showLocationSheet.value = false
+}
+
+const clearComposerLocation = () => {
+  composerLocation.value = ''
 }
 
 const pickComposerImage = () => {
   document.getElementById('composer-image-input')?.click()
 }
 
-const onComposerImage = async (e) => {
-  const file = e.target.files?.[0]
-  if (!file) return
+// 单个文件上传：视频/大图给 2 分钟超时，覆盖全局 5s
+const uploadOneMedia = async (file) => {
   const formData = new FormData()
   formData.append('file', file)
-  try {
-    const upRes = await http.post('/upload', formData)
-    if (upRes.data) composerImages.value.push(upRes.data)
-  } catch (err) {
-    alert('图片上传失败')
-  }
+  const res = await http.post('/upload', formData, { timeout: 120000 })
+  return res && res.data ? res.data : null
+}
+
+const onComposerImage = async (e) => {
+  const picked = Array.from(e.target.files || [])
   e.target.value = ''
+  if (!picked.length) return
+  const remaining = MAX_MEDIA - composerImages.value.length
+  if (remaining <= 0) { alert(`最多 ${MAX_MEDIA} 条哦`); return }
+  const files = picked.slice(0, remaining)
+  mediaUploading.value = true
+  try {
+    // 并行上传，互不阻塞；个别失败也不影响其它
+    const results = await Promise.allSettled(files.map(uploadOneMedia))
+    const urls = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value)
+    if (urls.length) composerImages.value.push(...urls)
+    const failed = results.length - urls.length
+    if (failed > 0) alert(`有 ${failed} 个上传失败了（可能太大或网络慢），已自动跳过`)
+  } finally {
+    mediaUploading.value = false
+  }
 }
 
 const removeComposerImage = (i) => {
@@ -1451,20 +1671,28 @@ const removeComposerImage = (i) => {
 }
 
 const publishMoment = async () => {
-  if (!composerText.value.trim() && composerImages.value.length === 0) {
+  const title = composerTitle.value.trim()
+  const body = composerText.value.trim()
+  if (!title && !body && composerImages.value.length === 0) {
     alert('写点什么或加张图吧')
     return
   }
+  // 标题选填：有标题就作为正文首行
+  const content = title ? (body ? title + '\n' + body : title) : body
   isPublishing.value = true
   try {
     const res = await http.post('/moment/publish', {
-      content: composerText.value,
-      imagesJson: composerImages.value.length ? JSON.stringify(composerImages.value) : null
+      content,
+      imagesJson: composerImages.value.length ? JSON.stringify(composerImages.value) : null,
+      location: composerLocation.value || null,
+      visibility: composerVisibility.value || 'public'
     })
     if (res.status === 200 || res.code === 200) {
       showComposer.value = false
       composerText.value = ''
+      composerTitle.value = ''
       composerImages.value = []
+      composerLocation.value = ''
       await loadMoments()
     } else {
       alert(res.message || '发布失败')
@@ -2172,8 +2400,7 @@ const scrollToBottom = () => {
 }
 .fade-enter-from,
 .fade-leave-to {
-  opacity: 0;
-}
+  opacity: 0;}
 
 @keyframes checkin-pop {
   0% { transform: scale(0.5); opacity: 0; }
@@ -2200,5 +2427,16 @@ const scrollToBottom = () => {
 }
 .animate-checkin-points {
   animation: checkin-points 0.4s 0.35s ease-out both;
+}
+
+/* 全屏发布页：从右侧滑入，沉浸感 */
+.page-slide-enter-active,
+.page-slide-leave-active {
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+}
+.page-slide-enter-from,
+.page-slide-leave-to {
+  transform: translateX(100%);
+  opacity: 0.6;
 }
 </style>

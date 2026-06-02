@@ -1,5 +1,6 @@
 <template>
   <article
+      @click="$emit('open')"
       :class="[
       'group relative w-full overflow-hidden cursor-pointer font-sans transition-all duration-500',
       'rounded-[24px] border',
@@ -24,6 +25,17 @@
       <div class="absolute inset-0 bg-gradient-to-br from-emerald-50 via-sky-50 to-violet-50"></div>
       <div class="absolute -top-20 right-0 w-72 h-72 rounded-full bg-emerald-200/40 blur-3xl"></div>
       <div class="absolute -bottom-20 left-0 w-72 h-72 rounded-full bg-violet-200/40 blur-3xl"></div>
+    </div>
+
+    <div v-if="theme === 'ink'" class="absolute inset-0 pointer-events-none">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.18),transparent_55%)]"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(244,63,94,0.12),transparent_55%)]"></div>
+    </div>
+
+    <div v-if="theme === 'bloom'" class="absolute inset-0 pointer-events-none">
+      <div class="absolute inset-0 bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-100"></div>
+      <div class="absolute -top-12 -right-10 w-52 h-52 rounded-full bg-rose-200/40 blur-3xl"></div>
+      <div class="absolute -bottom-16 -left-12 w-60 h-60 rounded-full bg-fuchsia-200/30 blur-3xl"></div>
     </div>
 
     <!-- 故事配图 -->
@@ -51,12 +63,13 @@
 
         <!-- 标题 -->
         <h3
+            v-if="title"
             :class="[
             'text-[18px] leading-[1.3] tracking-tight mb-2.5',
             titleColor[theme]
           ]"
         >
-          {{ title || '默认标题' }}
+          {{ title }}
         </h3>
 
         <!-- 摘要 -->
@@ -123,7 +136,7 @@ defineProps({
   comments: { type: Number, default: 0 },
   canEdit: { type: Boolean, default: false }
 })
-defineEmits(['delete'])
+defineEmits(['delete', 'open'])
 
 const formatDate = (date) => {
   if (!date) return ''
@@ -139,55 +152,71 @@ const themeWrap = {
   editorial: 'bg-white border-slate-100/80',
   midnight: 'bg-slate-900 border-slate-800/50',
   sunrise: 'bg-transparent border-orange-200/60',
-  aurora: 'bg-transparent border-white/80'
+  aurora: 'bg-transparent border-white/80',
+  ink: 'bg-slate-950 border-amber-500/20',
+  bloom: 'bg-transparent border-rose-200/70'
 }
 
 const iconBadge = {
   editorial: 'bg-slate-50 border border-slate-100 text-slate-700',
   midnight: 'bg-white/10 border border-white/20 text-white',
   sunrise: 'bg-white/70 border border-white/80 text-rose-700',
-  aurora: 'bg-white/70 border border-white/80 text-slate-700'
+  aurora: 'bg-white/70 border border-white/80 text-slate-700',
+  ink: 'bg-amber-400/10 border border-amber-400/30 text-amber-300',
+  bloom: 'bg-white/70 border border-white/80 text-rose-600'
 }
 
 const titleColor = {
   editorial: 'text-slate-900 font-black',
   midnight: 'text-white font-black',
   sunrise: 'text-slate-900 font-black',
-  aurora: 'text-slate-900 font-black'
+  aurora: 'text-slate-900 font-black',
+  ink: 'text-amber-50 font-black',
+  bloom: 'text-rose-950 font-black'
 }
 
 const summaryColor = {
   editorial: 'text-slate-500',
   midnight: 'text-slate-300',
   sunrise: 'text-slate-700/90',
-  aurora: 'text-slate-600'
+  aurora: 'text-slate-600',
+  ink: 'text-slate-300',
+  bloom: 'text-rose-900/70'
 }
 
 const metaColor = {
   editorial: 'text-slate-400',
   midnight: 'text-slate-400',
   sunrise: 'text-slate-600/80',
-  aurora: 'text-slate-500'
+  aurora: 'text-slate-500',
+  ink: 'text-amber-200/70',
+  bloom: 'text-rose-500/80'
 }
 
 const dotColor = {
   editorial: 'bg-blue-500',
   midnight: 'bg-sky-400',
   sunrise: 'bg-rose-500',
-  aurora: 'bg-violet-500'
+  aurora: 'bg-violet-500',
+  ink: 'bg-amber-400',
+  bloom: 'bg-fuchsia-500'
 }
 
 const dividerColor = {
   editorial: 'border-t border-slate-100',
   midnight: 'border-t border-white/10',
   sunrise: 'border-t border-orange-200/60',
-  aurora: 'border-t border-white/70'
+  aurora: 'border-t border-white/70',
+  ink: 'border-t border-amber-400/15',
+  bloom: 'border-t border-rose-200/60'
 }
 
 const tagStyle = {
   editorial: 'bg-slate-100 text-slate-700',
   midnight: 'bg-white/10 text-white/90 border border-white/15',
   sunrise: 'bg-white/70 text-rose-700 border border-white/80',
-  aurora: 'bg-white/70 text-violet-700 border border-white/80'
+  aurora: 'bg-white/70 text-violet-700 border border-white/80',
+  ink: 'bg-amber-400/10 text-amber-200 border border-amber-400/20',
+  bloom: 'bg-white/70 text-fuchsia-700 border border-white/80'
 }
 </script>

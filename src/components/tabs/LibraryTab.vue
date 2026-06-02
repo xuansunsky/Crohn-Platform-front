@@ -61,6 +61,7 @@
     <!-- Hero Story (featured) -->
     <section v-if="featured" class="px-5 mb-6 relative">
       <div
+          @click="openDetail(featured.id)"
           class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-6 pt-8 cursor-pointer group active:scale-[0.99] transition-transform"
       >
         <!-- 光晕装饰 -->
@@ -118,6 +119,7 @@
             v-bind="item"
             :can-edit="checkPermission(item.userId)"
             @delete="deleteCard(item.id)"
+            @open="openDetail(item.id)"
         />
       </div>
     </div>
@@ -178,17 +180,25 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2">故事配图（可选）</label>
-                  <div class="flex items-center gap-3">
-                    <div v-if="newPost.coverImage" class="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-100 shrink-0">
-                      <img :src="newPost.coverImage" class="w-full h-full object-cover" />
-                      <button @click="newPost.coverImage = ''" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center text-[10px]"><i class="ri-close-line"></i></button>
+                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2">正文图集 / 视频（最多 9 条 · 第 1 张作封面）</label>
+                  <div class="grid grid-cols-3 gap-2.5">
+                    <div v-for="(m, i) in newMedia" :key="i" class="relative aspect-square rounded-2xl overflow-hidden bg-stone-100 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.12)]">
+                      <video v-if="isVideo(m)" :src="m" class="w-full h-full object-cover" muted></video>
+                      <img v-else :src="m" class="w-full h-full object-cover" />
+                      <span v-if="i === 0" class="absolute top-1.5 left-1.5 text-[9px] font-black text-white bg-blue-600/90 px-1.5 py-0.5 rounded-md pointer-events-none">封面</span>
+                      <span v-if="isVideo(m)" class="absolute bottom-1.5 left-1.5 text-[10px] font-bold text-white bg-black/45 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 pointer-events-none"><i class="ri-play-mini-fill"></i> 视频</span>
+                      <button @click="removeStoryMedia(i)" class="absolute top-1.5 right-1.5 w-6 h-6 bg-slate-900/70 backdrop-blur text-white rounded-full flex items-center justify-center text-[13px] active:scale-90 shadow"><i class="ri-close-line"></i></button>
                     </div>
-                    <label class="cursor-pointer px-4 py-3 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-[12px] font-bold text-slate-500 hover:bg-slate-100 transition-all flex items-center gap-2">
-                      <i class="ri-image-add-line text-base"></i> {{ coverUploading ? '上传中...' : '上传配图' }}
-                      <input type="file" accept="image/*" class="hidden" @change="uploadCover" :disabled="coverUploading" />
-                    </label>
+                    <button
+                        v-if="newMedia.length < MAX_MEDIA"
+                        @click="pickStoryMedia"
+                        class="aspect-square rounded-2xl bg-[#f4f4f6] hover:bg-[#ececf0] flex flex-col items-center justify-center text-slate-400 active:scale-95 transition-all"
+                    >
+                      <i :class="mediaUploading ? 'ri-loader-4-line animate-spin text-3xl' : 'ri-add-line text-[34px] font-thin'"></i>
+                      <span class="text-[11px] font-bold mt-0.5">{{ mediaUploading ? '上传中' : newMedia.length + '/' + MAX_MEDIA }}</span>
+                    </button>
                   </div>
+                  <input id="story-media-input" type="file" accept="image/*,video/*" multiple class="hidden" @change="onStoryMedia" />
                 </div>
 
                 <div>
@@ -259,7 +269,7 @@
                   <span class="text-[11px] font-black text-slate-400 tracking-widest uppercase">实时预览</span>
                   <span class="text-[10px] font-bold text-slate-300">Live · 推送到金库</span>
                 </div>
-                <ExperienceCard v-bind="newPost" />
+                <ExperienceCard v-bind="previewPost" />
               </div>
             </div>
           </div>
@@ -271,12 +281,120 @@
             </button>
             <button
                 @click="publishPost"
-                class="px-7 py-3 rounded-xl text-[14px] font-black text-white bg-slate-900 hover:bg-slate-800 shadow-[0_8px_20px_-6px_rgba(15,23,42,0.4)] active:scale-95 transition-all flex items-center gap-2"
+                :disabled="publishing || mediaUploading"
+                class="px-7 py-3 rounded-xl text-[14px] font-black text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 shadow-[0_8px_20px_-6px_rgba(15,23,42,0.4)] active:scale-95 transition-all flex items-center gap-2"
             >
               发布到金库 <i class="ri-arrow-right-up-line"></i>
             </button>
           </footer>
         </div>
+      </div>
+    </transition>
+
+    <!-- ============ 文章详情 · 小红书风 ============ -->
+    <transition name="modal-fade">
+      <div v-if="showDetail" class="fixed inset-0 z-[110] bg-white flex flex-col">
+
+        <!-- 顶栏：返回 + 头像名字 -->
+        <header class="shrink-0 flex items-center gap-2 px-3 h-[52px] bg-white border-b border-slate-50">
+          <button @click="closeDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-slate-100 transition-all shrink-0">
+            <i class="ri-arrow-left-line text-[22px] text-slate-800"></i>
+          </button>
+          <div v-if="detail && !detailLoading" class="flex-1 flex items-center gap-2.5 min-w-0">
+            <img :src="detail.authorAvatar || defaultAvatar" class="w-8 h-8 rounded-full object-cover bg-slate-100 border border-slate-100 shrink-0" />
+            <span class="text-[15px] font-bold text-slate-900 truncate">{{ detail.authorName || '匿名战友' }}</span>
+          </div>
+          <div v-else class="flex-1"></div>
+          <button v-if="detail && checkPermission(detail.userId)" @click="deleteFromDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-rose-50 text-rose-500 shrink-0">
+            <i class="ri-delete-bin-line text-lg"></i>
+          </button>
+          <span v-else class="w-10 shrink-0"></span>
+        </header>
+
+        <div class="flex-1 overflow-y-auto custom-scroll bg-white">
+          <div v-if="detailLoading" class="flex items-center justify-center py-24 text-slate-400">
+            <i class="ri-loader-4-line text-2xl animate-spin"></i>
+          </div>
+
+          <article v-else-if="detail">
+            <!-- 横滑大图（横图/竖图自适应，不裁切） -->
+            <div v-if="detailMedia.length" class="relative bg-stone-50">
+              <div
+                ref="galleryEl"
+                @scroll="onGalleryScroll"
+                class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar items-start"
+              >
+                <div
+                  v-for="(m, i) in detailMedia"
+                  :key="i"
+                  class="shrink-0 w-full snap-center flex items-center justify-center bg-stone-50 min-h-[180px]"
+                >
+                  <video
+                    v-if="isVideo(m)"
+                    :src="m"
+                    class="w-full max-h-[72vh] object-contain"
+                    controls
+                    playsinline
+                    preload="metadata"
+                  ></video>
+                  <img
+                    v-else
+                    :src="m"
+                    class="w-full max-h-[72vh] object-contain block"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 圆点指示器（图片下方，小红书同款） -->
+            <div v-if="detailMedia.length > 1" class="flex items-center justify-center gap-1.5 py-3">
+              <span
+                v-for="(m, i) in detailMedia"
+                :key="i"
+                class="rounded-full transition-all duration-300"
+                :class="i === galleryIndex ? 'w-1.5 h-1.5 bg-rose-500' : 'w-1.5 h-1.5 bg-slate-300'"
+              ></span>
+            </div>
+
+            <!-- 标题 + 标签 + 正文 -->
+            <div class="px-5 pb-24" :class="detailMedia.length <= 1 ? 'pt-4' : ''">
+              <h1 class="text-[20px] leading-[1.45] font-black tracking-tight text-slate-900 mb-3">{{ detail.title }}</h1>
+
+              <p v-if="detail.summary" class="text-[15px] leading-[1.75] text-slate-700 whitespace-pre-line mb-4">{{ detail.summary }}</p>
+
+              <!-- 话题标签 -->
+              <div v-if="detailTags.length" class="flex flex-wrap gap-2 mb-3">
+                <span v-for="t in detailTags" :key="t" class="text-[13px] font-bold text-blue-600">#{{ t }}</span>
+              </div>
+
+              <!-- 日期 · 来源 -->
+              <p class="text-[12px] text-slate-400 font-medium">
+                {{ fmtDate(detail.createdAt) }}
+                <span v-if="detail.icon" class="ml-2">{{ detail.icon }}</span>
+              </p>
+            </div>
+          </article>
+        </div>
+
+        <!-- 底栏互动（占位，后续接点赞评论） -->
+        <footer v-if="detail && !detailLoading" class="shrink-0 flex items-center gap-3 px-4 py-3 border-t border-slate-100 bg-white safe-area-bottom">
+          <div class="flex-1 h-10 rounded-full bg-slate-100 flex items-center px-4 text-[13px] text-slate-400 font-medium">
+            <i class="ri-edit-line mr-1.5"></i> 说点什么…
+          </div>
+          <button class="flex flex-col items-center gap-0.5 text-slate-600 active:scale-95 px-1">
+            <i class="ri-heart-3-line text-[22px]"></i>
+            <span class="text-[10px] font-bold">0</span>
+          </button>
+          <button class="flex flex-col items-center gap-0.5 text-slate-600 active:scale-95 px-1">
+            <i class="ri-star-line text-[22px]"></i>
+            <span class="text-[10px] font-bold">0</span>
+          </button>
+          <button class="flex flex-col items-center gap-0.5 text-slate-600 active:scale-95 px-1">
+            <i class="ri-chat-3-line text-[22px]"></i>
+            <span class="text-[10px] font-bold">0</span>
+          </button>
+        </footer>
       </div>
     </transition>
 
@@ -325,22 +443,30 @@ const loadPosts = async () => {
   try {
     const res = await http.get('/experience/list')
     if (res.status === 200 || res.code === 200) {
-      libraryItems.value = (res.data || []).map(p => ({
-        id: p.id,
-        userId: p.userId,
-        theme: p.theme || 'editorial',
-        title: p.title,
-        summary: p.summary,
-        icon: p.icon || '✍️',
-        tags: p.tags ? p.tags.split(',').filter(Boolean) : [],
-        coverImage: p.coverImage || '',
-        authorName: p.authorName,
-        authorAvatar: p.authorAvatar,
-        likes: 0,
-        comments: 0,
-        category: categoryOf(p.tags ? p.tags.split(',') : []),
-        date: fmtDate(p.createdAt)
-      }))
+      libraryItems.value = (res.data || []).map(p => {
+        let mediaList = []
+        if (p.media) {
+          try { mediaList = JSON.parse(p.media) } catch (e) { mediaList = [] }
+        }
+        const cover = p.coverImage || mediaList.find(m => !/\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(m)) || mediaList[0] || ''
+        return {
+          id: p.id,
+          userId: p.userId,
+          theme: p.theme || 'editorial',
+          title: p.title,
+          summary: p.summary,
+          icon: p.icon || '✍️',
+          tags: p.tags ? p.tags.split(',').filter(Boolean) : [],
+          coverImage: cover,
+          media: mediaList,
+          authorName: p.authorName,
+          authorAvatar: p.authorAvatar,
+          likes: 0,
+          comments: 0,
+          category: categoryOf(p.tags ? p.tags.split(',') : []),
+          date: fmtDate(p.createdAt)
+        }
+      })
     }
   } catch (e) {
     console.error('加载金库失败', e)
@@ -381,10 +507,111 @@ const deleteCard = async (id) => {
   }
 }
 
+// 媒体辅助
+const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=story'
+const isVideo = (url) => /\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(url || '')
+
+// ============ 文章详情 ============
+const showDetail = ref(false)
+const detailLoading = ref(false)
+const detail = ref(null)
+const galleryEl = ref(null)
+const galleryIndex = ref(0)
+const detailTags = computed(() => detail.value && detail.value.tags ? detail.value.tags.split(',').filter(Boolean) : [])
+const detailMedia = computed(() => {
+  if (!detail.value) return []
+  let list = []
+  if (detail.value.media) {
+    try { list = JSON.parse(detail.value.media) } catch (e) { list = [] }
+  }
+  // 兼容旧数据：只有 coverImage、没有 media 时也能横滑
+  if (!list.length && detail.value.coverImage) list = [detail.value.coverImage]
+  return list
+})
+
+const onGalleryScroll = () => {
+  const el = galleryEl.value
+  if (!el || !el.clientWidth) return
+  galleryIndex.value = Math.round(el.scrollLeft / el.clientWidth)
+}
+
+const openDetail = async (id) => {
+  if (!id) return
+  showDetail.value = true
+  detailLoading.value = true
+  detail.value = null
+  galleryIndex.value = 0
+  try {
+    const res = await http.get(`/experience/detail/${id}`)
+    if (res.status === 200 || res.code === 200) {
+      detail.value = res.data
+    } else {
+      alert(res.message || '文章打不开了')
+      showDetail.value = false
+    }
+  } catch (e) {
+    alert('加载失败，检查网络')
+    showDetail.value = false
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+const closeDetail = () => { showDetail.value = false }
+
+const deleteFromDetail = async () => {
+  if (!detail.value) return
+  if (!confirm('兄弟，确定要把这条经验从金库里移除吗？')) return
+  const id = detail.value.id
+  try {
+    const res = await http.delete(`/experience/delete/${id}`)
+    if (res.status === 200 || res.code === 200) {
+      libraryItems.value = libraryItems.value.filter(item => item.id !== id)
+      showDetail.value = false
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (e) {
+    alert('删除失败，检查网络')
+  }
+}
+
 // Modal
 const showModal = ref(false)
-const coverUploading = ref(false)
 const publishing = ref(false)
+const newMedia = ref([])
+const mediaUploading = ref(false)
+const MAX_MEDIA = 9
+
+// 单个文件上传：视频/大图给 2 分钟超时，覆盖全局 5s
+const uploadOneMedia = async (file) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  const res = await http.post('/upload', fd, { timeout: 120000 })
+  return res && res.data ? res.data : null
+}
+
+const pickStoryMedia = () => document.getElementById('story-media-input')?.click()
+const onStoryMedia = async (e) => {
+  const picked = Array.from(e.target.files || [])
+  e.target.value = ''
+  if (!picked.length) return
+  const remaining = MAX_MEDIA - newMedia.value.length
+  if (remaining <= 0) { alert(`最多 ${MAX_MEDIA} 条哦`); return }
+  const files = picked.slice(0, remaining)
+  mediaUploading.value = true
+  try {
+    // 并行上传，互不阻塞；个别失败也不影响其它
+    const results = await Promise.allSettled(files.map(uploadOneMedia))
+    const urls = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value)
+    if (urls.length) newMedia.value.push(...urls)
+    const failed = results.length - urls.length
+    if (failed > 0) alert(`有 ${failed} 个上传失败了（可能太大或网络慢），已自动跳过`)
+  } finally {
+    mediaUploading.value = false
+  }
+}
+const removeStoryMedia = (i) => newMedia.value.splice(i, 1)
 const newPost = reactive({
   id: null,
   theme: 'editorial',
@@ -392,38 +619,24 @@ const newPost = reactive({
   summary: '',
   icon: '✍️',
   tags: ['新故事'],
-  coverImage: '',
   likes: 0,
   comments: 0,
   date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')
 })
 
-const uploadCover = async (e) => {
-  const file = e.target.files && e.target.files[0]
-  if (!file) return
-  coverUploading.value = true
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
-    const res = await http.post('/upload', formData)
-    if (res.status === 200 || res.code === 200) {
-      newPost.coverImage = res.data
-    } else {
-      alert(res.message || '上传失败')
-    }
-  } catch (err) {
-    alert('配图上传失败，检查网络')
-  } finally {
-    coverUploading.value = false
-    e.target.value = ''
-  }
-}
+// 实时预览：封面自动取图集第一张
+const previewPost = computed(() => ({
+  ...newPost,
+  coverImage: newMedia.value.find(m => !isVideo(m)) || newMedia.value[0] || ''
+}))
 
 const availableThemes = [
   { name: 'Editorial', value: 'editorial', bgPreview: '#ffffff', textColor: '#0f172a' },
   { name: 'Midnight', value: 'midnight', bgPreview: 'linear-gradient(135deg, #0f172a, #1e3a8a)', textColor: '#fff' },
   { name: 'Sunrise', value: 'sunrise', bgPreview: 'linear-gradient(135deg, #fef3c7, #fecaca)', textColor: '#7c2d12' },
-  { name: 'Aurora', value: 'aurora', bgPreview: 'linear-gradient(135deg, #ecfdf5, #ede9fe)', textColor: '#1e1b4b' }
+  { name: 'Aurora', value: 'aurora', bgPreview: 'linear-gradient(135deg, #ecfdf5, #ede9fe)', textColor: '#1e1b4b' },
+  { name: 'Ink', value: 'ink', bgPreview: 'linear-gradient(135deg, #020617, #422006)', textColor: '#fcd34d' },
+  { name: 'Bloom', value: 'bloom', bgPreview: 'linear-gradient(135deg, #fff1f2, #fae8ff)', textColor: '#9d174d' }
 ]
 
 const emojiOptions = ['😈', '🧊', '🍦', '🧠', '👾', '✍️', '📸', '🌥️', '🐳', '💊', '🌙', '🔥', '🌿', '🚑']
@@ -444,7 +657,7 @@ const openModal = () => {
   newPost.theme = 'editorial'
   newPost.icon = '✍️'
   newPost.tags = ['新故事']
-  newPost.coverImage = ''
+  newMedia.value = []
   showModal.value = true
 }
 
@@ -459,6 +672,8 @@ const publishPost = async () => {
   }
   if (publishing.value) return
   publishing.value = true
+  // 封面自动取图集第一张（图片优先；若第一张是视频也直接用，详情页会播放）
+  const firstImage = newMedia.value.find(m => !isVideo(m)) || newMedia.value[0] || ''
   try {
     const res = await http.post('/experience/publish', {
       title: newPost.title,
@@ -466,7 +681,8 @@ const publishPost = async () => {
       icon: newPost.icon,
       theme: newPost.theme,
       tags: newPost.tags.join(','),
-      coverImage: newPost.coverImage
+      coverImage: firstImage,
+      media: newMedia.value.length ? JSON.stringify(newMedia.value) : null
     })
     if (res.status === 200 || res.code === 200) {
       closeModal()

@@ -24,16 +24,22 @@
           </div>
           <div class="flex items-center gap-4">
             <div class="w-[60px] h-[60px] rounded-3xl bg-white/25 backdrop-blur-md flex items-center justify-center text-[34px] shrink-0 shadow-inner">
-              {{ myStatus.emoji }}
+              {{ myStatus.text ? myStatus.emoji : '🌫️' }}
             </div>
             <div class="flex-1 min-w-0">
-              <h2 class="text-white text-[22px] font-black tracking-tight leading-tight truncate">{{ myStatus.text }}</h2>
-              <p class="text-white/85 text-[12px] font-medium mt-0.5 leading-snug line-clamp-2">{{ myStatus.desc }}</p>
+              <template v-if="myStatus.text">
+                <h2 class="text-white text-[22px] font-black tracking-tight leading-tight truncate">{{ myStatus.text }}</h2>
+                <p class="text-white/85 text-[12px] font-medium mt-0.5 leading-snug line-clamp-2">{{ myStatus.desc }}</p>
+              </template>
+              <template v-else>
+                <h2 class="text-white text-[18px] font-black tracking-tight leading-tight">还没设置状态</h2>
+                <p class="text-white/80 text-[12px] font-medium mt-0.5 leading-snug">点下面，让战友看见此刻的你</p>
+              </template>
             </div>
           </div>
           <div class="flex items-center gap-2 mt-4">
             <button @click="showPicker = true" class="flex-1 py-2.5 rounded-2xl bg-white/90 text-slate-800 text-[13px] font-black active:scale-95 transition-all shadow-sm">
-              <i class="ri-edit-2-line"></i> 换个状态
+              <i class="ri-edit-2-line"></i> {{ myStatus.text ? '换个状态' : '设置状态' }}
             </button>
             <div class="px-3.5 py-2.5 rounded-2xl bg-black/15 text-white text-[12px] font-black flex items-center gap-1.5">
               <i class="ri-hand-heart-fill"></i> {{ myStatus.received || 0 }} 份关心
@@ -55,6 +61,9 @@
         </div>
       </div>
     </div>
+
+    <!-- 插槽：拉响警报这一排下面（痛痛共鸣舱等） -->
+    <slot name="after-stats" />
 
     <!-- 上传病例软提示（不挡状态墙，未上传时温柔推荐） -->
     <div v-if="!isVerified" class="px-5 pt-4">
@@ -91,7 +100,7 @@
         <div v-for="m in members" :key="m.userId" @click="openProfile(m)" class="bg-white border border-slate-100 rounded-[22px] p-3.5 flex items-center gap-3 shadow-[0_4px_16px_-6px_rgba(15,23,42,0.06)] pop-in cursor-pointer active:scale-[0.99] transition-transform">
           <div class="relative shrink-0">
             <img :src="avatarOf(m)" class="w-12 h-12 rounded-2xl object-cover bg-slate-100 border border-white shadow-sm">
-            <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[13px] border-2 border-white shadow-sm" :class="accent(m.accent).soft">{{ m.emoji || '🙂' }}</span>
+            <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[13px] border-2 border-white shadow-sm" :class="accent(m.accent).soft">{{ m.text ? (m.emoji || '🙂') : '🌫️' }}</span>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5">
@@ -101,7 +110,8 @@
               </span>
               <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="accent(m.accent).dot"></span>
             </div>
-            <p class="text-[12.5px] font-bold mt-0.5 truncate" :class="accent(m.accent).text">{{ m.emoji }} {{ m.text || '还没挂状态' }}</p>
+            <p v-if="m.text" class="text-[12.5px] font-bold mt-0.5 truncate" :class="accent(m.accent).text">{{ m.emoji }} {{ m.text }}</p>
+            <p v-else class="text-[12.5px] font-bold mt-0.5 text-slate-300">未设置状态</p>
             <div class="flex items-center gap-1.5 mt-0.5">
               <p class="text-[10px] font-medium text-slate-300">{{ m.updatedAt ? relTime(m.updatedAt) : '—' }}</p>
               <template v-if="m.reactions > 0">
@@ -211,13 +221,13 @@
               <!-- 当前状态 -->
               <div class="mt-4 rounded-[22px] p-4 bg-gradient-to-br shadow-md" :class="[accent(profileTarget.accent).grad, accent(profileTarget.accent).glow]">
                 <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-2xl bg-white/25 backdrop-blur-md flex items-center justify-center text-[26px] shrink-0">{{ profileTarget.emoji || '🙂' }}</div>
+                  <div class="w-12 h-12 rounded-2xl bg-white/25 backdrop-blur-md flex items-center justify-center text-[26px] shrink-0">{{ profileTarget.text ? (profileTarget.emoji || '🙂') : '🌫️' }}</div>
                   <div class="min-w-0">
-                    <p class="text-white text-[16px] font-black truncate">{{ profileTarget.text || '稳如老狗' }}</p>
-                    <p class="text-white/85 text-[11.5px] font-medium leading-snug line-clamp-2">{{ profileTarget.desc || '饮食干净，防线焊死' }}</p>
+                    <p class="text-white text-[16px] font-black truncate">{{ profileTarget.text || '还没设置状态' }}</p>
+                    <p v-if="profileTarget.desc" class="text-white/85 text-[11.5px] font-medium leading-snug line-clamp-2">{{ profileTarget.desc }}</p>
                   </div>
                 </div>
-                <p class="text-white/70 text-[10px] font-medium mt-2">{{ profileTarget.updatedAt ? '更新于 ' + relTime(profileTarget.updatedAt) : '当前默认状态' }} · 共收到 {{ profileTarget.reactions || 0 }} 份关心</p>
+                <p class="text-white/70 text-[10px] font-medium mt-2">{{ profileTarget.updatedAt ? '更新于 ' + relTime(profileTarget.updatedAt) : '暂无状态' }} · 共收到 {{ profileTarget.reactions || 0 }} 份关心</p>
               </div>
 
               <!-- 你们的往来（需我已上传解锁） -->
@@ -461,8 +471,8 @@ const STATUS_LIBRARY = [
 ]
 const emojiChoices = ['✏️', '🌈', '☕', '🌧️', '⚡', '🌙', '🐢', '🔋', '🎧', '❤️', '😭', '💪']
 
-const DEFAULT_STATUS = { key: 'steady', emoji: '🛡️', text: '稳如老狗', desc: '饮食干净，防线焊死，满血游龙', accent: 'emerald', zone: 'green', updatedAt: Date.now(), received: 0 }
-const myStatus = ref({ ...DEFAULT_STATUS })
+// 空白态：用户 24h 内没设置状态时留白，不显示任何默认状态
+const myStatus = ref({ key: null, emoji: '', text: '', desc: '', accent: 'slate', zone: null, updatedAt: null, received: 0 })
 const members = ref([])
 const loading = ref(true)
 
@@ -518,12 +528,12 @@ const flash = (msg) => { toast.value = msg; setTimeout(() => { toast.value = '' 
 
 const ok = (res) => res && (res.status === 200 || res.code === 200)
 
-// 把后端行映射成前端结构（无有效状态/已过期 → 回落默认「稳如老狗」）
+// 把后端行映射成前端结构（无有效状态/已过期 → 留白，不再回落默认）
 const mapRow = (r) => {
   const hasStatus = !!(r && r.text)
   const base = hasStatus
     ? { emoji: r.emoji || '🙂', text: r.text, desc: r.description || '', accent: r.accent || 'slate', zone: r.zone || 'green', updatedAt: r.updatedAt }
-    : { emoji: DEFAULT_STATUS.emoji, text: DEFAULT_STATUS.text, desc: DEFAULT_STATUS.desc, accent: DEFAULT_STATUS.accent, zone: DEFAULT_STATUS.zone, updatedAt: null }
+    : { emoji: '', text: '', desc: '', accent: 'slate', zone: null, updatedAt: null }
   return {
     userId: Number(r.userId),
     nickname: r.userId === myId ? '我' : (r.nickname || '神秘队员'),
@@ -544,7 +554,7 @@ const loadFeed = async () => {
       myVerifyStatus.value = res.data.myVerifyStatus || 'NONE'
       if (res.data.me) {
         const me = mapRow(res.data.me)
-        myStatus.value = { ...me, received: me.reactions, key: me.text === DEFAULT_STATUS.text ? 'steady' : 'live' }
+        myStatus.value = { ...me, received: me.reactions, key: me.text ? 'live' : null }
       }
       members.value = (res.data.members || []).map(mapRow)
     }
