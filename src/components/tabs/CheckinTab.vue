@@ -1,45 +1,25 @@
 <template>
   <div class="w-full pb-8 bg-[#FBF9F5]">
 
-    <!-- Premium Header -->
-    <header class="relative px-5 pt-6 pb-4 overflow-hidden">
-      <div class="absolute -top-16 -right-16 w-64 h-64 bg-blue-100/30 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute top-20 -left-20 w-56 h-56 bg-emerald-100/20 rounded-full blur-3xl pointer-events-none"></div>
+    <TabPageHeader
+      title="社区情报"
+      accent="blue"
+    />
 
-      <div class="relative flex items-center justify-between mb-5">
-        <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="text-[10px] font-black tracking-[0.1em] text-blue-600 uppercase">Crohn Paradise</span>
-            <span class="w-1 h-1 rounded-full bg-blue-400"></span>
-          </div>
-          <h1 class="text-[24px] font-black tracking-tight text-slate-900 leading-none">
-            晚上好，<span class="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">Xuan</span>
-          </h1>
-          <p class="text-[12px] text-slate-400 font-medium mt-1.5">今天的肠子还好吗？我们一起翻翻情报。</p>
-        </div>
-        <div class="relative shrink-0">
-          <div class="absolute -inset-1 bg-gradient-to-br from-blue-500/20 to-violet-500/20 rounded-full blur opacity-60"></div>
-          <div class="relative w-11 h-11 rounded-full bg-white overflow-hidden border-2 border-white shadow-md">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Xuan" alt="User" class="w-full h-full">
-          </div>
-          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></span>
-        </div>
-      </div>
-
-      <!-- 搜索条 -->
+    <div class="px-4 pb-4">
       <div class="relative">
         <i class="ri-search-line absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
         <input
             v-model="keyword"
             type="text"
-            placeholder="搜索品牌或食物 · 如 KFC / 火锅"
+            placeholder="搜索品牌或食物 · 如 肯德基 / 火锅"
             class="w-full bg-white/90 backdrop-blur-xl text-slate-900 text-[13px] font-medium rounded-2xl py-3 pl-10 pr-20 outline-none border border-white shadow-[0_4px_16px_-8px_rgba(15,23,42,0.08)] focus:bg-white focus:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.12)] focus:border-blue-200 transition-all placeholder-slate-400"
         >
         <button class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-[11px] font-black rounded-xl shadow-sm hover:bg-slate-800 active:scale-95 transition-all">
           雷达
         </button>
       </div>
-    </header>
+    </div>
 
     <main class="px-5 space-y-5 mt-2">
 
@@ -88,15 +68,15 @@
 
           <!-- 顶部标签 -->
           <div class="absolute top-4 left-4 flex items-center gap-1.5">
-            <span class="text-[10px] font-black tracking-[0.25em] text-amber-300 uppercase px-2.5 py-1 bg-amber-300/15 backdrop-blur-md rounded-full border border-amber-300/30">
-              ✦ Today Pick
+            <span class="text-[10px] font-black tracking-[0.16em] text-amber-300 px-2.5 py-1 bg-amber-300/15 backdrop-blur-md rounded-full border border-amber-300/30">
+              ✦ 今日精选
             </span>
           </div>
 
           <!-- 右上角评分 -->
           <div class="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20">
             <span class="text-[11px] font-black text-white">{{ todayPick.safeRate }}%</span>
-            <span class="text-[9px] font-bold text-white/70">SAFE</span>
+            <span class="text-[9px] font-bold text-white/70">安心</span>
           </div>
 
           <!-- 底部内容 -->
@@ -178,7 +158,7 @@
                     >
                       {{ item.safeRate }}<span class="text-[10px] opacity-70">%</span>
                     </div>
-                    <div class="text-[8.5px] font-bold text-slate-400 tracking-widest mt-0.5">SAFE</div>
+                    <div class="text-[8.5px] font-bold text-slate-400 tracking-widest mt-0.5">安心值</div>
                   </div>
                 </div>
                 <p class="text-[11.5px] text-slate-500 mt-1.5 line-clamp-1 leading-snug">
@@ -302,7 +282,7 @@
                 <i class="ri-message-3-fill text-blue-500"></i>
                 实测战报
               </span>
-              <span class="text-[10px] font-bold text-slate-400 tracking-wider">{{ currentFoodReports.length }} REPORTS</span>
+              <span class="text-[10px] font-bold text-slate-400 tracking-wider">{{ currentFoodReports.length }} 条</span>
             </h4>
 
             <div class="space-y-2.5">
@@ -372,7 +352,7 @@
 
         <header class="shrink-0 flex justify-between items-center px-6 pt-7 pb-4 border-b border-slate-100">
           <div>
-            <div class="text-[10px] font-black text-blue-600 tracking-[0.25em] uppercase mb-1">New Report</div>
+            <div class="text-[10px] font-black text-blue-600 tracking-[0.18em] mb-1">新的实测</div>
             <h3 class="text-[20px] font-black text-slate-900 tracking-tight">发布实测情报</h3>
           </div>
           <button @click="showUploadModal = false" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center active:scale-90 transition-all">
@@ -490,6 +470,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http.js'
 
 const emit = defineEmits(['change-tab'])

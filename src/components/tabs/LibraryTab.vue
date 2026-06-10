@@ -1,131 +1,54 @@
 <template>
-  <div class="relative w-full pb-8 bg-[#FBF9F5]">
+  <div class="relative w-full pb-8 bg-[#FBF9F5] min-h-full">
 
-    <!-- Hero Header -->
-    <header class="relative px-5 pt-8 pb-6 overflow-hidden">
-      <div class="absolute -top-20 -right-16 w-72 h-72 bg-gradient-to-br from-blue-200/30 to-violet-200/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute top-32 -left-20 w-64 h-64 bg-gradient-to-tr from-rose-100/30 to-amber-100/20 rounded-full blur-3xl pointer-events-none"></div>
+    <TabPageHeader
+      title="经验金库"
+      accent="amber"
+    >
+      <template #action>
+        <button
+          @click="openModal"
+          class="px-3 py-2 rounded-lg text-[12px] font-bold text-white bg-stone-900 border border-stone-900 active:scale-95 transition-transform flex items-center gap-1"
+        >
+          <i class="ri-add-line text-base"></i>
+          写故事
+        </button>
+      </template>
+    </TabPageHeader>
 
-      <div class="relative">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-[10px] font-black tracking-[0.3em] text-blue-600 uppercase">Vault · 经验金库</span>
-          <span class="w-1 h-1 rounded-full bg-blue-400"></span>
-          <span class="text-[10px] font-medium text-slate-400">Curated by 病友</span>
-        </div>
-        <h1 class="text-[32px] leading-none font-black tracking-tight text-slate-900 mb-3">
-          那些<span class="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">没人告诉你</span><br/>的真实经验。
-        </h1>
-        <p class="text-[13px] text-slate-500 leading-relaxed">
-          在这里，我们交换伤疤，也交换勋章。
-        </p>
-
-        <!-- 数据指标条 -->
-        <div class="mt-6 flex items-stretch gap-2 p-1.5 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/90 shadow-[0_4px_20px_-8px_rgba(15,23,42,0.06)]">
-          <div class="flex-1 px-4 py-2.5">
-            <div class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Stories</div>
-            <div class="text-xl font-black text-slate-900 mt-0.5 leading-none">{{ libraryItems.length }}</div>
-          </div>
-          <div class="w-px bg-slate-100"></div>
-          <div class="flex-1 px-4 py-2.5">
-            <div class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Today</div>
-            <div class="text-xl font-black text-slate-900 mt-0.5 leading-none">+{{ todayCount }}</div>
-          </div>
-          <div class="w-px bg-slate-100"></div>
-          <button
-              @click="openModal"
-              class="px-4 flex items-center gap-1.5 text-[13px] font-black text-white bg-slate-900 rounded-xl shadow-[0_4px_12px_-4px_rgba(15,23,42,0.4)] hover:bg-slate-800 active:scale-95 transition-all"
-          >
-            <i class="ri-add-line text-base"></i> 投稿
-          </button>
-        </div>
-
-        <!-- 类目筛选 -->
-        <div class="mt-5 flex gap-2 overflow-x-auto no-scrollbar -mx-5 px-5 pb-1">
-          <button
-              v-for="cat in categories"
-              :key="cat.id"
-              @click="activeCategory = cat.id"
-              :class="[
-              'shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-bold tracking-wide transition-all active:scale-95 flex items-center gap-1.5',
-              activeCategory === cat.id
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-white/80 text-slate-500 border border-slate-100 hover:bg-white'
-            ]"
-          >
-            <span>{{ cat.icon }}</span> {{ cat.label }}
-          </button>
-        </div>
+    <!-- 分类（吸顶） -->
+    <div class="sticky top-0 z-20 bg-[#FBF9F5]/95 backdrop-blur-md border-b border-stone-100">
+      <div class="flex gap-2 overflow-x-auto no-scrollbar px-4 py-2.5">
+        <button
+          v-for="cat in categories"
+          :key="cat.id"
+          @click="activeCategory = cat.id"
+          :class="[
+            'shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all active:scale-95',
+            activeCategory === cat.id
+              ? 'bg-stone-900 text-white'
+              : 'bg-white text-stone-500 border border-stone-200'
+          ]"
+        >
+          {{ cat.label }}
+        </button>
       </div>
-    </header>
-
-    <!-- Hero Story (featured) -->
-    <section v-if="featured" class="px-5 mb-6 relative">
-      <div
-          @click="openDetail(featured.id)"
-          class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-6 pt-8 cursor-pointer group active:scale-[0.99] transition-transform"
-      >
-        <!-- 光晕装饰 -->
-        <div class="absolute -top-20 -right-10 w-64 h-64 bg-blue-500/30 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-violet-500/20 rounded-full blur-3xl"></div>
-
-        <div class="relative z-10">
-          <div class="flex items-center gap-1.5 mb-4">
-            <span class="text-[10px] font-black tracking-[0.25em] text-amber-300 uppercase px-2 py-1 bg-amber-300/10 rounded-full border border-amber-300/20">
-              ✦ Editor's Pick
-            </span>
-            <span class="text-[10px] font-bold text-white/40 tracking-wider">本周精选</span>
-          </div>
-
-          <h2 class="text-white text-[26px] font-black leading-[1.2] tracking-tight mb-3">
-            {{ featured.title }}
-          </h2>
-          <p class="text-white/70 text-[13.5px] leading-relaxed line-clamp-2 mb-5">
-            {{ featured.summary }}
-          </p>
-
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="flex -space-x-2">
-                <div v-for="i in 3" :key="i" class="w-7 h-7 rounded-full border-2 border-slate-900 bg-gradient-to-br" :class="avatarColors[i-1]"></div>
-              </div>
-              <div>
-                <div class="text-[12px] font-bold text-white">{{ featured.likes || 128 }} 人共鸣</div>
-                <div class="text-[10px] text-white/40">·  {{ featured.date }}</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1 text-[12px] font-bold text-amber-300">
-              展开阅读 <i class="ri-arrow-right-line"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 列表区标题 -->
-    <div class="flex items-end justify-between px-5 mb-4">
-      <div>
-        <h3 class="text-[18px] font-black tracking-tight text-slate-900">最新故事</h3>
-        <p class="text-[11px] text-slate-400 font-medium mt-0.5">Sorted by latest · {{ filteredItems.length }} 条</p>
-      </div>
-      <button class="flex items-center gap-1 text-[12px] font-bold text-slate-500 hover:text-slate-900 transition-colors">
-        <i class="ri-equalizer-line"></i> 排序
-      </button>
     </div>
 
-    <!-- 卡片瀑布流 -->
-    <div class="px-5 columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-      <div v-for="item in filteredItems" :key="item.id" class="break-inside-avoid">
-        <ExperienceCard
-            v-bind="item"
-            :can-edit="checkPermission(item.userId)"
-            @delete="deleteCard(item.id)"
-            @open="openDetail(item.id)"
-        />
-      </div>
+    <!-- 双列瀑布流 · 小红书/闲鱼风 -->
+    <div class="px-2 pt-2 columns-2 gap-2">
+      <ExperienceCard
+        v-for="item in filteredItems"
+        :key="item.id"
+        v-bind="item"
+        :can-edit="checkPermission(item.userId)"
+        @delete="deleteCard(item.id)"
+        @open="openDetail(item.id)"
+      />
     </div>
 
     <!-- 空状态 -->
-    <div v-if="filteredItems.length === 0" class="px-5 mt-12 text-center">
+    <div v-if="filteredItems.length === 0" class="px-6 mt-16 text-center">
       <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center">
         <i class="ri-book-mark-line text-2xl text-slate-300"></i>
       </div>
@@ -145,8 +68,8 @@
           <!-- Header -->
           <header class="shrink-0 px-6 sm:px-8 pt-7 pb-4 flex items-center justify-between border-b border-slate-100">
             <div>
-              <div class="text-[10px] font-black text-blue-600 tracking-[0.25em] uppercase mb-1">New Story</div>
-              <h3 class="text-[22px] font-black tracking-tight text-slate-900">写下你的故事</h3>
+              <p class="text-[11px] font-medium text-stone-400 mb-1">发布到金库</p>
+              <h3 class="text-[22px] font-bold tracking-tight text-slate-900">写下你的故事</h3>
             </div>
             <button @click="closeModal" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all active:scale-90">
               <i class="ri-close-line text-lg"></i>
@@ -160,7 +83,7 @@
               <!-- 表单区 -->
               <div class="space-y-6">
                 <div>
-                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2">标题</label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">标题</label>
                   <input
                       v-model="newPost.title"
                       type="text"
@@ -170,7 +93,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2">摘要</label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">摘要</label>
                   <textarea
                       v-model="newPost.summary"
                       rows="5"
@@ -180,7 +103,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2">正文图集 / 视频（最多 9 条 · 第 1 张作封面）</label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">正文图集 / 视频（最多 9 条 · 第 1 张作封面）</label>
                   <div class="grid grid-cols-3 gap-2.5">
                     <div v-for="(m, i) in newMedia" :key="i" class="relative aspect-square rounded-2xl overflow-hidden bg-stone-100 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.12)]">
                       <video v-if="isVideo(m)" :src="m" class="w-full h-full object-cover" muted></video>
@@ -202,7 +125,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2.5">心情图标</label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2.5">心情图标</label>
                   <div class="flex flex-wrap gap-2">
                     <button
                         v-for="emoji in emojiOptions"
@@ -221,7 +144,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2.5">卡片主题</label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2.5">卡片底色</label>
                   <div class="grid grid-cols-4 gap-2.5">
                     <button
                         v-for="theme in availableThemes"
@@ -244,7 +167,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-black text-slate-400 tracking-widest uppercase mb-2">标签</label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">标签</label>
                   <div class="flex flex-wrap gap-1.5">
                     <button
                         v-for="t in tagOptions"
@@ -266,10 +189,12 @@
               <!-- 预览区 -->
               <div class="lg:sticky lg:top-0 lg:self-start">
                 <div class="mb-3 flex items-center justify-between">
-                  <span class="text-[11px] font-black text-slate-400 tracking-widest uppercase">实时预览</span>
-                  <span class="text-[10px] font-bold text-slate-300">Live · 推送到金库</span>
+                  <span class="text-[11px] font-bold text-stone-400">实时预览</span>
+                  <span class="text-[10px] font-medium text-stone-300">双列展示效果</span>
                 </div>
-                <ExperienceCard v-bind="previewPost" />
+                <div class="columns-2 gap-2 max-w-[320px]">
+                  <ExperienceCard v-bind="previewPost" />
+                </div>
               </div>
             </div>
           </div>
@@ -403,6 +328,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import ExperienceCard from '@/components/ExperienceCard.vue'
 import { useAuth } from '@/components/useAuth.js'
 import http from '@/api/http'
@@ -411,11 +337,11 @@ const { currentUserId, checkPermission } = useAuth()
 
 // 类目
 const categories = [
-  { id: 'all', label: '全部', icon: '✦' },
-  { id: 'pain', label: '血泪史', icon: '🔥' },
-  { id: 'heal', label: '治愈', icon: '🌿' },
-  { id: 'food', label: '吃货实录', icon: '🍜' },
-  { id: 'life', label: '人生感悟', icon: '🌙' }
+  { id: 'all', label: '全部' },
+  { id: 'pain', label: '血泪史' },
+  { id: 'heal', label: '治愈' },
+  { id: 'food', label: '吃货实录' },
+  { id: 'life', label: '人生感悟' }
 ]
 const activeCategory = ref('all')
 
@@ -475,23 +401,10 @@ const loadPosts = async () => {
 
 onMounted(loadPosts)
 
-// 计算属性：本周精选 = 最新一条（也可按共鸣排）
-const featured = computed(() => libraryItems.value[0] || null)
-
-const todayCount = computed(() => {
-  return Math.min(libraryItems.value.length, 12)
-})
-
 const filteredItems = computed(() => {
   if (activeCategory.value === 'all') return libraryItems.value
   return libraryItems.value.filter(item => item.category === activeCategory.value)
 })
-
-const avatarColors = [
-  'from-blue-400 to-violet-500',
-  'from-rose-400 to-orange-500',
-  'from-emerald-400 to-teal-500'
-]
 
 const deleteCard = async (id) => {
   if (!confirm('兄弟，确定要把这条经验从金库里移除吗？')) return
@@ -627,16 +540,18 @@ const newPost = reactive({
 // 实时预览：封面自动取图集第一张
 const previewPost = computed(() => ({
   ...newPost,
-  coverImage: newMedia.value.find(m => !isVideo(m)) || newMedia.value[0] || ''
+  coverImage: newMedia.value.find(m => !isVideo(m)) || newMedia.value[0] || '',
+  authorName: '我',
+  authorAvatar: defaultAvatar
 }))
 
 const availableThemes = [
-  { name: 'Editorial', value: 'editorial', bgPreview: '#ffffff', textColor: '#0f172a' },
-  { name: 'Midnight', value: 'midnight', bgPreview: 'linear-gradient(135deg, #0f172a, #1e3a8a)', textColor: '#fff' },
-  { name: 'Sunrise', value: 'sunrise', bgPreview: 'linear-gradient(135deg, #fef3c7, #fecaca)', textColor: '#7c2d12' },
-  { name: 'Aurora', value: 'aurora', bgPreview: 'linear-gradient(135deg, #ecfdf5, #ede9fe)', textColor: '#1e1b4b' },
-  { name: 'Ink', value: 'ink', bgPreview: 'linear-gradient(135deg, #020617, #422006)', textColor: '#fcd34d' },
-  { name: 'Bloom', value: 'bloom', bgPreview: 'linear-gradient(135deg, #fff1f2, #fae8ff)', textColor: '#9d174d' }
+  { name: '素白', value: 'editorial', bgPreview: '#ffffff', textColor: '#0f172a' },
+  { name: '深夜', value: 'midnight', bgPreview: 'linear-gradient(135deg, #0f172a, #1e3a8a)', textColor: '#fff' },
+  { name: '暖晨', value: 'sunrise', bgPreview: 'linear-gradient(135deg, #fef3c7, #fecaca)', textColor: '#7c2d12' },
+  { name: '清透', value: 'aurora', bgPreview: 'linear-gradient(135deg, #ecfdf5, #ede9fe)', textColor: '#1e1b4b' },
+  { name: '墨金', value: 'ink', bgPreview: 'linear-gradient(135deg, #020617, #422006)', textColor: '#fcd34d' },
+  { name: '浅绯', value: 'bloom', bgPreview: 'linear-gradient(135deg, #fff1f2, #fae8ff)', textColor: '#9d174d' }
 ]
 
 const emojiOptions = ['😈', '🧊', '🍦', '🧠', '👾', '✍️', '📸', '🌥️', '🐳', '💊', '🌙', '🔥', '🌿', '🚑']

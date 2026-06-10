@@ -17,7 +17,7 @@
         </button>
         <div>
           <div class="flex items-center gap-1.5 mb-0.5">
-            <span class="text-[10px] font-black tracking-[0.3em] text-emerald-600 uppercase">Pharma · IBD Frontier</span>
+            <span class="text-[10px] font-black tracking-[0.18em] text-emerald-600">药物前沿情报</span>
           </div>
           <h1 class="text-[19px] font-black tracking-tight text-slate-900 leading-none flex items-center gap-2">
             前沿药物图谱
@@ -70,7 +70,7 @@
       <div class="flex items-end justify-between pt-2 px-1">
         <div>
           <h3 class="text-[17px] font-black tracking-tight text-slate-900">药物清单</h3>
-          <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ filteredDrugs.length }} 款前沿药物 · IBD 实战数据</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ filteredDrugs.length }} 款前沿药物 · 病友实测数据</p>
         </div>
       </div>
 
@@ -274,7 +274,7 @@
       <div class="p-6 space-y-5 bg-[#FBF9F5] rounded-t-3xl">
         <div class="flex justify-between items-center">
           <div>
-            <div class="text-[10px] font-black text-emerald-600 tracking-[0.25em] uppercase mb-1">Setup</div>
+            <div class="text-[10px] font-black text-emerald-600 tracking-[0.18em] mb-1">药箱设置</div>
             <h3 class="text-[18px] font-black text-slate-900 tracking-tight">配置药箱守护</h3>
           </div>
           <button @click="showCabinetConfig = false" class="w-9 h-9 rounded-full bg-white border border-stone-200 text-slate-500 hover:bg-stone-100 flex items-center justify-center active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
@@ -282,7 +282,7 @@
 
         <div class="space-y-4" v-if="configDrug">
           <div class="bg-white p-4 rounded-2xl border border-stone-100">
-            <p class="text-[10px] text-slate-400 font-black tracking-widest uppercase">已选药物</p>
+            <p class="text-[10px] text-slate-400 font-black tracking-widest">已选药物</p>
             <p class="text-[14px] font-black text-emerald-700 mt-1.5 tracking-tight">{{ configDrug.name }}</p>
           </div>
 
@@ -345,7 +345,7 @@
       <div class="p-6 bg-[#FBF9F5] rounded-t-3xl h-[70vh] flex flex-col">
         <div class="flex justify-between items-center mb-5 shrink-0">
           <div>
-            <div class="text-[10px] font-black text-emerald-600 tracking-[0.25em] uppercase mb-1">Cabinet</div>
+            <div class="text-[10px] font-black text-emerald-600 tracking-[0.18em] mb-1">守护药箱</div>
             <h3 class="text-[19px] font-black text-slate-900 tracking-tight">我的守护药箱</h3>
             <p class="text-[11px] text-slate-400 mt-1 font-medium">{{ cabinetList.length }} 款药物 · 静默护肠</p>
           </div>
@@ -376,7 +376,7 @@
                 <button @click="removeFromCabinet(item.id)" class="text-[10.5px] font-black text-rose-500 bg-rose-50 px-2.5 py-1 rounded-md hover:bg-rose-100 transition-colors shrink-0">卸载</button>
               </div>
               <p class="text-[11.5px] text-slate-500 mt-1.5 flex items-center gap-1.5 font-medium">
-                <span class="font-black text-slate-400 tracking-wider uppercase text-[9.5px]">剂量</span> {{ item.dosage }}
+                <span class="font-black text-slate-400 tracking-wider text-[9.5px]">剂量</span> {{ item.dosage }}
               </p>
               <div class="flex items-center gap-2 mt-2.5 border-t border-stone-100 pt-2.5 flex-wrap">
                 <span class="text-[10px] text-slate-600 font-bold bg-stone-50 px-2 py-1 rounded-md border border-stone-100 flex items-center gap-1">

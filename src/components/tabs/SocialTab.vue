@@ -6,31 +6,26 @@
       <!-- ============ 朋友圈封面 Hero ============ -->
       <div class="shrink-0 relative">
         <!-- 封面图 -->
-        <div class="relative h-44 overflow-hidden">
+        <div class="relative h-[calc(9.5rem+env(safe-area-inset-top,0px))] overflow-hidden">
           <img :src="myCard.cover" class="absolute inset-0 w-full h-full object-cover" />
-          <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40"></div>
+          <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50"></div>
 
-          <!-- 顶部小标签 + 相机 -->
-          <div class="absolute top-3 left-4 right-4 flex justify-between items-center z-10">
-            <span class="text-[10px] font-black tracking-[0.3em] text-white uppercase backdrop-blur-md bg-black/25 px-2.5 py-1 rounded-full border border-white/20">
-              ✦ Paradise · 密友圈
-            </span>
-            <div class="flex items-center gap-2">
-              <button @click="openPaperBoat" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="情绪解压纸船">
-                <i class="ri-ship-line text-base"></i>
-              </button>
-              <button @click="openComposer" class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-xl border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="发布动态">
-                <i class="ri-camera-line text-base"></i>
-              </button>
-            </div>
+          <!-- 封面右上：快捷操作 -->
+          <div class="absolute top-[calc(env(safe-area-inset-top,0px)+0.75rem)] right-4 flex items-center gap-2 z-10">
+            <button @click="openPaperBoat" class="w-9 h-9 rounded-lg bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="情绪解压纸船">
+              <i class="ri-ship-line text-base"></i>
+            </button>
+            <button @click="openComposer" class="w-9 h-9 rounded-lg bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="发布动态">
+              <i class="ri-camera-line text-base"></i>
+            </button>
           </div>
 
           <!-- 右下：用户信息 -->
           <div class="absolute bottom-3 left-4 right-24 z-10">
-            <p class="text-white/70 text-[10px] font-bold tracking-[0.2em] uppercase mb-0.5">My Wall</p>
-            <h2 class="text-white text-[20px] font-black tracking-tight leading-tight drop-shadow-md">{{ myCard.name }}</h2>
-            <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5">{{ myCard.sign }}</p>
-            <button @click="copyMyId" class="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-white/90 bg-black/30 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 active:scale-95 transition-all">
+            <p class="text-white/70 text-[10px] font-bold tracking-wide mb-0.5">我的主页</p>
+            <h2 class="text-white text-[20px] font-bold tracking-tight leading-tight drop-shadow-md">{{ myCard.name }}</h2>
+            <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5 line-clamp-2">{{ myCard.sign }}</p>
+            <button @click="copyMyId" class="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-white/90 bg-black/30 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/20 active:scale-95 transition-all">
               <i class="ri-fingerprint-line"></i> 我的ID: {{ myId }}
               <i class="ri-file-copy-line ml-0.5"></i>
             </button>
@@ -38,18 +33,16 @@
 
         </div>
 
-        <!-- 头像悬浮 -->
-        <div class="absolute -bottom-7 right-4 z-40">
-          <div class="relative">
-            <div class="absolute -inset-1 bg-gradient-to-br from-blue-500 to-violet-500 rounded-[20px] blur opacity-40"></div>
-            <img :src="myCard.avatar" class="relative w-[60px] h-[60px] rounded-[18px] border-[3px] border-[#FBF9F5] object-cover bg-white shadow-md" />
-            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-[#FBF9F5] rounded-full"></span>
-          </div>
-        </div>
+        <!-- 档案框标题 -->
+        <TabPageHeader
+          title="战术小队"
+          accent="indigo"
+        />
+
       </div>
 
       <!-- ============ Tab Pills ============ -->
-      <div class="sticky top-0 shrink-0 px-5 pt-8 pb-3 z-30 bg-[#FBF9F5]/90 backdrop-blur-xl border-b border-stone-200/40">
+      <div class="sticky top-0 shrink-0 px-5 pt-3 pb-3 z-30 bg-[#FBF9F5]/90 backdrop-blur-xl border-b border-stone-200/40">
         <div class="flex bg-white/70 backdrop-blur-xl p-1 rounded-full shadow-[0_4px_20px_rgba(15,23,42,0.04)] border border-white/80 gap-0.5">
           <button @click="currentTab = 'status'" :class="currentTab === 'status' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
             状态
@@ -309,7 +302,22 @@
           <div v-if="chatList.length === 0" class="text-center py-16 text-[13px] text-slate-400 font-bold">
             还没有会话,去联络人加个好友或点右上角「创建小队」吧 💬
           </div>
-          <div v-for="item in chatList" :key="item.type + '-' + item.id" @click="openChat(item)" class="group mb-4 p-4 flex items-center cursor-pointer bg-white/50 backdrop-blur-lg rounded-[28px] border border-white/60 shadow-[0_8px_24px_rgba(0,0,0,0.02)] hover:bg-white/80 hover:shadow-[0_12px_32px_rgba(59,130,246,0.08)] hover:-translate-y-0.5 transition-all duration-400 active:scale-[0.98]">
+          <div v-else class="mb-4">
+            <div class="flex items-center gap-2 bg-white/70 border border-white/80 rounded-[22px] px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.03)]">
+              <i class="ri-search-line text-slate-400 text-lg"></i>
+              <input v-model="chatSearchKeyword" type="text" placeholder="搜索联系人、小队或聊天内容" class="flex-1 bg-transparent text-[13.5px] font-bold text-slate-700 placeholder:text-slate-400 outline-none">
+              <button v-if="chatSearchKeyword" @click="chatSearchKeyword = ''" class="w-6 h-6 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center active:scale-90 transition-all">
+                <i class="ri-close-line text-sm"></i>
+              </button>
+            </div>
+            <p v-if="isChatHistorySearching" class="mt-2 text-[11px] text-slate-400 font-bold px-2">
+              正在搜索历史消息...
+            </p>
+          </div>
+          <div v-if="chatList.length > 0 && !isChatHistorySearching && filteredChatList.length === 0" class="text-center py-12 text-[13px] text-slate-400 font-bold">
+            没找到对应会话，换个关键词试试 🔍
+          </div>
+          <div v-for="item in filteredChatList" :key="item.type + '-' + item.id" @click="openChat(item)" class="group mb-4 p-4 flex items-center cursor-pointer bg-white/50 backdrop-blur-lg rounded-[28px] border border-white/60 shadow-[0_8px_24px_rgba(0,0,0,0.02)] hover:bg-white/80 hover:shadow-[0_12px_32px_rgba(59,130,246,0.08)] hover:-translate-y-0.5 transition-all duration-400 active:scale-[0.98]">
             <div class="relative">
               <img :src="item.avatar" class="w-[56px] h-[56px] rounded-[22px] object-cover shrink-0 shadow-sm border-2 border-white transition-transform duration-500 group-hover:scale-105 group-hover:border-blue-100">
               <div v-if="item.type === 'group'" class="absolute -bottom-0.5 -right-0.5 px-1 h-4 bg-violet-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center">
@@ -474,7 +482,7 @@
             <i class="ri-arrow-left-line text-[22px]"></i>
           </button>
 
-          <div class="flex-1 flex items-center gap-3 min-w-0">
+          <button @click="activeChat?.type === 'group' ? openMemberPanel() : openUserProfile(activeChat?.id)" class="flex-1 flex items-center gap-3 min-w-0 text-left active:scale-[0.99] transition-all">
             <div class="relative shrink-0">
               <img :src="activeChat?.avatar" class="w-9 h-9 rounded-full object-cover">
               <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
@@ -483,10 +491,10 @@
               <h2 class="text-[15px] font-semibold text-slate-900 leading-tight truncate">{{ activeChat?.name }}</h2>
               <span class="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">{{ activeChat?.type === 'group' ? (activeChat?.memberCount || 0) + ' 位成员' : '在线' }}</span>
             </div>
-          </div>
+          </button>
 
           <button v-if="activeChat?.type === 'group'" @click="openMemberPanel" class="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-all active:scale-90 shrink-0">
-            <i class="ri-more-line text-[20px]"></i>
+            <i class="ri-settings-3-line text-[20px]"></i>
           </button>
         </header>
 
@@ -498,7 +506,7 @@
 
           <div v-for="(msg, index) in chatHistory" :key="msg.id || index" class="flex flex-col mb-2.5" :class="msg.senderId === myId ? 'items-end' : 'items-start'">
 
-            <span v-if="msg.senderId !== myId && activeChat?.type === 'group'" class="text-[10px] text-slate-400 font-bold mb-0.5 ml-1">{{ msg.senderName || '队友' }}</span>
+            <button v-if="msg.senderId !== myId && activeChat?.type === 'group'" @click="openUserProfile(msg.senderId)" class="text-[10px] text-slate-400 font-bold mb-0.5 ml-1 text-left active:text-blue-500 transition-colors">{{ msg.senderName || '队友' }}</button>
 
             <div v-if="msg.senderId !== myId" class="bg-white text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-md text-[14.5px] max-w-[78%] leading-relaxed border border-slate-100 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
               <img v-if="msg.type === 'image'" :src="msg.content" class="max-w-full rounded-xl" />
@@ -694,55 +702,82 @@
       </div>
     </transition>
 
-    <!-- ============ 情绪解压纸船 Modal ============ -->
+    <!-- ============ 情绪纸船 Modal ============ -->
     <transition name="fade-up">
       <div v-if="showPaperBoatModal" class="fixed inset-0 z-[140] bg-slate-950/85 backdrop-blur-md flex flex-col justify-end">
-        <div class="bg-gradient-to-b from-slate-900 to-slate-950 rounded-t-[36px] p-6 h-[85vh] flex flex-col border-t border-slate-800 relative">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-800 rounded-full"></div>
+        <div class="paper-river-sheet relative h-[88vh] rounded-t-[34px] border border-white/10 shadow-[0_-28px_80px_-34px_rgba(0,0,0,0.75)] flex flex-col overflow-hidden">
+          <div class="paper-stars"></div>
+          <div class="paper-moon"></div>
+          <div class="paper-river"></div>
+          <div class="paper-river-shine"></div>
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full z-10"></div>
 
-          <div class="flex justify-between items-center mb-6 mt-4 shrink-0">
-            <div>
-              <h2 class="text-white text-[20px] font-black tracking-tight flex items-center gap-2">
-                情绪解压纸船 <i class="ri-ship-2-fill text-indigo-400 animate-pulse"></i>
-              </h2>
-              <p class="text-slate-400 text-[11px] mt-1">倾倒你的痛苦，它们会化作星光彻底解体消散。</p>
+          <header class="relative z-10 shrink-0 px-6 pt-8 pb-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-[11px] font-black tracking-[0.22em] text-cyan-100/70 mb-1">星河漂流</p>
+                <h2 class="text-[25px] font-black tracking-tight text-white leading-none">把心事放进河里</h2>
+                <p class="text-[12px] text-cyan-50/70 font-medium mt-2 leading-relaxed">一天放飞两封，捞起两封。让它慢慢漂，不催它靠岸。</p>
+              </div>
+              <button @click="showPaperBoatModal = false" class="w-9 h-9 rounded-full bg-white/10 text-white/70 border border-white/10 flex items-center justify-center active:scale-90 transition-all shrink-0">
+                <i class="ri-close-line text-lg"></i>
+              </button>
             </div>
-            <button @click="showPaperBoatModal = false" class="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-full text-slate-400 hover:bg-slate-700 active:scale-90 transition-all">
-              <i class="ri-close-line text-lg"></i>
-            </button>
+
+            <div class="grid grid-cols-2 gap-2.5 mt-5">
+              <div class="paper-quota-card">
+                <p class="text-[10px] font-black tracking-[0.18em] text-cyan-100/70">今日可放</p>
+                <div class="mt-1 flex items-end gap-1">
+                  <span class="text-[25px] font-black text-white leading-none">{{ paperBoatQuota.releaseRemaining }}</span>
+                  <span class="text-[11px] font-bold text-cyan-100/50 mb-0.5">/ {{ paperBoatQuota.releaseLimit }}</span>
+                </div>
+              </div>
+              <div class="paper-quota-card">
+                <p class="text-[10px] font-black tracking-[0.18em] text-cyan-100/70">今日可捞</p>
+                <div class="mt-1 flex items-end gap-1">
+                  <span class="text-[25px] font-black text-white leading-none">{{ paperBoatQuota.scoopRemaining }}</span>
+                  <span class="text-[11px] font-bold text-cyan-100/50 mb-0.5">/ {{ paperBoatQuota.scoopLimit }}</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div class="relative z-10 shrink-0 px-6">
+            <div class="flex bg-white/10 p-1 rounded-full gap-1 border border-white/10">
+              <button @click="paperBoatTab = 'write'" :class="paperBoatTab === 'write' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
+                写一封
+              </button>
+              <button @click="paperBoatTab = 'scoop'" :class="paperBoatTab === 'scoop' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
+                捞一封
+              </button>
+            </div>
           </div>
 
-          <!-- 模式选择 -->
-          <div class="shrink-0 flex bg-slate-800/55 p-1 rounded-full border border-slate-750 gap-0.5 mb-6">
-            <button @click="paperBoatTab = 'write'" :class="paperBoatTab === 'write' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-[12px] font-bold rounded-full transition-all">
-              写下心事
-            </button>
-            <button @click="paperBoatTab = 'scoop'" :class="paperBoatTab === 'scoop' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'" class="flex-1 py-1.5 text-[12px] font-bold rounded-full transition-all">
-              捞取漂流纸船
-            </button>
+          <div v-if="paperBoatHint" class="relative z-10 mx-6 mt-3 rounded-2xl bg-amber-200/10 border border-amber-100/20 px-4 py-3 text-[12px] font-bold text-amber-100">
+            {{ paperBoatHint }}
           </div>
 
-          <div class="flex-1 overflow-y-auto custom-scroll space-y-6 pb-6">
-            <!-- 写下心事 -->
-            <div v-if="paperBoatTab === 'write'" class="space-y-5">
+          <div class="relative z-10 flex-1 overflow-y-auto custom-scroll px-6 py-5 pb-6">
+            <div v-if="paperBoatTab === 'write'" class="space-y-4">
               <div class="relative">
-                <textarea 
-                  v-model="paperBoatText" 
-                  rows="6" 
-                  :disabled="isDisintegrating"
-                  placeholder="写下你此时此刻所有的委屈、愤怒、或者对病痛的无助。这里没有人知道你是谁，写完它，然后彻底粉碎放飞吧..."
+                <textarea
+                  v-model="paperBoatText"
+                  maxlength="280"
+                  rows="8"
+                  :disabled="isDisintegrating || paperBoatQuota.releaseRemaining <= 0"
+                  placeholder="写下此刻不想说出口的话。它会匿名漂走，不进入公开动态。"
                   :class="[
-                    'w-full bg-slate-900 border rounded-2xl p-4 text-slate-100 text-[13.5px] font-medium outline-none transition-all resize-none',
-                    isDisintegrating ? 'border-indigo-500/20 text-transparent select-none cursor-default' : 'border-slate-800 focus:border-indigo-500 focus:shadow-[0_8px_30px_rgba(99,102,241,0.2)]'
+                    'w-full bg-slate-950/40 border rounded-[24px] p-4 text-cyan-50 placeholder:text-cyan-100/40 text-[14px] font-medium outline-none transition-all resize-none leading-relaxed shadow-[0_18px_50px_-34px_rgba(0,0,0,0.8)] backdrop-blur-xl',
+                    isDisintegrating ? 'border-cyan-100/10 text-transparent select-none cursor-default' : 'border-white/12 focus:border-cyan-200/32 focus:bg-slate-950/45',
+                    paperBoatQuota.releaseRemaining <= 0 ? 'opacity-60' : ''
                   ]"
                 ></textarea>
-                
-                <!-- 粒子粉碎动画层 -->
+
                 <div v-if="isDisintegrating" class="absolute inset-0 p-4 overflow-hidden pointer-events-none flex flex-wrap content-start gap-0.5">
-                  <span 
-                    v-for="(word, wIdx) in paperBoatText.split('')" 
+                  <span
+                    v-for="(word, wIdx) in paperBoatText.split('')"
                     :key="wIdx"
-                    class="text-[13.5px] text-indigo-300 font-bold inline-block animate-disintegrate"
+                    class="text-[13.5px] text-cyan-100/80 font-bold inline-block animate-disintegrate"
                     :style="getDisintegrateStyle()"
                   >
                     {{ word === '\n' ? '' : word }}
@@ -750,66 +785,114 @@
                 </div>
               </div>
 
-              <div class="text-[11px] text-slate-500 text-center leading-relaxed">
-                点击碎裂放飞，所有的字符都会在物理级被彻底粉碎抹除，不记入任何数据库。
+              <div class="flex items-center justify-between text-[11px] text-cyan-50/45 font-bold">
+                <span>{{ paperBoatText.length }}/280</span>
+                <span>剩余 {{ paperBoatQuota.releaseRemaining }} 封</span>
               </div>
+
+              <button
+                @click="disintegratePaperBoat"
+                :disabled="!paperBoatText.trim() || isDisintegrating || paperBoatQuota.releaseRemaining <= 0"
+                class="w-full bg-white text-slate-950 hover:bg-cyan-50 disabled:bg-white/10 disabled:text-cyan-100/40 font-black text-[15px] py-4 rounded-[22px] active:scale-[0.98] transition-all flex justify-center items-center gap-2 shadow-[0_16px_40px_-24px_rgba(255,255,255,0.7)]"
+              >
+                {{ paperBoatQuota.releaseRemaining <= 0 ? '今天的河面已经满了' : '放进河里' }}
+              </button>
             </div>
 
-            <!-- 捞取心事 -->
             <div v-if="paperBoatTab === 'scoop'" class="space-y-4">
-              <div v-if="scoopedBoat" class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 animate-in zoom-in duration-300">
-                <div class="flex items-center justify-between">
-                  <span class="text-[10px] text-indigo-400 font-black tracking-widest uppercase">
-                    ⛵ 捞起了一只匿名纸船
-                  </span>
-                  <span class="text-[10px] text-slate-500 font-bold">
-                    {{ scoopedBoat.time }}
-                  </span>
+              <div v-if="scoopedBoat" class="paper-floating-boat rounded-[28px] bg-white/10 border border-white/20 p-5 shadow-[0_20px_56px_-34px_rgba(0,0,0,0.85)] backdrop-blur-xl animate-in zoom-in duration-300">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                  <span class="text-[10px] text-cyan-100/70 font-black tracking-[0.2em]">匿名来信</span>
+                  <span class="text-[10px] text-cyan-100/50 font-bold">{{ scoopedBoat.time || '刚刚' }}</span>
                 </div>
-                
-                <p class="text-[13.5px] text-slate-200 leading-relaxed italic">
-                  “{{ scoopedBoat.content }}”
+
+                <p class="text-[15px] text-cyan-50/90 leading-relaxed font-medium whitespace-pre-wrap">
+                  {{ scoopedBoat.content }}
                 </p>
-                
-                <div class="flex justify-end gap-2 pt-2">
-                  <button 
+
+                <div class="grid grid-cols-3 gap-2 mt-5 text-center">
+                  <div class="rounded-2xl bg-white/10 px-2 py-2 border border-white/10">
+                    <p class="text-[15px] font-black text-white">{{ scoopedBoat.breezeCount || 0 }}</p>
+                    <p class="text-[10px] font-bold text-cyan-100/40 mt-0.5">微风</p>
+                  </div>
+                  <div class="rounded-2xl bg-white/10 px-2 py-2 border border-white/10">
+                    <p class="text-[15px] font-black text-white">{{ scoopedBoat.replyCount || 0 }}</p>
+                    <p class="text-[10px] font-bold text-cyan-100/40 mt-0.5">回声</p>
+                  </div>
+                  <div class="rounded-2xl bg-white/10 px-2 py-2 border border-white/10">
+                    <p class="text-[15px] font-black text-white">{{ scoopedBoat.giftCount || 0 }}</p>
+                    <p class="text-[10px] font-bold text-cyan-100/40 mt-0.5">礼物</p>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="scoopedBoat" class="rounded-[24px] bg-slate-950/28 border border-white/10 p-4 space-y-3 backdrop-blur-xl">
+                <textarea
+                  v-model="paperBoatReplyText"
+                  rows="3"
+                  maxlength="180"
+                  :disabled="scoopedBoat.replied"
+                  placeholder="写一句只给这只纸船的私密回声。"
+                  class="w-full bg-white/10 border border-white/10 rounded-2xl px-3.5 py-3 text-[13px] text-cyan-50 placeholder:text-cyan-100/40 font-medium outline-none focus:bg-white/10 focus:border-cyan-200/30 transition-all resize-none leading-relaxed disabled:opacity-60"
+                ></textarea>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    v-for="gift in paperBoatGifts"
+                    :key="gift.type"
+                    @click="selectedPaperBoatGift = gift.type"
+                    :disabled="scoopedBoat.gifted"
+                    :class="[
+                      'rounded-2xl border px-3 py-2.5 text-left transition-all active:scale-[0.98] disabled:opacity-55',
+                      selectedPaperBoatGift === gift.type ? 'bg-white text-slate-950 border-white' : 'bg-white/10 text-cyan-50/70 border-white/10'
+                    ]"
+                  >
+                    <div class="text-[17px] leading-none">{{ gift.icon }}</div>
+                    <div class="text-[11px] font-black mt-1">{{ gift.label }}</div>
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 pt-1">
+                  <button
+                    @click="respondToScooped('reply')"
+                    :disabled="!paperBoatReplyText.trim() || scoopedBoat.replied || isPaperBoatResponding"
+                    class="py-3 rounded-2xl bg-white text-slate-950 text-[12px] font-black disabled:bg-white/10 disabled:text-cyan-100/40 active:scale-95 transition-all"
+                  >
+                    {{ scoopedBoat.replied ? '已回应' : '回一声' }}
+                  </button>
+                  <button
+                    @click="respondToScooped('gift')"
+                    :disabled="scoopedBoat.gifted || isPaperBoatResponding"
+                    class="py-3 rounded-2xl bg-amber-200/20 text-amber-100 text-[12px] font-black disabled:bg-white/10 disabled:text-cyan-100/40 active:scale-95 transition-all border border-amber-100/20"
+                  >
+                    {{ scoopedBoat.gifted ? '已送礼' : '送礼物' }}
+                  </button>
+                  <button
                     @click="sendBreezeToScooped"
                     :disabled="scoopedBoat.breezed"
-                    class="px-4 py-2 rounded-full text-[11px] font-black text-indigo-300 border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 active:scale-95 transition-all flex items-center gap-1 disabled:bg-emerald-500/20 disabled:text-emerald-400 disabled:border-emerald-500/30"
+                    class="py-3 rounded-2xl bg-cyan-200/20 text-cyan-100 text-[12px] font-black disabled:bg-white/10 disabled:text-cyan-100/40 active:scale-95 transition-all border border-cyan-100/20"
                   >
-                    <i class="ri-windy-line" :class="{ 'animate-spin': scoopedBoat.breezed }"></i>
-                    {{ scoopedBoat.breezed ? '微风已吹过 🍃' : '吹拂微风 🍃' }}
-                  </button>
-                  <button 
-                    @click="scoopAnother"
-                    class="px-4 py-2 rounded-full text-[11px] font-black text-slate-400 bg-slate-800 hover:bg-slate-700 active:scale-95 transition-all"
-                  >
-                    换一只 🌊
+                    {{ scoopedBoat.breezed ? '已吹过' : '微风' }}
                   </button>
                 </div>
               </div>
-              
-              <div v-else class="text-center py-10 space-y-4">
-                <div class="text-[28px] text-indigo-400 animate-bounce">🌊</div>
-                <p class="text-[12px] text-slate-400 font-bold">点击网起江河里漂来的匿名纸船...</p>
-                <button 
-                  @click="scoopAnother" 
-                  class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[12.5px] rounded-full active:scale-95 transition-all shadow-md shadow-indigo-600/20"
-                >
-                  抛网打捞 ⛵
-                </button>
-              </div>
-            </div>
-          </div>
 
-          <div v-if="paperBoatTab === 'write'" class="shrink-0 pt-4 border-t border-slate-800">
-            <button 
-              @click="disintegratePaperBoat" 
-              :disabled="!paperBoatText.trim() || isDisintegrating"
-              class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black text-[15px] py-4 rounded-[20px] shadow-[0_10px_20px_rgba(99,102,241,0.2)] active:scale-95 transition-all flex justify-center items-center gap-2"
-            >
-              碎裂放飞 ⛵
-            </button>
+              <div v-if="!scoopedBoat" class="rounded-[28px] bg-white/10 border border-dashed border-cyan-100/20 p-8 text-center backdrop-blur-xl">
+                <div class="w-14 h-14 mx-auto rounded-full bg-white/10 text-cyan-100/70 flex items-center justify-center mb-4 border border-white/10">
+                  <i class="ri-ship-2-line text-2xl"></i>
+                </div>
+                <p class="text-[14px] font-black text-white">河面很安静</p>
+                <p class="text-[12px] text-cyan-50/70 mt-1 leading-relaxed">今天还可以捞 {{ paperBoatQuota.scoopRemaining }} 封匿名心事。</p>
+              </div>
+
+              <button
+                @click="scoopAnother"
+                :disabled="isScoopLoading || paperBoatQuota.scoopRemaining <= 0"
+                class="w-full bg-white text-slate-950 hover:bg-cyan-50 disabled:bg-white/10 disabled:text-cyan-100/40 font-black text-[15px] py-4 rounded-[22px] active:scale-[0.98] transition-all shadow-[0_16px_40px_-24px_rgba(255,255,255,0.7)]"
+              >
+                {{ paperBoatQuota.scoopRemaining <= 0 ? '今天先不打扰河面了' : (scoopedBoat ? '再捞一封' : '捞起一封') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1050,39 +1133,90 @@
       </div>
     </transition>
 
-    <!-- ============ 小队成员面板 ============ -->
+    <!-- ============ 小队资料页 ============ -->
     <transition name="fade-up">
-      <div v-if="showMemberPanel" class="fixed inset-0 z-[150] flex justify-end">
-        <div @click="showMemberPanel = false" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
-        <div class="relative w-[80%] max-w-[340px] h-full bg-white shadow-[-8px_0_40px_rgba(0,0,0,0.12)] flex flex-col animate-in slide-in-from-right duration-300">
-          <div class="shrink-0 px-5 pt-[calc(env(safe-area-inset-top,16px)+16px)] pb-4 border-b border-slate-100">
-            <div class="flex items-center justify-between">
-              <div class="min-w-0">
-                <h2 class="text-[18px] font-black text-slate-900 tracking-tight truncate">{{ activeChat?.name }}</h2>
-                <p class="text-[12px] text-slate-400 font-bold mt-0.5">{{ groupMembers.length }} 位成员</p>
+      <div v-if="showMemberPanel" class="fixed inset-0 z-[150] bg-slate-900/45 backdrop-blur-md flex flex-col justify-end">
+        <div class="relative h-[88vh] bg-[#FBF9F5] rounded-t-[34px] overflow-hidden flex flex-col shadow-[0_-24px_60px_-26px_rgba(15,23,42,0.45)]">
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-200 rounded-full"></div>
+
+          <header class="shrink-0 px-5 pt-8 pb-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="relative shrink-0">
+                  <img :src="groupEdit.avatar || activeChat?.avatar" class="w-16 h-16 rounded-[24px] object-cover border-2 border-white shadow-md bg-slate-100">
+                  <button v-if="isGroupOwner" @click="pickGroupAvatar" class="absolute -right-1 -bottom-1 w-8 h-8 rounded-full bg-slate-950 text-white flex items-center justify-center border-2 border-[#FBF9F5] active:scale-90 transition-all">
+                    <i class="ri-camera-line text-sm"></i>
+                  </button>
+                  <input id="group-avatar-input" type="file" accept="image/*" class="hidden" @change="onGroupAvatarChange" />
+                </div>
+
+                <div class="min-w-0">
+                  <p class="text-[11px] font-black tracking-[0.16em] text-violet-500 mb-1">小队资料</p>
+                  <h2 class="text-[24px] font-black text-slate-950 tracking-tight truncate">{{ groupEdit.name || activeChat?.name }}</h2>
+                  <p class="text-[12px] text-slate-400 font-bold mt-1">{{ groupMembers.length }} 位成员 · {{ isGroupOwner ? '你是队长' : '队员' }}</p>
+                </div>
               </div>
-              <button @click="showMemberPanel = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90 transition-all shrink-0">
+
+              <button @click="showMemberPanel = false" class="w-9 h-9 flex items-center justify-center bg-white rounded-full text-slate-500 active:scale-90 transition-all shrink-0 shadow-sm">
                 <i class="ri-close-line text-lg"></i>
               </button>
             </div>
-          </div>
-          <div class="flex-1 overflow-y-auto custom-scroll px-3 py-3 space-y-1">
-            <p v-if="loadingMembers" class="text-center text-[13px] text-slate-400 font-bold py-10">加载成员中...</p>
-            <div v-for="m in groupMembers" :key="m.userId" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-all">
-              <img :src="m.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + m.userId" class="w-11 h-11 rounded-2xl border border-white shadow-sm object-cover bg-slate-100">
-              <div class="flex-1 min-w-0">
-                <h4 class="text-[14.5px] font-bold text-slate-800 truncate">{{ m.nickname || '神秘队员' }}</h4>
-                <span v-if="m.userId === myId" class="text-[11px] text-slate-400 font-medium">我自己</span>
+          </header>
+
+          <div class="flex-1 overflow-y-auto custom-scroll px-5 pb-5 space-y-4">
+            <section class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.35)]">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-[14px] font-black text-slate-900">小队信息</h3>
+                <button v-if="isGroupOwner" @click="groupProfileMode = groupProfileMode === 'edit' ? 'view' : 'edit'" class="text-[12px] font-black text-violet-600 bg-violet-50 px-3 py-1.5 rounded-full active:scale-95 transition-all">
+                  {{ groupProfileMode === 'edit' ? '收起编辑' : '编辑资料' }}
+                </button>
               </div>
-              <span v-if="m.role === 'OWNER'" class="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
-                <i class="ri-vip-crown-fill"></i> 队长
-              </span>
-              <span v-else class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">队员</span>
-            </div>
-          </div>
-          <div class="shrink-0 p-4 border-t border-slate-100 pb-[calc(env(safe-area-inset-bottom,8px)+16px)]">
-            <button @click="openInviteFromPanel" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-[14px] py-3.5 rounded-[18px] active:scale-95 transition-all flex justify-center items-center gap-2">
-              <i class="ri-user-add-line"></i> 邀请战友进队
+
+              <div v-if="groupProfileMode !== 'edit'" class="space-y-2">
+                <p class="text-[12px] text-slate-400 font-bold">公告</p>
+                <p class="text-[13px] text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">{{ groupEdit.notice || '队长还没有写公告。' }}</p>
+              </div>
+
+              <div v-else class="space-y-3">
+                <input v-model="groupEdit.name" type="text" placeholder="小队名称" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-[14px] font-bold text-slate-800 outline-none focus:bg-white focus:border-violet-200 transition-all">
+                <textarea v-model="groupEdit.notice" rows="4" placeholder="写一段小队公告：目标、边界、互助规则..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-[13px] font-medium text-slate-700 outline-none focus:bg-white focus:border-violet-200 transition-all resize-none leading-relaxed"></textarea>
+                <button @click="saveGroupProfile" :disabled="isSavingGroupProfile" class="w-full bg-slate-950 text-white py-3.5 rounded-2xl text-[13px] font-black active:scale-95 transition-all disabled:bg-slate-300">
+                  {{ isSavingGroupProfile ? '保存中...' : '保存小队资料' }}
+                </button>
+              </div>
+            </section>
+
+            <section class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.35)]">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-[14px] font-black text-slate-900">成员</h3>
+                <button @click="openInviteFromPanel" class="text-[12px] font-black text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">
+                  邀请
+                </button>
+              </div>
+
+              <p v-if="loadingMembers" class="text-center text-[13px] text-slate-400 font-bold py-10">加载成员中...</p>
+              <div v-else class="space-y-1">
+                <div v-for="m in groupMembers" :key="m.userId" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-all">
+                  <button @click="openUserProfile(m.userId)" class="flex items-center gap-3 flex-1 min-w-0 text-left">
+                    <img :src="m.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + m.userId" class="w-11 h-11 rounded-2xl border border-white shadow-sm object-cover bg-slate-100">
+                    <div class="flex-1 min-w-0">
+                      <h4 class="text-[14.5px] font-bold text-slate-800 truncate">{{ m.nickname || '神秘队员' }}</h4>
+                      <span class="text-[11px] text-slate-400 font-medium">{{ m.userId === myId ? '我自己' : '查看资料' }}</span>
+                    </div>
+                  </button>
+                  <span v-if="m.role === 'OWNER'" class="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+                    <i class="ri-vip-crown-fill"></i> 队长
+                  </span>
+                  <button v-else-if="isGroupOwner" @click="removeGroupMember(m)" class="text-[10px] font-black text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full active:scale-95 transition-all shrink-0">
+                    移出
+                  </button>
+                  <span v-else class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">队员</span>
+                </div>
+              </div>
+            </section>
+
+            <button @click="leaveCurrentGroup" class="w-full py-4 rounded-[22px] bg-white text-rose-500 border border-rose-100 text-[14px] font-black active:scale-95 transition-all">
+              <i class="ri-logout-box-r-line"></i> 退出这个小队
             </button>
           </div>
         </div>
@@ -1117,11 +1251,125 @@
         </div>
       </div>
     </transition>
+
+    <!-- ============ 战友资料卡 ============ -->
+    <transition name="fade-up">
+      <div v-if="showUserProfile" class="fixed inset-0 z-[170] bg-slate-900/55 backdrop-blur-md flex flex-col justify-end">
+        <div class="relative bg-[#FBF9F5] rounded-t-[34px] max-h-[82vh] overflow-hidden flex flex-col shadow-[0_-24px_60px_-26px_rgba(15,23,42,0.45)]">
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-200 rounded-full"></div>
+
+          <header class="shrink-0 px-6 pt-8 pb-5">
+            <div class="flex justify-between items-start gap-3">
+              <div class="flex items-center gap-4 min-w-0">
+                <img :src="profileUser?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + profileUser?.userId" class="w-16 h-16 rounded-[24px] object-cover border-2 border-white shadow-md bg-slate-100">
+                <div class="min-w-0">
+                  <p class="text-[11px] font-black tracking-[0.16em] text-blue-500 mb-1">战友资料</p>
+                  <h2 class="text-[23px] font-black text-slate-950 tracking-tight truncate">{{ profileDisplayName }}</h2>
+                  <p v-if="profileRemark" class="text-[11px] text-slate-400 font-bold mt-0.5 truncate">原昵称：{{ profileUser?.nickname }}</p>
+                  <div class="flex items-center gap-2 mt-2">
+                    <span v-if="profileUser?.verified" class="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
+                      <i class="ri-shield-check-fill"></i> 已认证
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-full border border-slate-100">
+                      ID {{ profileUser?.userId }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button @click="showUserProfile = false" class="w-9 h-9 rounded-full bg-white text-slate-500 flex items-center justify-center shadow-sm active:scale-90 transition-all shrink-0">
+                <i class="ri-close-line text-lg"></i>
+              </button>
+            </div>
+          </header>
+
+          <div class="flex-1 overflow-y-auto custom-scroll px-6 pb-6 space-y-3">
+            <p v-if="userProfileLoading" class="text-center py-12 text-[13px] text-slate-400 font-bold">加载资料中...</p>
+
+            <template v-else>
+              <section class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.35)]">
+                <div class="flex items-start gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl shrink-0">
+                    {{ profileUser?.emoji || '🌙' }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[11px] font-black text-slate-400 tracking-[0.14em] mb-1">当前状态</p>
+                    <h3 class="text-[16px] font-black text-slate-900 tracking-tight">{{ profileUser?.text || '暂未设置状态' }}</h3>
+                    <p class="text-[12px] text-slate-500 leading-relaxed mt-1">{{ profileUser?.description || 'TA 还没有留下更多说明。' }}</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="grid grid-cols-3 gap-2">
+                <div class="bg-white rounded-2xl border border-white/80 p-3 text-center">
+                  <p class="text-[18px] font-black text-slate-900">{{ profileUser?.reactions || 0 }}</p>
+                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">收到关心</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-white/80 p-3 text-center">
+                  <p class="text-[18px] font-black text-slate-900">{{ userProfileData?.iSent || 0 }}</p>
+                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">我送出</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-white/80 p-3 text-center">
+                  <p class="text-[18px] font-black text-slate-900">{{ userProfileData?.theySent || 0 }}</p>
+                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">TA 回应</p>
+                </div>
+              </section>
+
+              <section v-if="profileUser?.reactors?.length" class="bg-white rounded-[24px] border border-white/80 p-4">
+                <p class="text-[12px] font-black text-slate-900 mb-3">最近关心 TA 的人</p>
+                <div class="flex -space-x-2">
+                  <img v-for="(r, idx) in profileUser.reactors" :key="idx" :src="r.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + idx" class="w-8 h-8 rounded-full border-2 border-white bg-slate-100">
+                </div>
+              </section>
+
+              <section class="bg-white rounded-[24px] border border-white/80 p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <p class="text-[12px] font-black text-slate-900">TA 的朋友圈</p>
+                  <span class="text-[10px] font-bold text-slate-400">{{ profileMoments.length }} 条</span>
+                </div>
+                <p v-if="profileMomentsLoading" class="text-center py-6 text-[12px] text-slate-400 font-bold">正在加载动态...</p>
+                <p v-else-if="profileMoments.length === 0" class="text-center py-6 text-[12px] text-slate-400 font-bold">暂时没有可见动态</p>
+                <div v-else class="space-y-3">
+                  <article v-for="post in profileMoments" :key="post.id" class="rounded-2xl bg-stone-50/80 border border-stone-100 p-3">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                      <span class="text-[11px] font-bold text-slate-400">{{ post.time }}</span>
+                      <span v-if="post.visibility !== 'public'" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        {{ post.visibility === 'private' ? '仅自己' : '仅战友' }}
+                      </span>
+                    </div>
+                    <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line">{{ post.content }}</p>
+                    <div v-if="post.images?.length" class="grid grid-cols-3 gap-1.5 mt-2">
+                      <img v-for="(img, idx) in post.images.slice(0, 3)" :key="idx" :src="img" class="w-full aspect-square object-cover rounded-xl bg-slate-100">
+                    </div>
+                  </article>
+                </div>
+              </section>
+
+              <section v-if="userProfileData && userProfileData.myUnlocked === false" class="bg-amber-50 border border-amber-100 rounded-[22px] p-4 text-[12px] text-amber-700 font-bold leading-relaxed">
+                上传病例认证后，可以查看更多战友隐私资料。当前只展示基础状态。
+              </section>
+            </template>
+          </div>
+
+          <footer v-if="!userProfileLoading" class="shrink-0 grid grid-cols-3 gap-2 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+16px)] bg-[#FBF9F5]/95 border-t border-stone-100">
+            <button @click="editProfileRemark" :disabled="!canRemarkProfile" class="py-3.5 rounded-2xl text-[13px] font-black bg-white text-slate-700 border border-slate-100 disabled:bg-slate-100 disabled:text-slate-400 active:scale-95 transition-all">
+              备注
+            </button>
+            <button @click="careFromUserProfile" :disabled="profileUser?.reactedToday" class="py-3.5 rounded-2xl text-[13px] font-black active:scale-95 transition-all" :class="profileUser?.reactedToday ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white'">
+              {{ profileUser?.reactedToday ? '今天已关心' : '送上关心' }}
+            </button>
+            <button @click="startChatFromProfile" :disabled="profileUser?.userId === myId" class="py-3.5 rounded-2xl text-[13px] font-black bg-blue-600 text-white disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 transition-all">
+              发起密聊
+            </button>
+          </footer>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
 import { nextTick, onMounted, ref, computed, watch } from 'vue'
+import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http'
 import { areaList } from '@vant/area-data'
 import StatusBoard from '@/components/tabs/StatusBoard.vue'
@@ -1212,8 +1460,28 @@ const sendWarmthTo = async (p) => {
 const showPaperBoatModal = ref(false)
 const paperBoatTab = ref('write')
 const paperBoatText = ref('')
+const paperBoatHint = ref('')
 const isDisintegrating = ref(false)
+const isScoopLoading = ref(false)
+const isPaperBoatResponding = ref(false)
 const scoopedBoat = ref(null)
+const paperBoatReplyText = ref('')
+const selectedPaperBoatGift = ref('warm_water')
+const paperBoatQuota = ref({
+  releaseLimit: 2,
+  scoopLimit: 2,
+  releaseUsed: 0,
+  scoopUsed: 0,
+  releaseRemaining: 2,
+  scoopRemaining: 2
+})
+
+const paperBoatGifts = [
+  { type: 'warm_water', label: '一杯温水', icon: '♨️' },
+  { type: 'night_light', label: '一盏夜灯', icon: '🕯️' },
+  { type: 'soft_blanket', label: '一条毯子', icon: '🧣' },
+  { type: 'quiet_hug', label: '一个拥抱', icon: '🤍' }
+]
 
 const mockBurdens = [
   { content: '今天刚做了肠镜，溃疡面还是很大，什么时候是个头啊...', time: '10分钟前', breezed: false },
@@ -1222,30 +1490,78 @@ const mockBurdens = [
   { content: '因为请假太频繁主管找我谈话了，慢性病病友在职场真难啊...', time: '半天前', breezed: false }
 ]
 
-const openPaperBoat = () => {
+const openPaperBoat = async () => {
   showPaperBoatModal.value = true
   paperBoatText.value = ''
+  paperBoatHint.value = ''
   isDisintegrating.value = false
   scoopedBoat.value = null
+  paperBoatReplyText.value = ''
+  selectedPaperBoatGift.value = 'warm_water'
   paperBoatTab.value = 'write'
+  await loadPaperBoatQuota()
+}
+
+const loadPaperBoatQuota = async () => {
+  try {
+    const res = await http.get('/heal/paperboat/quota')
+    if (res.status === 200 && res.data) {
+      paperBoatQuota.value = {
+        ...paperBoatQuota.value,
+        ...res.data
+      }
+    }
+  } catch (e) {
+    console.error('纸船额度加载失败', e)
+  }
+}
+
+const applyPaperBoatQuota = (quota) => {
+  if (!quota) return
+  paperBoatQuota.value = {
+    ...paperBoatQuota.value,
+    ...quota
+  }
+}
+
+const normalizePaperBoat = (boat) => {
+  if (!boat) return null
+  return {
+    id: boat.id,
+    content: boat.content,
+    time: boat.time || '刚刚',
+    breezeCount: boat.breezeCount || 0,
+    replyCount: boat.replyCount || 0,
+    giftCount: boat.giftCount || 0,
+    breezed: !!boat.breezed,
+    replied: !!boat.replied,
+    gifted: !!boat.gifted
+  }
 }
 
 const disintegratePaperBoat = async () => {
   if (!paperBoatText.value.trim()) return
+  if (paperBoatQuota.value.releaseRemaining <= 0) {
+    paperBoatHint.value = '今天已经放飞 2 封了，留一点心事给明天慢慢说。'
+    return
+  }
+
+  paperBoatHint.value = ''
   isDisintegrating.value = true
   
   try {
-    await http.post('/heal/paperboat/release', { content: paperBoatText.value })
+    const res = await http.post('/heal/paperboat/release', { content: paperBoatText.value })
+    applyPaperBoatQuota(res.data?.quota)
+    paperBoatHint.value = res.message || '纸船已经入河。'
   } catch (e) {
     console.error('心事放飞失败', e)
+    paperBoatHint.value = e?.response?.data?.message || '放飞失败，稍后再试。'
   }
   
-  // 2.2秒后粒子碎裂特效结束，清除文本并关闭弹窗
   setTimeout(() => {
     paperBoatText.value = ''
     isDisintegrating.value = false
-    showPaperBoatModal.value = false
-  }, 2200)
+  }, 1400)
 }
 
 const getDisintegrateStyle = () => {
@@ -1260,22 +1576,33 @@ const getDisintegrateStyle = () => {
 }
 
 const scoopAnother = async () => {
+  if (paperBoatQuota.value.scoopRemaining <= 0) {
+    paperBoatHint.value = '今天已经捞过 2 封了，给河面留一点安静。'
+    return
+  }
+
+  paperBoatHint.value = ''
+  isScoopLoading.value = true
+
   try {
     const res = await http.get('/heal/paperboat/scoop')
-    if (res.status === 200 && res.data) {
-      scoopedBoat.value = {
-        id: res.data.id,
-        content: res.data.content,
-        time: res.data.time || '刚刚',
-        breezed: res.data.breezed || false
-      }
+    applyPaperBoatQuota(res.data?.quota)
+
+    const boat = res.data?.boat || res.data
+    if (res.status === 200 && boat?.content) {
+      scoopedBoat.value = normalizePaperBoat(boat)
+      paperBoatReplyText.value = ''
     } else {
-      const rand = mockBurdens[Math.floor(Math.random() * mockBurdens.length)]
-      scoopedBoat.value = { ...rand, id: Date.now(), breezed: false }
+      scoopedBoat.value = null
+      paperBoatHint.value = res.message || '暂时没有新的心事。'
     }
   } catch (e) {
-    const rand = mockBurdens[Math.floor(Math.random() * mockBurdens.length)]
-    scoopedBoat.value = { ...rand, id: Date.now(), breezed: false }
+    if (e?.response?.data?.data?.quota) {
+      applyPaperBoatQuota(e.response.data.data.quota)
+    }
+    paperBoatHint.value = e?.response?.data?.message || '打捞失败，稍后再试。'
+  } finally {
+    isScoopLoading.value = false
   }
 }
 
@@ -1283,12 +1610,52 @@ const sendBreezeToScooped = async () => {
   if (!scoopedBoat.value) return
   try {
     const res = await http.post('/heal/paperboat/breeze', { boatId: scoopedBoat.value.id })
-    if (res.status === 200 || res.code === 200) {
+    if (res.status === 200) {
       scoopedBoat.value.breezed = true
+      scoopedBoat.value.breezeCount = (scoopedBoat.value.breezeCount || 0) + 1
+      paperBoatHint.value = res.message || '微风已送达。'
       loadWarmth()
     }
   } catch (e) {
     console.error('送微风失败', e)
+    paperBoatHint.value = '微风没有送出去，稍后再试。'
+  }
+}
+
+const respondToScooped = async (type) => {
+  if (!scoopedBoat.value || isPaperBoatResponding.value) return
+  if (type === 'reply' && !paperBoatReplyText.value.trim()) return
+
+  isPaperBoatResponding.value = true
+
+  try {
+    const res = await http.post('/heal/paperboat/respond', {
+      boatId: scoopedBoat.value.id,
+      type,
+      content: type === 'reply' ? paperBoatReplyText.value : '',
+      giftType: type === 'gift' ? selectedPaperBoatGift.value : null
+    })
+
+    if (res.status === 200) {
+      if (type === 'reply' && !scoopedBoat.value.replied) {
+        scoopedBoat.value.replied = true
+        scoopedBoat.value.replyCount = (scoopedBoat.value.replyCount || 0) + 1
+        paperBoatReplyText.value = ''
+      }
+
+      if (type === 'gift' && !scoopedBoat.value.gifted) {
+        scoopedBoat.value.gifted = true
+        scoopedBoat.value.giftCount = (scoopedBoat.value.giftCount || 0) + 1
+      }
+
+      paperBoatHint.value = res.message || '回应已经轻轻送达。'
+      loadWarmth()
+    }
+  } catch (e) {
+    console.error('纸船回应失败', e)
+    paperBoatHint.value = e?.response?.data?.message || '回应失败，稍后再试。'
+  } finally {
+    isPaperBoatResponding.value = false
   }
 }
 
@@ -1468,41 +1835,53 @@ const currentTab = ref('status')
 // ============ 我的朋友圈封面 ============
 const myCard = ref({
   name: 'Xuan',
-  sign: 'Architect · Crohn 缓解期 · 每天努力多吃一勺白粥',
+  sign: '缓解期 · 每天努力多吃一勺白粥',
   avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Xuan',
   cover: 'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1200&q=80'
 })
 
 const moments = ref([])
 
+const parseMomentImages = (imagesJson) => {
+  if (!imagesJson) return []
+  try {
+    return JSON.parse(imagesJson)
+  } catch (e) {
+    return []
+  }
+}
+
+const mapMoment = (m) => ({
+  id: m.id,
+  userId: m.userId,
+  user: {
+    name: m.nickname,
+    avatar: m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`,
+    stage: '',
+    online: false
+  },
+  time: m.createdAt ? new Date(m.createdAt).toLocaleString('zh-CN') : '',
+  device: m.device || '',
+  location: m.location || '',
+  visibility: m.visibility || 'public',
+  content: m.content,
+  images: parseMomentImages(m.imagesJson),
+  liked: m.liked,
+  likesCount: m.likesCount || 0,
+  likes: [],
+  comments: (m.comments || []).map(c => ({
+    user: c.nickname || '神秘特工',
+    content: c.content
+  })),
+  commentInput: '',
+  showCommentBox: false
+})
+
 const loadMoments = async () => {
   try {
     const res = await http.get('/moment/list')
     if (res.status === 200) {
-      moments.value = res.data.map(m => ({
-        id: m.id,
-        user: {
-          name: m.nickname,
-          avatar: m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`,
-          stage: '',
-          online: false
-        },
-        time: m.createdAt ? new Date(m.createdAt).toLocaleString('zh-CN') : '',
-        device: m.device || '',
-        location: m.location || '',
-        visibility: m.visibility || 'public',
-        content: m.content,
-        images: m.imagesJson ? JSON.parse(m.imagesJson) : [],
-        liked: m.liked,
-        likesCount: m.likesCount || 0,
-        likes: [],
-        comments: (m.comments || []).map(c => ({
-          user: c.nickname || '神秘特工',
-          content: c.content
-        })),
-        commentInput: '',
-        showCommentBox: false
-      }))
+      moments.value = (res.data || []).map(mapMoment)
     }
   } catch (e) {
     console.error('动态加载失败', e)
@@ -1546,7 +1925,7 @@ const MAX_MEDIA = 9
 // 可见范围三档
 const visibilityOptions = [
   { value: 'public', label: '公开可见', desc: '所有病友都能看到', icon: 'ri-earth-line' },
-  { value: 'comrade', label: '仅战友可见', desc: '只有已认证的 IBD 战友能看', icon: 'ri-shield-check-line' },
+  { value: 'comrade', label: '仅战友可见', desc: '只有已认证的战友能看', icon: 'ri-shield-check-line' },
   { value: 'private', label: '仅自己可见', desc: '只有你自己能看到', icon: 'ri-lock-2-line' }
 ]
 const showVisibilitySheet = ref(false)
@@ -1733,12 +2112,115 @@ let socket = null
 // 联络人状态
 const friendChats = ref([])
 const groupChats = ref([])
-const chatList = computed(() => [...groupChats.value, ...friendChats.value])
+const chatSearchKeyword = ref('')
+const chatHistorySearchResults = ref([])
+const isChatHistorySearching = ref(false)
+let chatSearchTimer = null
+const chatList = computed(() => {
+  return [...groupChats.value, ...friendChats.value].sort((a, b) => (b.sortAt || 0) - (a.sortAt || 0))
+})
+const filteredChatList = computed(() => {
+  const keyword = chatSearchKeyword.value.trim().toLowerCase()
+  if (!keyword) return chatList.value
+  const merged = new Map()
+  chatList.value.filter(item => {
+    const text = [
+      item.name,
+      item.lastMsg,
+      item.id,
+      item.type === 'group' ? '小队 群聊' : '好友 密聊'
+    ].filter(Boolean).join(' ').toLowerCase()
+    return text.includes(keyword)
+  }).forEach(item => merged.set(chatKey(item), item))
+  chatHistorySearchResults.value
+    .map(hydrateChatSearchResult)
+    .filter(Boolean)
+    .forEach(item => merged.set(chatKey(item), item))
+  return Array.from(merged.values())
+})
 const pendingRequests = ref([])
 const friendSearchKeyword = ref('')
 const searchResults = ref([])
 const isSearching = ref(false)
 const searchDone = ref(false)
+
+const previewMessage = (content, type = 'text') => {
+  if (type === 'image') return '[图片]'
+  return content || '点击进入聊天...'
+}
+
+const chatKey = (item) => `${item.type}-${item.id}`
+
+const hydrateChatSearchResult = (result) => {
+  if (!result?.type || !result?.id) return null
+  const id = Number(result.id)
+  const existing = chatList.value.find(item => item.type === result.type && Number(item.id) === id)
+  return {
+    ...(existing || {}),
+    type: result.type,
+    id,
+    name: result.name || existing?.name || (result.type === 'group' ? '未知小队' : '神秘战友'),
+    avatar: result.avatar || existing?.avatar || (
+      result.type === 'group'
+        ? `https://api.dicebear.com/7.x/identicon/svg?seed=${id}`
+        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`
+    ),
+    lastMsg: result.lastMsg || existing?.lastMsg,
+    time: result.lastTime || existing?.time || '',
+    memberCount: existing?.memberCount || result.memberCount || 0,
+    unread: existing?.unread || null,
+    sortAt: Date.now()
+  }
+}
+
+const touchChatPreview = (type, id, content, msgType = 'text', unread = false) => {
+  const pool = type === 'group' ? groupChats.value : friendChats.value
+  const item = pool.find(c => Number(c.id) === Number(id))
+  if (!item) return
+  item.lastMsg = previewMessage(content, msgType)
+  item.time = '刚刚'
+  item.sortAt = Date.now()
+  if (unread) {
+    item.unread = (item.unread || 0) + 1
+  }
+}
+
+const searchChatHistory = async (keyword) => {
+  const currentKeyword = keyword.trim()
+  if (!currentKeyword) {
+    chatHistorySearchResults.value = []
+    isChatHistorySearching.value = false
+    return
+  }
+
+  isChatHistorySearching.value = true
+  try {
+    const res = await http.get('/chat/search', { params: { keyword: currentKeyword } })
+    if (chatSearchKeyword.value.trim() === currentKeyword && (res.status === 200 || res.code === 200)) {
+      chatHistorySearchResults.value = res.data || []
+    }
+  } catch (e) {
+    console.error('搜索聊天历史失败', e)
+    if (chatSearchKeyword.value.trim() === currentKeyword) {
+      chatHistorySearchResults.value = []
+    }
+  } finally {
+    if (chatSearchKeyword.value.trim() === currentKeyword) {
+      isChatHistorySearching.value = false
+    }
+  }
+}
+
+watch(chatSearchKeyword, (value) => {
+  clearTimeout(chatSearchTimer)
+  const keyword = value.trim()
+  chatHistorySearchResults.value = []
+  if (!keyword) {
+    isChatHistorySearching.value = false
+    return
+  }
+  chatSearchTimer = setTimeout(() => searchChatHistory(keyword), 260)
+})
 
 const copyMyId = async () => {
   const idText = String(myId)
@@ -1773,16 +2255,23 @@ const loadFriends = async () => {
   try {
     const res = await http.get('/friend/list')
     if (res.status === 200 || res.code === 200) {
-      friendChats.value = res.data.map(friend => ({
-        type: 'single',
-        id: friend.friendId || friend.id,
-        name: friend.nickname || '神秘特工',
-        avatar: friend.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (friend.friendId || friend.id),
-        role: '小队成员',
-        lastMsg: '点击发起密聊...',
-        time: '',
-        unread: null
-      }))
+      const friends = res.data || []
+      friendChats.value = friends.map((friend, index, list) => {
+        const id = friend.friendId || friend.id
+        const rawName = friend.nickname || '神秘特工'
+        return {
+          type: 'single',
+          id,
+          name: friendRemarks.value[String(id)] || rawName,
+          rawName,
+          avatar: friend.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + id,
+          role: '小队成员',
+          lastMsg: previewMessage(friend.lastMsg),
+          time: friend.lastTime || '',
+          unread: friend.unread || null,
+          sortAt: list.length - index
+        }
+      })
     }
   } catch (error) {
     console.error("拉取好友失败:", error)
@@ -1793,15 +2282,19 @@ const loadGroups = async () => {
   try {
     const res = await http.get('/group/list')
     if (res.status === 200 || res.code === 200) {
-      groupChats.value = (res.data || []).map(g => ({
+      const groups = res.data || []
+      groupChats.value = groups.map((g, index) => ({
         type: 'group',
         id: g.id,
         name: g.name,
         avatar: g.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + g.id,
+        notice: g.notice || '',
+        ownerId: g.ownerId,
         memberCount: g.memberCount || 0,
-        lastMsg: '点击进入小队群聊...',
-        time: '',
-        unread: null
+        lastMsg: previewMessage(g.lastMsg),
+        time: g.lastTime || '',
+        unread: null,
+        sortAt: groups.length - index
       }))
     }
   } catch (error) {
@@ -1810,13 +2303,14 @@ const loadGroups = async () => {
 }
 
 // 收到非当前会话的消息时,给会话列表打未读角标
-const bumpUnread = (type, id, content) => {
+const bumpUnread = (type, id, content, msgType = 'text') => {
   const pool = type === 'group' ? groupChats.value : friendChats.value
   const item = pool.find(c => Number(c.id) === Number(id))
   if (item) {
     item.unread = (item.unread || 0) + 1
-    item.lastMsg = content
+    item.lastMsg = previewMessage(content, msgType)
     item.time = '刚刚'
+    item.sortAt = Date.now()
   }
 }
 
@@ -1835,21 +2329,151 @@ const groupMembers = ref([])
 const loadingMembers = ref(false)
 const showInvitePicker = ref(false)
 const inviteSelected = ref([])
+const groupDetail = ref(null)
+const groupProfileMode = ref('view')
+const groupDetailRole = ref('')
+const isSavingGroupProfile = ref(false)
+const groupEdit = ref({
+  name: '',
+  avatar: '',
+  notice: ''
+})
+
+const isGroupOwner = computed(() => {
+  return groupDetailRole.value === 'OWNER' || Number(groupDetail.value?.ownerId) === myId || Number(activeChat.value?.ownerId) === myId
+})
 
 const openMemberPanel = async () => {
   if (!activeChat.value || activeChat.value.type !== 'group') return
   showMemberPanel.value = true
   loadingMembers.value = true
+  groupProfileMode.value = 'view'
   groupMembers.value = []
   try {
-    const res = await http.get(`/group/${activeChat.value.id}/members`)
-    if (res.status === 200 || res.code === 200) {
-      groupMembers.value = (res.data || []).map(m => ({ ...m, userId: Number(m.userId) }))
+    const [detailRes, membersRes] = await Promise.all([
+      http.get(`/group/${activeChat.value.id}`),
+      http.get(`/group/${activeChat.value.id}/members`)
+    ])
+
+    if (detailRes.status === 200 || detailRes.code === 200) {
+      groupDetail.value = detailRes.data?.group || null
+      groupDetailRole.value = detailRes.data?.myRole || ''
+      if (groupDetail.value) {
+        groupEdit.value = {
+          name: groupDetail.value.name || activeChat.value.name,
+          avatar: groupDetail.value.avatar || activeChat.value.avatar,
+          notice: groupDetail.value.notice || ''
+        }
+        activeChat.value.name = groupEdit.value.name
+        activeChat.value.avatar = groupEdit.value.avatar
+        activeChat.value.notice = groupEdit.value.notice
+        activeChat.value.ownerId = groupDetail.value.ownerId
+      }
+    }
+
+    if (membersRes.status === 200 || membersRes.code === 200) {
+      groupMembers.value = (membersRes.data || []).map(m => ({ ...m, userId: Number(m.userId) }))
     }
   } catch (e) {
     console.error('加载成员失败', e)
   } finally {
     loadingMembers.value = false
+  }
+}
+
+const pickGroupAvatar = () => {
+  document.getElementById('group-avatar-input')?.click()
+}
+
+const onGroupAvatarChange = async (event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  try {
+    const url = await uploadOneMedia(file)
+    if (url) {
+      groupEdit.value.avatar = url
+    }
+  } catch (e) {
+    alert('群头像上传失败，请稍后再试')
+  }
+}
+
+const syncActiveGroup = (group) => {
+  if (!group) return
+  const target = groupChats.value.find(item => Number(item.id) === Number(group.id))
+  if (target) {
+    target.name = group.name
+    target.avatar = group.avatar || target.avatar
+    target.notice = group.notice || ''
+    target.ownerId = group.ownerId
+    target.memberCount = group.memberCount || target.memberCount
+  }
+  if (activeChat.value && Number(activeChat.value.id) === Number(group.id)) {
+    activeChat.value.name = group.name
+    activeChat.value.avatar = group.avatar || activeChat.value.avatar
+    activeChat.value.notice = group.notice || ''
+    activeChat.value.ownerId = group.ownerId
+    activeChat.value.memberCount = group.memberCount || activeChat.value.memberCount
+  }
+}
+
+const saveGroupProfile = async () => {
+  if (!activeChat.value || !groupEdit.value.name.trim()) return
+  isSavingGroupProfile.value = true
+  try {
+    const res = await http.post(`/group/${activeChat.value.id}/profile`, {
+      name: groupEdit.value.name.trim(),
+      avatar: groupEdit.value.avatar,
+      notice: groupEdit.value.notice
+    })
+    if (res.status === 200 || res.code === 200) {
+      groupDetail.value = res.data
+      syncActiveGroup(res.data)
+      groupProfileMode.value = 'view'
+    } else {
+      alert(res.message || '保存失败')
+    }
+  } catch (e) {
+    alert('保存失败，请检查网络')
+  } finally {
+    isSavingGroupProfile.value = false
+  }
+}
+
+const removeGroupMember = async (member) => {
+  if (!activeChat.value || !member) return
+  if (!confirm(`确定把「${member.nickname || '这位队员'}」移出小队吗？`)) return
+  try {
+    const res = await http.post(`/group/${activeChat.value.id}/remove`, { memberId: member.userId })
+    if (res.status === 200 || res.code === 200) {
+      await openMemberPanel()
+      activeChat.value.memberCount = groupMembers.value.length
+      const g = groupChats.value.find(x => Number(x.id) === Number(activeChat.value.id))
+      if (g) g.memberCount = groupMembers.value.length
+    } else {
+      alert(res.message || '移除失败')
+    }
+  } catch (e) {
+    alert('移除失败，请检查网络')
+  }
+}
+
+const leaveCurrentGroup = async () => {
+  if (!activeChat.value) return
+  if (!confirm(`确定退出「${activeChat.value.name}」吗？`)) return
+  try {
+    const res = await http.post(`/group/${activeChat.value.id}/leave`)
+    if (res.status === 200 || res.code === 200) {
+      showMemberPanel.value = false
+      closeChat()
+      await loadGroups()
+      currentTab.value = 'chat'
+    } else {
+      alert(res.message || '退出失败')
+    }
+  } catch (e) {
+    alert(e?.response?.data?.message || '退出失败，请检查网络')
   }
 }
 
@@ -1890,6 +2514,122 @@ const submitInvite = async () => {
   } catch (e) {
     alert('邀请失败,请检查网络')
   }
+}
+
+// ============ 战友资料卡 ============
+const showUserProfile = ref(false)
+const userProfileLoading = ref(false)
+const userProfileData = ref(null)
+const profileMoments = ref([])
+const profileMomentsLoading = ref(false)
+const loadFriendRemarks = () => {
+  try {
+    return JSON.parse(localStorage.getItem('friend_remarks') || '{}')
+  } catch (e) {
+    return {}
+  }
+}
+const friendRemarks = ref(loadFriendRemarks())
+const profileUser = computed(() => userProfileData.value?.user || null)
+const profileFriendChat = computed(() => {
+  if (!profileUser.value) return null
+  return friendChats.value.find(item => Number(item.id) === Number(profileUser.value.userId)) || null
+})
+const profileRemark = computed(() => {
+  if (!profileUser.value) return ''
+  return friendRemarks.value[String(profileUser.value.userId)] || ''
+})
+const profileDisplayName = computed(() => profileRemark.value || profileUser.value?.nickname || '神秘战友')
+const canRemarkProfile = computed(() => !!profileFriendChat.value && Number(profileUser.value?.userId) !== myId)
+
+const saveFriendRemarks = () => {
+  localStorage.setItem('friend_remarks', JSON.stringify(friendRemarks.value))
+}
+
+const openUserProfile = async (userId) => {
+  if (!userId) return
+  showUserProfile.value = true
+  userProfileLoading.value = true
+  profileMomentsLoading.value = true
+  userProfileData.value = null
+  profileMoments.value = []
+  try {
+    const [profileRes, momentsRes] = await Promise.allSettled([
+      http.get(`/team/status/profile/${userId}`),
+      http.get(`/moment/user/${userId}`)
+    ])
+
+    if (profileRes.status === 'fulfilled' && (profileRes.value.status === 200 || profileRes.value.code === 200)) {
+      userProfileData.value = profileRes.value.data
+    }
+
+    if (momentsRes.status === 'fulfilled' && (momentsRes.value.status === 200 || momentsRes.value.code === 200)) {
+      profileMoments.value = (momentsRes.value.data || []).map(mapMoment)
+    }
+  } catch (e) {
+    console.error('加载战友资料失败', e)
+  } finally {
+    userProfileLoading.value = false
+    profileMomentsLoading.value = false
+  }
+}
+
+const editProfileRemark = () => {
+  if (!canRemarkProfile.value || !profileUser.value) return
+  const nextRemark = prompt('给 TA 设置一个你看得懂的备注', profileRemark.value || profileUser.value.nickname || '')
+  if (nextRemark === null) return
+  const key = String(profileUser.value.userId)
+  const clean = nextRemark.trim()
+  if (clean) {
+    friendRemarks.value[key] = clean
+  } else {
+    delete friendRemarks.value[key]
+  }
+  friendRemarks.value = { ...friendRemarks.value }
+  saveFriendRemarks()
+
+  const friend = friendChats.value.find(item => Number(item.id) === Number(profileUser.value.userId))
+  if (friend) {
+    friend.rawName = profileUser.value.nickname || friend.rawName || friend.name
+    friend.name = clean || friend.rawName
+  }
+}
+
+const careFromUserProfile = async () => {
+  if (!profileUser.value || profileUser.value.reactedToday) return
+  try {
+    const res = await http.post('/team/status/react', {
+      targetUserId: profileUser.value.userId,
+      reactionType: 'seen'
+    })
+    if (res.status === 200 || res.code === 200) {
+      profileUser.value.reactedToday = 1
+      profileUser.value.reactions = (profileUser.value.reactions || 0) + 1
+      userProfileData.value.iSent = (userProfileData.value.iSent || 0) + 1
+    } else {
+      alert(res.message || '送关心失败')
+    }
+  } catch (e) {
+    alert('送关心失败，请稍后再试')
+  }
+}
+
+const startChatFromProfile = () => {
+  if (!profileUser.value || Number(profileUser.value.userId) === myId) return
+  const existing = friendChats.value.find(item => Number(item.id) === Number(profileUser.value.userId))
+  const chat = existing || {
+    type: 'single',
+    id: profileUser.value.userId,
+    name: profileDisplayName.value,
+    rawName: profileUser.value.nickname || '神秘战友',
+    avatar: profileUser.value.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + profileUser.value.userId,
+    lastMsg: '点击发起密聊...',
+    time: '',
+    unread: null
+  }
+  showUserProfile.value = false
+  showMemberPanel.value = false
+  openChat(chat)
 }
 
 const openFriendPicker = () => {
@@ -2182,17 +2922,16 @@ const handlePlusItem = async (item) => {
 
 const sendImageFile = async (e) => {
   const file = e.target.files?.[0]
+  e.target.value = ''
   if (!file) return
-  const formData = new FormData()
-  formData.append('file', file)
   try {
-    const upRes = await http.post('/upload', formData)
-    const imgUrl = upRes.data
+    const imgUrl = await uploadOneMedia(file)
+    if (!imgUrl) throw new Error('上传接口没有返回图片地址')
     await dispatchMessage(imgUrl, 'image')
   } catch (err) {
-    alert('图片发送失败')
+    console.error('图片发送失败', err)
+    alert('图片发送失败，可能是网络慢或图片格式过大')
   }
-  e.target.value = ''
 }
 
 const sendLocationMessage = async () => {
@@ -2233,6 +2972,7 @@ const openChat = async (item) => {
       const res = await http.get(`/chat/history?friendId=${item.id}`)
       if (res.status === 200 || res.code === 200) {
         chatHistory.value = res.data
+        item.unread = null
         scrollToBottom()
       }
     }
@@ -2260,6 +3000,7 @@ const dispatchMessage = async (content, type = 'text') => {
     } else {
       await http.post('/chat/send', { receiverId: activeChat.value.id, content, type })
     }
+    touchChatPreview(activeChat.value.type, activeChat.value.id, content, type)
   } catch (error) {
     console.error("发送失败:", error)
     alert("发送失败，请检查网络")
@@ -2285,13 +3026,25 @@ const initWebSocket = () => {
     return
   }
 
+  const isLocalNetworkHost = (hostname) => {
+    if (!hostname) return false
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+    )
+  }
+
   // 甩手掌柜全自动：智能切换本地/生产环境的 WebSocket 聊天链路
   const getWsUrl = () => {
     if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      // 如果你在本地开发调试网页
-      if (hostname === 'localhost' && window.location.port === '5173') {
-        return `ws://localhost:8080/ws/${myId}`
+      const hostname = window.location.hostname
+      // 本地/局域网真机调试：让手机连回电脑后端，而不是误飞公网
+      if (isLocalNetworkHost(hostname)) {
+        const wsHost = hostname === 'localhost' ? 'localhost' : hostname
+        return `ws://${wsHost}:8080/ws/${myId}`
       }
     }
     // 如果你在手机 App 上运行或者访问部署上线的网页，直接连接公网服务器的 WebSocket 通道！
@@ -2325,9 +3078,10 @@ const initWebSocket = () => {
           senderName: data.senderName,
           senderAvatar: data.senderAvatar
         })
+        touchChatPreview('group', data.groupId, data.content, data.type || 'text')
         scrollToBottom()
       } else {
-        bumpUnread('group', data.groupId, data.content)
+        bumpUnread('group', data.groupId, data.content, data.type || 'text')
       }
     } else {
       const inThisChat = activeChat.value && activeChat.value.type !== 'group' && Number(activeChat.value.id) === Number(data.senderId)
@@ -2338,9 +3092,10 @@ const initWebSocket = () => {
           content: data.content,
           type: data.type || 'text'
         })
+        touchChatPreview('single', data.senderId, data.content, data.type || 'text')
         scrollToBottom()
       } else {
-        bumpUnread('single', data.senderId, data.content)
+        bumpUnread('single', data.senderId, data.content, data.type || 'text')
       }
     }
   }
@@ -2392,6 +3147,179 @@ const scrollToBottom = () => {
   --rand-x: 0px;
   --rand-y: 0px;
   --rand-r: 0deg;
+}
+
+.paper-river-sheet {
+  background:
+    radial-gradient(circle at 74% 12%, rgba(248, 244, 198, 0.18), transparent 8rem),
+    radial-gradient(circle at 18% 24%, rgba(125, 92, 255, 0.18), transparent 11rem),
+    linear-gradient(180deg, #090d21 0%, #0b132a 46%, #071224 100%);
+}
+
+.paper-stars,
+.paper-stars::before,
+.paper-stars::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.paper-stars {
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(147, 197, 253, 0.48) 0 1px, transparent 1.6px);
+  background-position: 18px 22px, 94px 64px;
+  background-size: 92px 92px, 138px 138px;
+  opacity: 0.42;
+  animation: paper-stars-drift 20s linear infinite;
+}
+
+.paper-stars::before {
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(251, 191, 36, 0.56) 0 1px, transparent 1.5px);
+  background-position: 42px 18px, 130px 92px;
+  background-size: 156px 156px, 218px 218px;
+  opacity: 0.35;
+  animation: paper-stars-pulse 5s ease-in-out infinite;
+}
+
+.paper-stars::after {
+  background:
+    linear-gradient(120deg, transparent 0 42%, rgba(255, 255, 255, 0.28) 48%, transparent 54% 100%) 0 12% / 210px 1px no-repeat;
+  opacity: 0.58;
+  animation: paper-shooting-star 5.8s ease-in-out infinite;
+}
+
+.paper-moon {
+  position: absolute;
+  right: 32px;
+  top: 54px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 32% 30%, #fff9d8 0%, #f8d88b 42%, rgba(248, 216, 139, 0.05) 72%);
+  box-shadow: 0 0 38px rgba(248, 216, 139, 0.26);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.paper-river {
+  position: absolute;
+  left: -18%;
+  right: -18%;
+  bottom: -9%;
+  height: 42%;
+  pointer-events: none;
+  background:
+    linear-gradient(165deg, transparent 0 18%, rgba(37, 99, 235, 0.14) 30%, rgba(20, 184, 166, 0.24) 52%, rgba(129, 140, 248, 0.14) 72%, transparent 88%),
+    linear-gradient(8deg, rgba(14, 165, 233, 0.18), rgba(49, 46, 129, 0.05));
+  border-radius: 48% 52% 0 0 / 36% 38% 0 0;
+  filter: blur(0.4px);
+  opacity: 0.78;
+  transform: rotate(-4deg);
+  animation: paper-river-breathe 8s ease-in-out infinite;
+}
+
+.paper-river::before,
+.paper-river::after {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  content: "";
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.paper-river::before {
+  top: 26%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(186, 230, 253, 0.42), transparent);
+  animation: paper-river-line 5.5s linear infinite;
+}
+
+.paper-river::after {
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.28), transparent);
+  animation: paper-river-line 7s linear infinite reverse;
+}
+
+.paper-river-shine {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: 9%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.paper-quota-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 34px -28px rgba(0, 0, 0, 0.8);
+  padding: 12px 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.paper-floating-boat {
+  position: relative;
+  animation: paper-boat-float 4.8s ease-in-out infinite;
+}
+
+.paper-floating-boat::before {
+  position: absolute;
+  right: 18px;
+  top: -13px;
+  content: "⛵";
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 24px;
+  filter: drop-shadow(0 10px 18px rgba(14, 165, 233, 0.22));
+  transform: rotate(-7deg);
+}
+
+@keyframes paper-stars-drift {
+  from { background-position: 18px 22px, 94px 64px; }
+  to { background-position: 110px 114px, 232px 202px; }
+}
+
+@keyframes paper-stars-pulse {
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 0.48; }
+}
+
+@keyframes paper-shooting-star {
+  0%, 54% {
+    transform: translate3d(-45%, 0, 0);
+    opacity: 0;
+  }
+  62% {
+    opacity: 0.6;
+  }
+  76%, 100% {
+    transform: translate3d(120%, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes paper-river-breathe {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-4deg) scaleY(1); }
+  50% { transform: translate3d(2%, -2%, 0) rotate(-3deg) scaleY(1.06); }
+}
+
+@keyframes paper-river-line {
+  from { transform: translateX(-22%); }
+  to { transform: translateX(22%); }
+}
+
+@keyframes paper-boat-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.2deg); }
+  50% { transform: translate3d(0, -4px, 0) rotate(0.4deg); }
 }
 
 .fade-enter-active,

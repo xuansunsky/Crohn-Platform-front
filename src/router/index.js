@@ -29,11 +29,23 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
   const roleId = localStorage.getItem('roleId')
+  const publicPaths = ['/login', '/login2', '/register']
+
+  if (!token && !publicPaths.includes(to.path)) {
+    next({ path: '/login2', query: { redirect: to.fullPath }, replace: true })
+    return
+  }
+
+  if (token && publicPaths.includes(to.path)) {
+    next({ path: '/dashboard', replace: true })
+    return
+  }
 
   if (to.meta.role === 1 && parseInt(roleId) !== 1) {
     console.warn('非国王身份，试图越权访问大殿，已重定向至普通仪表盘。')
-    next('/dashboard')
+    next({ path: '/dashboard', replace: true })
   } else {
     next()
   }

@@ -17,7 +17,7 @@
         <div class="absolute -bottom-12 -left-8 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
         <div class="relative">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-[10px] font-black tracking-[0.25em] text-white/80 uppercase">My Status</span>
+            <span class="text-[10px] font-black tracking-[0.18em] text-white/80">我的状态</span>
             <button @click="showPayQrSetup = true" class="text-[10px] font-bold text-white/80 bg-black/15 px-2.5 py-1 rounded-full active:scale-95 transition-all flex items-center gap-1">
               <i class="ri-qr-code-line"></i> 我的收款码
             </button>
@@ -376,7 +376,7 @@
             <button @click="showVerify = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90"><i class="ri-close-line text-lg"></i></button>
             <div class="flex items-center justify-center gap-1.5 mb-1">
               <i class="ri-shield-check-fill text-blue-500 text-[20px]"></i>
-              <p class="text-[16px] font-black text-slate-900 text-center">IBD 战友认证</p>
+              <p class="text-[16px] font-black text-slate-900 text-center">战友身份认证</p>
             </div>
             <p class="text-[11px] text-slate-400 font-medium text-center leading-snug mb-4">
               上传确诊单 / 肠镜报告 / 药单照片，<br>可把姓名、医院等信息<span class="text-rose-500 font-bold">涂黑遮盖</span>再传

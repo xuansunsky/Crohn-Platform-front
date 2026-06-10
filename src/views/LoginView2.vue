@@ -171,7 +171,7 @@ async function submit() {
       console.log("前端热更新成功")
 
       setTimeout(async () => {
-        await router.push('/dashboard')
+        await router.replace('/dashboard')
       }, 1500)
 
     } else {

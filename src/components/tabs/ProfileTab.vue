@@ -3,12 +3,10 @@
     <div class="bg-shape shape-1"></div>
     <div class="bg-shape shape-2"></div>
 
-    <header class="greeting-bar">
-      <div class="greeting-text">
-        <span class="greeting-subtitle">Crohn Paradise</span>
-        <span class="greeting-title">早上好，今天也要按时吃饭 🌼</span>
-      </div>
-    </header>
+    <TabPageHeader
+      title="我的"
+      accent="violet"
+    />
 
     <!-- 身份卡 -->
     <div class="premium-glass-card">
@@ -33,7 +31,7 @@
           </div>
           <div class="member-chip">
             <i class="ri-vip-crown-fill member-chip-icon"></i>
-            <span>Crohn Paradise 成员</span>
+            <span>乐园成员</span>
           </div>
         </div>
 
@@ -325,6 +323,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import { areaList } from '@vant/area-data'
 import { closeToast, showToast } from 'vant'
 import http from '@/api/http.js'
@@ -634,7 +633,7 @@ const onSelectCity = async (city) => {
 .xuan-care-container {
   background-color: #FBF9F5;
   position: relative;
-  padding: 14px 16px 32px;
+  padding: 0 16px 32px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: #4a5568;
   max-width: 440px;
@@ -644,11 +643,6 @@ const onSelectCity = async (city) => {
 .bg-shape { position: absolute; border-radius: 50%; filter: blur(70px); z-index: 0; opacity: 0.3; }
 .shape-1 { width: 160px; height: 160px; background: #b39ddb; top: -30px; right: -30px; }
 .shape-2 { width: 200px; height: 200px; background: #ff8e8b; bottom: 60px; left: -70px; }
-
-.greeting-bar { margin-bottom: 16px; }
-.greeting-text { display: flex; flex-direction: column; gap: 2px; }
-.greeting-subtitle { font-size: 11px; color: #7ba4c9; opacity: 0.9; font-weight: 700; letter-spacing: 1px; }
-.greeting-title { font-size: 17px; font-weight: 600; color: #2d3748; }
 
 /* 身份卡 */
 .premium-glass-card {

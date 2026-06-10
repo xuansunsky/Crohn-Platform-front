@@ -1,30 +1,6 @@
 <template>
   <div class="fixed inset-0 bg-[#FBF9F5] flex flex-col font-sans text-slate-900 overflow-hidden">
 
-    <!-- 顶部 NavBar：自然 shrink，不再 fixed -->
-    <header
-        v-show="!isChatActive"
-        class="shrink-0 px-4 py-3 flex items-center justify-between bg-[#FBF9F5]/90 backdrop-blur-xl border-b border-stone-100/80"
-    >
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-md shadow-blue-500/25">
-          <i class="ri-heart-pulse-fill text-white text-sm"></i>
-        </div>
-        <div>
-          <div class="text-[15px] font-black tracking-tight text-slate-900 leading-none">Crohn Paradise</div>
-          <div class="text-[10px] text-slate-400 font-medium mt-0.5">{{ currentTabLabel }}</div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button class="w-8 h-8 rounded-xl bg-white border border-stone-100 shadow-sm flex items-center justify-center text-slate-500 active:scale-90 transition-all">
-          <i class="ri-search-line text-base"></i>
-        </button>
-        <div class="w-8 h-8 rounded-xl overflow-hidden border-2 border-white shadow-md">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Architect" class="w-full h-full object-cover">
-        </div>
-      </div>
-    </header>
-
     <!-- 唯一的滚动容器 -->
     <main
         ref="scrollMain"
@@ -122,20 +98,6 @@ const handleChatActive = (active) => {
 // 哪些 Tab 是"地图/聊天"这种需要塞满 main 高度的全屏 Tab
 const isFullHeightTab = computed(() => {
   return ['circle', 'policy'].includes(activeTab.value)
-})
-
-const currentTabLabel = computed(() => {
-  const map = {
-    checkin: '星光打卡',
-    policy: '医保地图',
-    circle: '战术小队',
-    library: '经验金库',
-    profile: '个人中心',
-    admin: '王国控制台',
-    drugmap: '药物图谱',
-    hospital: '医院调查'
-  }
-  return map[activeTab.value] || '克罗恩王国'
 })
 
 // 切换 Tab 时把滚动容器复位到顶部
