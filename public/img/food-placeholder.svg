@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520">
+  <defs>
+    <linearGradient id="bg" x1="56" y1="26" x2="744" y2="505" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset=".54" stop-color="#EEF6F3"/>
+      <stop offset="1" stop-color="#E7EEF9"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="210" y1="132" x2="596" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E2E8F0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="520" rx="54" fill="url(#bg)"/>
+  <circle cx="662" cy="92" r="96" fill="#D9EEE7" opacity=".75"/>
+  <circle cx="117" cy="420" r="120" fill="#DBEAFE" opacity=".62"/>
+  <path d="M118 132h564" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+  <path d="M154 394h492" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" opacity=".35"/>
+  <circle cx="400" cy="268" r="154" fill="url(#plate)" stroke="#FFFFFF" stroke-width="18"/>
+  <circle cx="400" cy="268" r="96" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="6" opacity=".88"/>
+  <path d="M330 253c32-47 99-48 134 0" fill="none" stroke="#334155" stroke-width="16" stroke-linecap="round"/>
+  <path d="M326 307h148" stroke="#334155" stroke-width="16" stroke-linecap="round"/>
+  <path d="M280 156v224" stroke="#64748B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M520 154v226" stroke="#64748B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M542 154v226" stroke="#64748B" stroke-width="12" stroke-linecap="round" opacity=".45"/>
+  <rect x="276" y="128" width="8" height="70" rx="4" fill="#64748B"/>
+  <text x="400" y="456" text-anchor="middle" font-family="Arial,'Microsoft YaHei',sans-serif" font-size="28" font-weight="800" fill="#475569">等待上传实测图片</text>
+</svg>
