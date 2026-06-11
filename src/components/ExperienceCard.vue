@@ -61,7 +61,7 @@
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 min-w-0 flex-1">
           <img
-            :src="authorAvatar || defaultAvatar"
+            :src="authorAvatarSrc"
             class="w-[18px] h-[18px] rounded-full object-cover bg-stone-100 shrink-0"
             alt=""
           />
@@ -87,6 +87,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { avatarOf } from '@/utils/avatarPool'
 
 const props = defineProps({
   id: Number,
@@ -106,7 +107,7 @@ const props = defineProps({
 
 defineEmits(['delete', 'open'])
 
-const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=vault'
+const authorAvatarSrc = computed(() => avatarOf(props.authorAvatar, props.authorName || props.id || 'story'))
 
 const isVideoCover = computed(() =>
   /\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(props.coverImage || '')

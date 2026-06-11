@@ -10,14 +10,27 @@
           <img :src="myCard.cover" class="absolute inset-0 w-full h-full object-cover" />
           <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50"></div>
 
-          <!-- 封面右上：快捷操作 -->
-          <div class="absolute top-[calc(env(safe-area-inset-top,0px)+0.75rem)] right-4 flex items-center gap-2 z-10">
-            <button @click="openPaperBoat" class="w-9 h-9 rounded-lg bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="情绪解压纸船">
+          <!-- 封面右上：创建入口 -->
+          <div class="absolute top-[calc(env(safe-area-inset-top,0px)+0.75rem)] right-4 z-10 flex items-center gap-2">
+            <button @click="openPaperBoat" class="w-10 h-10 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="星河漂流">
               <i class="ri-ship-line text-base"></i>
             </button>
-            <button @click="openComposer" class="w-9 h-9 rounded-lg bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="发布动态">
-              <i class="ri-camera-line text-base"></i>
+            <button @click.stop="showQuickCreateMenu = !showQuickCreateMenu" class="w-10 h-10 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="创建">
+              <i class="ri-add-line text-[22px] transition-transform" :class="{ 'rotate-45': showQuickCreateMenu }"></i>
             </button>
+
+            <transition name="fade-up">
+              <div v-if="showQuickCreateMenu" class="fixed top-[calc(env(safe-area-inset-top,0px)+3.6rem)] right-4 z-[220] w-40 rounded-2xl bg-white/95 backdrop-blur-xl border border-white/80 shadow-[0_18px_42px_-24px_rgba(15,23,42,0.45)] overflow-hidden p-1.5">
+                <button @click="openAddFriendShortcut" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-black text-slate-700 active:bg-slate-100 transition-all">
+                  <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center"><i class="ri-user-add-line"></i></span>
+                  添加好友
+                </button>
+                <button @click="openComposerFromQuickMenu" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-black text-slate-700 active:bg-slate-100 transition-all">
+                  <span class="w-8 h-8 rounded-xl bg-slate-950 text-white flex items-center justify-center"><i class="ri-quill-pen-line"></i></span>
+                  发动态
+                </button>
+              </div>
+            </transition>
           </div>
 
           <!-- 右下：用户信息 -->
@@ -25,10 +38,6 @@
             <p class="text-white/70 text-[10px] font-bold tracking-wide mb-0.5">我的主页</p>
             <h2 class="text-white text-[20px] font-bold tracking-tight leading-tight drop-shadow-md">{{ myCard.name }}</h2>
             <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5 line-clamp-2">{{ myCard.sign }}</p>
-            <button @click="copyMyId" class="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-white/90 bg-black/30 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/20 active:scale-95 transition-all">
-              <i class="ri-fingerprint-line"></i> 我的ID: {{ myId }}
-              <i class="ri-file-copy-line ml-0.5"></i>
-            </button>
           </div>
 
         </div>
@@ -213,7 +222,7 @@
                   class="relative overflow-hidden rounded-xl bg-stone-100 hover:opacity-95 transition-opacity"
               >
                 <video v-if="isVideo(img)" :src="img" class="w-full h-full object-cover" controls playsinline preload="metadata"></video>
-                <img v-else :src="img" class="w-full h-full object-cover cursor-pointer" loading="lazy" />
+                <img v-else :src="img" @click="openImageViewer(post.images, i)" class="w-full h-full object-cover cursor-pointer" loading="lazy" />
                 <span v-if="isVideo(img) && post.images.length > 1" class="absolute top-1.5 left-1.5 text-[9px] font-black text-white bg-black/45 px-1.5 py-0.5 rounded-full pointer-events-none">
                   <i class="ri-play-mini-fill"></i> 视频
                 </span>
@@ -225,9 +234,9 @@
               <div v-if="post.location" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
                 <i class="ri-map-pin-2-fill text-[12px]"></i> {{ post.location }}
               </div>
-              <div v-if="post.visibility && post.visibility !== 'public'" class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md" :class="post.visibility === 'private' ? 'text-slate-500 bg-slate-100' : 'text-emerald-600 bg-emerald-50'">
-                <i :class="post.visibility === 'private' ? 'ri-lock-2-fill' : 'ri-shield-check-fill'" class="text-[12px]"></i>
-                {{ post.visibility === 'private' ? '仅自己' : '仅战友' }}
+              <div class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md" :class="momentVisibilityMeta(post.visibility).class">
+                <i :class="momentVisibilityMeta(post.visibility).icon" class="text-[12px]"></i>
+                {{ momentVisibilityMeta(post.visibility).label }}
               </div>
             </div>
 
@@ -283,7 +292,7 @@
                 v-model="post.commentInput"
                 @keydown.enter="submitComment(post)"
                 type="text"
-                placeholder="说点什么暖暖TA..."
+                placeholder="说点什么暖暖对方..."
                 class="flex-1 bg-stone-50 rounded-full px-4 py-2 text-[12.5px] outline-none border border-stone-100 focus:border-blue-300 focus:bg-white transition-all"
               >
               <button @click="submitComment(post)" :disabled="!post.commentInput || !post.commentInput.trim()" class="px-4 py-2 rounded-full text-[12px] font-bold text-white bg-blue-600 shadow-sm active:scale-95 transition-all disabled:bg-slate-300">
@@ -360,75 +369,124 @@
             </button>
           </div>
 
-          <div class="relative overflow-hidden bg-white p-5 rounded-[28px] border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.05)] mb-5">
-            <div class="absolute -right-4 -top-4 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-2xl"></div>
+          <div class="relative overflow-hidden bg-[#111827] p-5 rounded-[30px] border border-white/10 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.85)] mb-5 text-white">
+            <div class="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-gradient-to-br from-amber-200/30 via-rose-200/20 to-indigo-300/20 blur-2xl"></div>
+            <div class="absolute -left-10 bottom-0 w-40 h-24 rounded-full bg-cyan-300/10 blur-2xl"></div>
+            <div class="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent"></div>
 
             <div class="relative z-10 space-y-4">
               <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-slate-800 text-[18px] font-black tracking-tight mb-1 flex items-center gap-2">
-                    <i class="ri-map-pin-user-fill text-blue-500"></i> 同城精选
+                <div class="min-w-0">
+                  <div class="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-2.5 py-1 text-[10px] font-black tracking-[0.16em] text-white/65 mb-2">
+                    认识朋友
+                    <span class="w-1 h-1 rounded-full bg-emerald-300"></span>
+                    慢慢来
+                  </div>
+                  <h3 class="text-white text-[20px] font-black tracking-tight mb-1 flex items-center gap-2">
+                    有限遇见
                   </h3>
-                  <p class="text-slate-400 text-[12px] font-medium">
-                    当前城市：<span class="text-blue-600 font-black">{{ myCity || '还没选择' }}</span> · 匹配同城 Crohn 战友
+                  <p class="text-white/55 text-[12px] font-medium leading-relaxed">
+                    同城看当前城市，远方看天南海北。每天少量，不刷人。
                   </p>
                 </div>
-                <div class="flex items-center gap-[-10px]">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=A" class="w-8 h-8 rounded-full border-2 border-white shadow-sm z-30">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=B" class="w-8 h-8 rounded-full border-2 border-white shadow-sm z-20 -ml-3">
-                  <div class="w-8 h-8 rounded-full border-2 border-white bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-bold z-10 -ml-3 shadow-sm">
-                    +12
+                <div class="shrink-0 w-14 h-14 rounded-[22px] bg-white/10 border border-white/10 flex items-center justify-center shadow-inner">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-100 to-cyan-100 text-slate-950 flex items-center justify-center shadow-[0_0_28px_rgba(255,255,255,0.24)]">
+                    <i class="ri-compass-3-line text-xl"></i>
                   </div>
                 </div>
               </div>
 
               <div class="grid grid-cols-[1fr_auto] gap-2">
-                <button
-                  @click="showAreaPicker = true"
-                  class="min-w-0 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-[13px] font-black outline-none focus:border-blue-300 focus:bg-white transition-all flex items-center justify-between gap-2"
-                  :class="myCity ? 'text-slate-700' : 'text-slate-400'"
+                <div
+                  class="min-w-0 bg-white/10 border border-white/10 rounded-2xl px-4 py-3 text-[13px] font-black flex items-center justify-between gap-2"
+                  :class="myCity ? 'text-white' : 'text-white/45'"
                 >
-                  <span class="truncate">{{ areaDisplay || '选择你的省 / 市 / 区' }}</span>
-                  <i class="ri-arrow-down-s-line text-base text-slate-400 shrink-0"></i>
-                </button>
+                  <span class="truncate">{{ cityDisplay || '定位后确认当前城市' }}</span>
+                  <i class="ri-shield-check-line text-base text-white/45 shrink-0"></i>
+                </div>
                 <button
                   @click="detectAndSaveLocation"
                   :disabled="isLocating"
-                  class="px-4 py-3 rounded-2xl text-[12px] font-black text-white bg-blue-600 shadow-md shadow-blue-500/20 active:scale-95 transition-all disabled:bg-slate-400"
+                  class="px-4 py-3 rounded-2xl text-[12px] font-black text-slate-950 bg-white shadow-md shadow-white/10 active:scale-95 transition-all disabled:bg-white/40 disabled:text-white/60"
                 >
                   <i class="ri-crosshair-2-line" :class="{ 'animate-pulse': isLocating }"></i>
-                  {{ isLocating ? '定位中' : '发定位' }}
+                  {{ isLocating ? '确认中' : '定位确认' }}
                 </button>
               </div>
 
-              <van-popup v-model:show="showAreaPicker" position="bottom" round teleport="body" :z-index="200">
-                <van-area
-                  :area-list="areaList"
-                  :value="areaCode"
-                  title="选择城市"
-                  @confirm="onAreaConfirm"
-                  @cancel="showAreaPicker = false"
-                />
-              </van-popup>
-
-              <p v-if="locationStatus" class="text-[11px] font-bold text-slate-400 leading-relaxed">
+              <p v-if="locationStatus" class="text-[11px] font-bold text-white/45 leading-relaxed">
                 {{ locationStatus }}
               </p>
 
-              <button
-                @click="openRadar"
-                class="w-full py-3 rounded-2xl text-[13px] font-black bg-slate-900 text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <i class="ri-radar-line animate-pulse"></i>
-                开始匹配同城好友
-              </button>
+              <div class="rounded-[24px] bg-white/10 border border-white/10 p-3.5 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-[13px] font-black text-white">允许被遇见</p>
+                    <p class="text-[10.5px] font-bold text-white/42 mt-0.5">关闭后不会出现在同城和远方推荐里</p>
+                  </div>
+                  <button
+                    @click="toggleDiscoveryEnabled"
+                    :disabled="discoverySaving"
+                    class="relative w-[52px] h-[30px] rounded-full transition-all shrink-0 active:scale-95 disabled:opacity-60"
+                    :class="discoveryEnabled ? 'bg-emerald-400' : 'bg-white/18'"
+                  >
+                    <span class="absolute top-1 w-[22px] h-[22px] rounded-full bg-white shadow transition-all" :class="discoveryEnabled ? 'left-[26px]' : 'left-1'"></span>
+                  </button>
+                </div>
+
+                <textarea
+                  v-model="broadcastSign"
+                  rows="2"
+                  maxlength="60"
+                  placeholder="一句话介绍你的情况，比如：缓解期，想认识能互相鼓劲的人。"
+                  class="w-full rounded-2xl bg-white/10 border border-white/10 px-3.5 py-3 text-[12.5px] font-bold text-white placeholder-white/30 outline-none resize-none focus:bg-white/14 transition-all"
+                  @blur="saveDiscoverySettings"
+                ></textarea>
+
+                <div class="flex gap-1.5 overflow-x-auto custom-scroll -mx-0.5 px-0.5">
+                  <button
+                    v-for="tag in lifeTags"
+                    :key="tag.id"
+                    @click="toggleTag(tag.id)"
+                    class="shrink-0 px-2.5 py-1.5 rounded-full text-[10.5px] font-black border transition-all active:scale-95"
+                    :class="selectedTags.includes(tag.id) ? 'bg-white text-slate-950 border-white' : 'bg-white/8 text-white/50 border-white/10'"
+                  >
+                    {{ tag.icon }} {{ tag.label }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <button
+                  @click="openDiscovery('city')"
+                  class="min-h-[78px] rounded-[22px] bg-white/10 border border-white/10 text-white active:scale-95 transition-all flex flex-col items-start justify-center px-4 text-left"
+                >
+                  <span class="w-8 h-8 rounded-2xl bg-white/15 text-cyan-100 flex items-center justify-center mb-2"><i class="ri-map-pin-user-line"></i></span>
+                  <span class="text-[13px] font-black">同城精选</span>
+                  <span class="text-[10.5px] font-bold text-white/42 mt-0.5">按当前城市</span>
+                </button>
+                <button
+                  @click="openDiscovery('distant')"
+                  class="min-h-[78px] rounded-[22px] bg-white/10 border border-white/10 text-white active:scale-95 transition-all flex flex-col items-start justify-center px-4 text-left"
+                >
+                  <span class="w-8 h-8 rounded-2xl bg-white/15 text-amber-100 flex items-center justify-center mb-2"><i class="ri-route-line"></i></span>
+                  <span class="text-[13px] font-black">远方朋友</span>
+                  <span class="text-[10.5px] font-bold text-white/42 mt-0.5">不按距离</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="bg-white/60 backdrop-blur-xl p-5 rounded-[28px] border border-white/80 shadow-sm">
-            <h3 class="text-[12px] font-black text-blue-600 tracking-widest uppercase mb-4 flex items-center gap-1"><i class="ri-search-2-line"></i> 搜索 / 添加好友</h3>
+          <div ref="addFriendCardRef" class="bg-white/60 backdrop-blur-xl p-5 rounded-[28px] border border-white/80 shadow-sm">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <h3 class="text-[12px] font-black text-blue-600 tracking-widest uppercase flex items-center gap-1"><i class="ri-search-2-line"></i> 搜索 / 添加好友</h3>
+              <button @click="copyMyId" class="shrink-0 inline-flex items-center gap-1 text-[10.5px] font-black text-slate-500 bg-white/80 border border-slate-100 px-2.5 py-1.5 rounded-full active:scale-95 transition-all">
+                我的编号 {{ myId }}
+                <i class="ri-file-copy-line"></i>
+              </button>
+            </div>
             <div class="flex items-center gap-3">
-              <input v-model="friendSearchKeyword" @keydown.enter="searchUsers" type="text" placeholder="输入昵称或对方 ID..." class="flex-1 bg-white/80 rounded-full px-5 py-3 text-[14px] font-medium outline-none border border-white focus:border-blue-300 focus:shadow-md transition-all">
+              <input ref="friendSearchInputRef" v-model="friendSearchKeyword" @keydown.enter="searchUsers" type="text" placeholder="输入昵称或对方编号..." class="flex-1 bg-white/80 rounded-full px-5 py-3 text-[14px] font-medium outline-none border border-white focus:border-blue-300 focus:shadow-md transition-all">
               <button @click="searchUsers" :disabled="isSearching" class="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center shrink-0 shadow-lg hover:bg-slate-800 active:scale-90 transition-all disabled:bg-slate-400">
                 <i class="ri-search-line text-xl" :class="{ 'animate-pulse': isSearching }"></i>
               </button>
@@ -438,10 +496,10 @@
             <div v-if="searchResults.length > 0" class="mt-4 space-y-2.5">
               <div v-for="u in searchResults" :key="u.userId" class="flex items-center justify-between p-2.5 rounded-2xl bg-white/80 border border-stone-100">
                 <div class="flex items-center gap-3 min-w-0">
-                  <img :src="u.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + u.userId" class="w-10 h-10 rounded-2xl border border-white shadow-sm shrink-0">
+                  <img :src="avatarOf(u, u.userId)" class="w-10 h-10 rounded-2xl border border-white shadow-sm shrink-0">
                   <div class="min-w-0">
                     <h4 class="text-[14px] font-bold text-slate-800 truncate">{{ u.nickname || '神秘特工' }}</h4>
-                    <p class="text-[10.5px] text-slate-400 font-medium">ID: {{ u.userId }}<span v-if="u.city"> · {{ u.city }}</span></p>
+                    <p class="text-[10.5px] text-slate-400 font-medium">编号：{{ u.userId }}<span v-if="u.city"> · {{ u.city }}</span></p>
                   </div>
                 </div>
                 <button @click="sendFriendRequest(u.userId)" class="px-4 py-2 bg-blue-600 text-white text-[12px] font-bold rounded-full shadow-md shadow-blue-500/20 active:scale-95 transition-all shrink-0">
@@ -449,17 +507,17 @@
                 </button>
               </div>
             </div>
-            <p v-else-if="searchDone" class="mt-4 text-center text-[12px] text-slate-400 font-bold py-2">没找到这个人,换个昵称或 ID 试试 🔍</p>
+            <p v-else-if="searchDone" class="mt-4 text-center text-[12px] text-slate-400 font-bold py-2">没找到这个人，换个昵称或编号试试 🔍</p>
           </div>
 
           <div v-if="pendingRequests.length > 0">
             <h3 class="text-[12px] font-black text-slate-400 tracking-widest uppercase mb-3 px-2">新请求接入</h3>
             <div v-for="req in pendingRequests" :key="req.id" class="bg-white/50 backdrop-blur-lg rounded-[28px] p-4 flex items-center justify-between border border-white/60 shadow-sm mb-3">
               <div class="flex items-center gap-3">
-                <img :src="req.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + req.id" class="w-[46px] h-[46px] rounded-[18px] object-cover border-2 border-white shadow-sm">
+                <img :src="avatarOf(req, req.id)" class="w-[46px] h-[46px] rounded-[18px] object-cover border-2 border-white shadow-sm">
                 <div>
                   <h4 class="text-[15px] font-bold text-slate-800">{{ req.nickname || '神秘特工' }}</h4>
-                  <p class="text-[11px] text-slate-500 font-medium">请求加入您的小队</p>
+                  <p class="text-[11px] text-slate-500 font-medium">想和你成为朋友</p>
                 </div>
               </div>
               <button @click="acceptRequest(req.friendshipId)" class="px-5 py-2 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white text-[13px] font-bold rounded-full shadow-md shadow-emerald-500/30 hover:shadow-lg active:scale-95 transition-all">
@@ -563,60 +621,133 @@
     </transition>
 
     <transition name="fade-up">
-      <div v-if="showRadarModal" class="fixed inset-0 z-[120] bg-slate-50 flex flex-col overflow-hidden font-sans">
+      <div v-if="showRadarModal" class="city-picks-page fixed inset-0 z-[120] flex flex-col overflow-hidden font-sans text-slate-950">
+        <div class="city-picks-orb city-picks-orb-a"></div>
+        <div class="city-picks-orb city-picks-orb-b"></div>
 
-        <div class="flex justify-between items-center px-4 py-3 pt-[calc(env(safe-area-inset-top,16px)+10px)] relative z-20 bg-slate-50/90 backdrop-blur-md">
-          <button @click="showRadarModal = false,emit('chat-active', false)" class="flex items-center gap-1.5 bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full text-[12px] font-bold active:scale-95 transition-all">
+        <header class="relative z-20 px-5 pt-[calc(env(safe-area-inset-top,16px)+12px)] pb-3 flex items-center justify-between">
+          <button @click="closeCityPicks" class="h-9 px-3 rounded-full bg-white/72 backdrop-blur-xl border border-white/70 text-slate-700 text-[12px] font-black flex items-center gap-1 active:scale-95 transition-all shadow-sm">
             <i class="ri-arrow-left-s-line text-lg"></i> 返回
           </button>
-
-          <div class="flex items-center gap-4 text-slate-700 text-xl">
-            <i class="ri-search-line"></i>
-            <i @click="showProfileConfig = true" class="ri-equalizer-line cursor-pointer active:scale-90 transition-all"></i>
-            <div class="relative">
-              <i class="ri-chat-3-line"></i>
-              <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-            </div>
+          <div class="text-center">
+            <p class="text-[10px] font-black tracking-[0.22em] text-slate-400 leading-none">每日少量</p>
+            <h2 class="text-[15px] font-black tracking-tight text-slate-900 mt-1">{{ discoveryTitle }}</h2>
           </div>
-        </div>
+          <button v-if="discoveryMode === 'city'" @click="openDiscovery('city')" :disabled="isLocating" class="h-9 px-3 rounded-full bg-slate-950 text-white text-[12px] font-black flex items-center gap-1 active:scale-95 transition-all shadow-[0_12px_26px_-18px_rgba(15,23,42,0.8)] disabled:bg-slate-400">
+            <i class="ri-crosshair-2-line" :class="{ 'animate-pulse': isLocating }"></i> 定位
+          </button>
+          <div v-else class="h-9 px-3 rounded-full bg-white/72 backdrop-blur-xl border border-white/70 text-slate-500 text-[12px] font-black flex items-center gap-1 shadow-sm">
+            <i class="ri-leaf-line"></i> 有限
+          </div>
+        </header>
 
-        <div class="flex-1 overflow-y-auto px-4 pt-2 pb-24 space-y-5 custom-scroll relative z-10 overscroll-none">
-          <div v-for="(p, index) in foundPatients" :key="p.id"
-               class="relative w-full aspect-[3/4] max-h-[65vh] rounded-[32px] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.1)] bg-slate-200 animate-in fade-in slide-in-from-bottom-8 duration-700"
-               :style="`animation-fill-mode: both; animation-delay: ${index * 100}ms;`">
-
-            <img :src="p.avatar" class="absolute inset-0 w-full h-full object-cover">
-            <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none"></div>
-
-            <div class="absolute inset-x-0 bottom-0 p-6 pb-8 flex flex-col justify-end">
-              <div class="flex flex-wrap gap-2 mb-3">
-            <span v-for="tag in p.tags" :key="tag" class="bg-black/40 backdrop-blur-md text-white text-[12px] font-medium px-3 py-1.5 rounded-full">
-              {{ tag }}
-            </span>
+        <main class="relative z-10 flex-1 overflow-y-auto custom-scroll overscroll-none px-5 pt-2 pb-[calc(env(safe-area-inset-bottom,8px)+28px)]">
+          <section class="relative overflow-hidden rounded-[34px] bg-slate-950 text-white p-6 mb-4 shadow-[0_24px_60px_-38px_rgba(15,23,42,0.95)]">
+            <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-amber-200/20 blur-2xl"></div>
+            <div class="absolute -left-10 bottom-0 w-44 h-24 rounded-full bg-cyan-300/15 blur-2xl"></div>
+            <div class="relative z-10">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="w-8 h-8 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                  <i class="ri-sparkling-2-line text-amber-100"></i>
+                </span>
+                <span class="text-[11px] font-black tracking-[0.16em] text-white/55">今天最多 5 位 · 还能打招呼 {{ discoveryGreetRemaining }} 次</span>
               </div>
-
-              <div class="flex items-center gap-2 mb-2">
-                <h1 class="text-white text-[28px] font-black tracking-tight drop-shadow-md">{{ p.name }}</h1>
-                <div v-if="p.gender === 'female'" class="w-5 h-5 rounded-full bg-pink-500/80 flex items-center justify-center backdrop-blur-sm">
-                  <i class="ri-women-line text-white text-[12px]"></i>
-                </div>
-                <div v-else class="w-5 h-5 rounded-full bg-blue-500/80 flex items-center justify-center backdrop-blur-sm">
-                  <i class="ri-men-line text-white text-[12px]"></i>
-                </div>
-              </div>
-
-              <p class="text-white/80 text-[13px] font-medium tracking-wide drop-shadow-md flex items-center gap-1.5">
-                {{ p.sign }}
-                <span class="w-1 h-1 bg-white/50 rounded-full"></span>
-                {{ p.distance }}
+              <h1 class="text-[28px] font-black tracking-tight leading-[1.08] whitespace-pre-line">{{ discoveryHeroTitle }}</h1>
+              <p class="text-[12.5px] text-white/58 font-medium leading-relaxed mt-3 max-w-[17rem]">
+                {{ discoveryHeroDesc }}
               </p>
+              <div class="mt-5 inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-2 text-[11px] font-black text-white/72">
+                <i :class="discoveryMode === 'city' ? 'ri-map-pin-user-line' : 'ri-route-line'" class="text-amber-100"></i>
+                {{ discoveryScopeText }}
+              </div>
+            </div>
+          </section>
 
-              <button class="absolute right-6 bottom-6 w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/30 rounded-full flex items-center justify-center text-white active:scale-90 transition-all shadow-lg">
-                <i class="ri-heart-fill text-2xl drop-shadow-md"></i>
+          <section class="space-y-3.5">
+            <div v-if="isCityPicksLoading" class="space-y-3.5">
+              <div v-for="i in 3" :key="i" class="rounded-[28px] bg-white/72 border border-white/80 p-4 shadow-sm animate-pulse">
+                <div class="flex gap-3">
+                  <div class="w-14 h-14 rounded-2xl bg-slate-200"></div>
+                  <div class="flex-1 space-y-2 py-1">
+                    <div class="h-4 w-28 rounded-full bg-slate-200"></div>
+                    <div class="h-3 w-full rounded-full bg-slate-100"></div>
+                    <div class="h-3 w-2/3 rounded-full bg-slate-100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="foundPatients.length > 0" class="space-y-3.5">
+              <article
+                v-for="(p, index) in foundPatients"
+                :key="p.id"
+                class="city-pick-card relative overflow-hidden rounded-[30px] bg-white/76 backdrop-blur-xl border border-white/90 p-4 shadow-[0_16px_45px_-34px_rgba(15,23,42,0.75)]"
+                :style="`animation-delay: ${index * 70}ms;`"
+              >
+                <div class="absolute right-4 top-4 text-[10px] font-black text-slate-300 tracking-[0.16em]">0{{ index + 1 }}</div>
+                <div class="flex items-start gap-3.5 pr-8">
+                  <div class="relative shrink-0">
+                    <img :src="p.avatar" class="w-[58px] h-[58px] rounded-[22px] object-cover bg-slate-100 border-2 border-white shadow-sm">
+                    <span class="absolute -right-1 -bottom-1 w-5 h-5 rounded-full bg-emerald-400 border-2 border-white flex items-center justify-center">
+                      <i class="ri-check-line text-white text-[11px]"></i>
+                    </span>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h3 class="text-[17px] font-black text-slate-950 tracking-tight truncate max-w-[9rem]">{{ p.name }}</h3>
+                      <span class="rounded-full bg-slate-100 text-slate-500 px-2 py-0.5 text-[10px] font-black">
+                        {{ p.distance }}
+                      </span>
+                    </div>
+                    <p class="mt-2 text-[12.5px] text-slate-500 font-medium leading-relaxed">
+                      {{ p.sign }}
+                    </p>
+                    <div class="flex flex-wrap gap-1.5 mt-3">
+                      <span v-for="tag in p.tags" :key="tag" class="rounded-full bg-stone-100/80 text-slate-500 px-2.5 py-1 text-[10.5px] font-black">
+                        {{ tag }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-[0.82fr_1.18fr] gap-2 mt-4">
+                  <button @click="skipCityPick(p.id)" class="py-2.5 rounded-2xl bg-slate-100/80 text-slate-500 text-[12px] font-black active:scale-95 transition-all">
+                    暂时跳过
+                  </button>
+                  <button
+                    @click="greetCityPick(p)"
+                    :disabled="p.requested || discoveryGreetRemaining <= 0"
+                    class="py-2.5 rounded-2xl text-[12px] font-black active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                    :class="p.requested ? 'bg-emerald-50 text-emerald-600' : (discoveryGreetRemaining <= 0 ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white shadow-[0_14px_26px_-20px_rgba(15,23,42,0.9)]')"
+                  >
+                    <i :class="p.requested ? 'ri-check-line' : 'ri-user-heart-line'"></i>
+                    {{ p.requested ? '已打招呼' : (discoveryGreetRemaining <= 0 ? '今日已满' : '打个招呼') }}
+                  </button>
+                </div>
+              </article>
+            </div>
+
+            <div v-else class="rounded-[32px] bg-white/76 border border-white/90 p-7 text-center shadow-sm">
+              <div class="mx-auto w-14 h-14 rounded-[24px] bg-slate-100 text-slate-500 flex items-center justify-center mb-4">
+                <i class="ri-moon-clear-line text-2xl"></i>
+              </div>
+              <h3 class="text-[18px] font-black text-slate-900 tracking-tight">今天暂时没有精选</h3>
+              <p class="text-[12.5px] text-slate-500 font-medium leading-relaxed mt-2">
+                {{ discoveryEmptyText }}
+              </p>
+              <button v-if="discoveryMode === 'city'" @click="openDiscovery('city')" :disabled="isLocating" class="mt-5 px-5 py-3 rounded-2xl bg-slate-950 text-white text-[12px] font-black active:scale-95 transition-all disabled:bg-slate-400">
+                {{ isLocating ? '正在确认' : '定位确认' }}
+              </button>
+              <button v-else @click="closeCityPicks" class="mt-5 px-5 py-3 rounded-2xl bg-slate-950 text-white text-[12px] font-black active:scale-95 transition-all">
+                先返回
               </button>
             </div>
-          </div>
-        </div>
+          </section>
+
+          <p class="mt-5 text-center text-[10.5px] font-bold text-slate-400 leading-relaxed px-5">
+            {{ discoveryFooterText }}
+          </p>
+        </main>
       </div>
 
     </transition>
@@ -628,8 +759,8 @@
 
           <div class="flex justify-between items-center mb-6 mt-4 shrink-0">
             <div>
-              <h2 class="text-slate-900 text-[22px] font-black tracking-tight">信号源配置</h2>
-              <p class="text-slate-500 text-[12px] mt-1">定制你的专属同城雷达</p>
+              <h2 class="text-slate-900 text-[22px] font-black tracking-tight">同城偏好</h2>
+              <p class="text-slate-500 text-[12px] mt-1">让推荐更接近你的真实需要</p>
             </div>
             <button @click="showProfileConfig = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 active:scale-90 transition-all">
               <i class="ri-close-line text-lg"></i>
@@ -684,7 +815,7 @@
             <div>
               <div class="flex items-center gap-2 mb-4">
                 <div class="w-1.5 h-4 bg-emerald-500 rounded-full"></div>
-                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">广播签名</h3>
+                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">问候签名</h3>
               </div>
               <textarea v-model="broadcastSign" rows="3" placeholder="说点什么，吸引频率相同的人..."
                         class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-800 text-[14px] font-medium outline-none focus:border-blue-400 focus:bg-white focus:shadow-[0_8px_20px_rgba(59,130,246,0.1)] transition-all resize-none"></textarea>
@@ -694,7 +825,7 @@
 
           <div class="shrink-0 pt-4 border-t border-slate-100">
             <button @click="showProfileConfig = false" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-[16px] py-4 rounded-[20px] shadow-[0_10px_20px_rgba(15,23,42,0.2)] active:scale-95 transition-all flex justify-center items-center gap-2">
-              保存并开启广播 <i class="ri-radar-line animate-pulse"></i>
+              保存偏好 <i class="ri-check-line"></i>
             </button>
           </div>
 
@@ -744,11 +875,14 @@
 
           <div class="relative z-10 shrink-0 px-6">
             <div class="flex bg-white/10 p-1 rounded-full gap-1 border border-white/10">
-              <button @click="paperBoatTab = 'write'" :class="paperBoatTab === 'write' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
+              <button @click="switchPaperBoatTab('write')" :class="paperBoatTab === 'write' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
                 写一封
               </button>
-              <button @click="paperBoatTab = 'scoop'" :class="paperBoatTab === 'scoop' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
+              <button @click="switchPaperBoatTab('scoop')" :class="paperBoatTab === 'scoop' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
                 捞一封
+              </button>
+              <button @click="switchPaperBoatTab('history')" :class="paperBoatTab === 'history' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
+                记录
               </button>
             </div>
           </div>
@@ -892,6 +1026,101 @@
               >
                 {{ paperBoatQuota.scoopRemaining <= 0 ? '今天先不打扰河面了' : (scoopedBoat ? '再捞一封' : '捞起一封') }}
               </button>
+            </div>
+
+            <div v-if="paperBoatTab === 'history'" class="space-y-5">
+              <div class="paper-history-hero rounded-[28px] p-5 border border-white/12 backdrop-blur-xl">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-[10px] text-cyan-100/55 font-black tracking-[0.2em]">河流记得</p>
+                    <h3 class="text-[20px] text-white font-black mt-1 tracking-tight">你的纸船记录</h3>
+                    <p class="text-[12px] text-cyan-50/65 mt-2 leading-relaxed">写过的心事、捞起的来信，都会安静留在这里。</p>
+                  </div>
+                  <button
+                    @click="loadPaperBoatHistory(true)"
+                    :disabled="isPaperBoatHistoryLoading"
+                    class="w-10 h-10 rounded-2xl bg-white/10 text-cyan-50 border border-white/10 flex items-center justify-center active:scale-95 transition-all disabled:opacity-50 shrink-0"
+                  >
+                    <i class="ri-refresh-line" :class="{ 'animate-spin': isPaperBoatHistoryLoading }"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="isPaperBoatHistoryLoading" class="rounded-[28px] bg-white/10 border border-white/10 p-8 text-center backdrop-blur-xl">
+                <div class="w-12 h-12 mx-auto rounded-full bg-white/10 text-cyan-100 flex items-center justify-center mb-4">
+                  <i class="ri-loader-4-line text-2xl animate-spin"></i>
+                </div>
+                <p class="text-[13px] font-black text-cyan-50">正在翻找河面记忆</p>
+              </div>
+
+              <template v-else>
+                <div class="space-y-3">
+                  <div class="flex items-end justify-between">
+                    <h4 class="text-[15px] font-black text-white">我放飞的</h4>
+                    <span class="text-[11px] font-bold text-cyan-100/45">{{ paperBoatHistory.released.length }} 封</span>
+                  </div>
+
+                  <div v-if="paperBoatHistory.released.length === 0" class="paper-history-empty">
+                    还没有放飞过纸船。
+                  </div>
+
+                  <article v-for="boat in paperBoatHistory.released" :key="'released-' + boat.id" class="paper-history-card">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                      <span class="text-[10px] font-black tracking-[0.18em] text-cyan-100/50">匿名心事</span>
+                      <span class="text-[10px] font-bold text-cyan-100/60">{{ formatPaperBoatTime(boat.createdAt) }}</span>
+                    </div>
+                    <p class="text-[13.5px] leading-relaxed text-cyan-50/90 whitespace-pre-wrap">{{ boat.content }}</p>
+                    <div class="grid grid-cols-3 gap-2 mt-4">
+                      <div class="paper-history-stat">
+                        <b>{{ boat.breezeCount || 0 }}</b>
+                        <span>微风</span>
+                      </div>
+                      <div class="paper-history-stat">
+                        <b>{{ boat.replyCount || 0 }}</b>
+                        <span>回声</span>
+                      </div>
+                      <div class="paper-history-stat">
+                        <b>{{ boat.giftCount || 0 }}</b>
+                        <span>礼物</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="flex items-end justify-between">
+                    <h4 class="text-[15px] font-black text-white">我捞到的</h4>
+                    <span class="text-[11px] font-bold text-cyan-100/45">{{ paperBoatHistory.scooped.length }} 封</span>
+                  </div>
+
+                  <div v-if="paperBoatHistory.scooped.length === 0" class="paper-history-empty">
+                    还没有捞起过纸船。
+                  </div>
+
+                  <article v-for="boat in paperBoatHistory.scooped" :key="'scooped-' + boat.id + '-' + boat.scoopedAt" class="paper-history-card">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                      <span class="text-[10px] font-black tracking-[0.18em] text-cyan-100/50">捞起的来信</span>
+                    <span class="text-[10px] font-bold text-cyan-100/60">{{ formatPaperBoatTime(boat.scoopedAt || boat.createdAt) }}</span>
+                  </div>
+                    <p class="text-[13.5px] leading-relaxed text-cyan-50/90 whitespace-pre-wrap">{{ boat.content }}</p>
+
+                    <div v-if="boat.replyContent || boat.giftType || boat.breezed" class="mt-4 space-y-2">
+                      <div v-if="boat.replyContent" class="paper-history-note">
+                        <span>我的回声</span>
+                        <p>{{ boat.replyContent }}</p>
+                      </div>
+                      <div v-if="boat.giftType" class="paper-history-note">
+                        <span>送过礼物</span>
+                        <p>{{ paperBoatGiftLabel(boat.giftType) }}</p>
+                      </div>
+                      <div v-if="boat.breezed" class="paper-history-note">
+                        <span>微风</span>
+                        <p>你给它吹过一阵风</p>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -1198,7 +1427,7 @@
               <div v-else class="space-y-1">
                 <div v-for="m in groupMembers" :key="m.userId" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-all">
                   <button @click="openUserProfile(m.userId)" class="flex items-center gap-3 flex-1 min-w-0 text-left">
-                    <img :src="m.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + m.userId" class="w-11 h-11 rounded-2xl border border-white shadow-sm object-cover bg-slate-100">
+                    <img :src="avatarOf(m, m.userId)" class="w-11 h-11 rounded-2xl border border-white shadow-sm object-cover bg-slate-100">
                     <div class="flex-1 min-w-0">
                       <h4 class="text-[14.5px] font-bold text-slate-800 truncate">{{ m.nickname || '神秘队员' }}</h4>
                       <span class="text-[11px] text-slate-400 font-medium">{{ m.userId === myId ? '我自己' : '查看资料' }}</span>
@@ -1261,17 +1490,21 @@
           <header class="shrink-0 px-6 pt-8 pb-5">
             <div class="flex justify-between items-start gap-3">
               <div class="flex items-center gap-4 min-w-0">
-                <img :src="profileUser?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + profileUser?.userId" class="w-16 h-16 rounded-[24px] object-cover border-2 border-white shadow-md bg-slate-100">
+                <img :src="avatarOf(profileUser, profileUser?.userId)" class="w-16 h-16 rounded-[24px] object-cover border-2 border-white shadow-md bg-slate-100">
                 <div class="min-w-0">
-                  <p class="text-[11px] font-black tracking-[0.16em] text-blue-500 mb-1">战友资料</p>
-                  <h2 class="text-[23px] font-black text-slate-950 tracking-tight truncate">{{ profileDisplayName }}</h2>
-                  <p v-if="profileRemark" class="text-[11px] text-slate-400 font-bold mt-0.5 truncate">原昵称：{{ profileUser?.nickname }}</p>
+                  <div class="flex items-center gap-2 min-w-0">
+                    <h2 class="text-[23px] font-black text-slate-950 tracking-tight truncate">{{ profileDisplayName }}</h2>
+                    <button v-if="canRemarkProfile" @click="editProfileRemark" class="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 text-[10px] font-black text-slate-500 active:scale-95 transition-all">
+                      {{ profileRemark ? '改备注' : '+备注' }}
+                    </button>
+                  </div>
+                  <p v-if="profileRemark" class="text-[11px] text-slate-400 font-bold mt-0.5 truncate">昵称：{{ profileUser?.nickname }}</p>
                   <div class="flex items-center gap-2 mt-2">
                     <span v-if="profileUser?.verified" class="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
                       <i class="ri-shield-check-fill"></i> 已认证
                     </span>
                     <span class="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-full border border-slate-100">
-                      ID {{ profileUser?.userId }}
+                      编号 {{ profileUser?.userId }}
                     </span>
                   </div>
                 </div>
@@ -1294,7 +1527,7 @@
                   <div class="min-w-0 flex-1">
                     <p class="text-[11px] font-black text-slate-400 tracking-[0.14em] mb-1">当前状态</p>
                     <h3 class="text-[16px] font-black text-slate-900 tracking-tight">{{ profileUser?.text || '暂未设置状态' }}</h3>
-                    <p class="text-[12px] text-slate-500 leading-relaxed mt-1">{{ profileUser?.description || 'TA 还没有留下更多说明。' }}</p>
+                    <p class="text-[12px] text-slate-500 leading-relaxed mt-1">{{ profileUser?.description || '对方还没有留下更多说明。' }}</p>
                   </div>
                 </div>
               </section>
@@ -1310,37 +1543,41 @@
                 </div>
                 <div class="bg-white rounded-2xl border border-white/80 p-3 text-center">
                   <p class="text-[18px] font-black text-slate-900">{{ userProfileData?.theySent || 0 }}</p>
-                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">TA 回应</p>
+                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">对方回应</p>
                 </div>
               </section>
 
               <section v-if="profileUser?.reactors?.length" class="bg-white rounded-[24px] border border-white/80 p-4">
-                <p class="text-[12px] font-black text-slate-900 mb-3">最近关心 TA 的人</p>
+                <p class="text-[12px] font-black text-slate-900 mb-3">最近关心对方的人</p>
                 <div class="flex -space-x-2">
-                  <img v-for="(r, idx) in profileUser.reactors" :key="idx" :src="r.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + idx" class="w-8 h-8 rounded-full border-2 border-white bg-slate-100">
+                  <img v-for="(r, idx) in profileUser.reactors" :key="idx" :src="avatarOf(r, idx)" class="w-8 h-8 rounded-full border-2 border-white bg-slate-100">
                 </div>
               </section>
 
-              <section class="bg-white rounded-[24px] border border-white/80 p-4">
+              <section @click="openProfileMomentsPanel" class="bg-white rounded-[24px] border border-white/80 p-4 active:scale-[0.99] transition-all cursor-pointer">
                 <div class="flex items-center justify-between mb-3">
-                  <p class="text-[12px] font-black text-slate-900">TA 的朋友圈</p>
-                  <span class="text-[10px] font-bold text-slate-400">{{ profileMoments.length }} 条</span>
+                  <p class="text-[12px] font-black text-slate-900">对方的朋友圈</p>
+                  <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                    {{ profileMoments.length }} 条
+                    <i v-if="profileMoments.length" class="ri-arrow-right-s-line text-sm"></i>
+                  </span>
                 </div>
                 <p v-if="profileMomentsLoading" class="text-center py-6 text-[12px] text-slate-400 font-bold">正在加载动态...</p>
                 <p v-else-if="profileMoments.length === 0" class="text-center py-6 text-[12px] text-slate-400 font-bold">暂时没有可见动态</p>
                 <div v-else class="space-y-3">
-                  <article v-for="post in profileMoments" :key="post.id" class="rounded-2xl bg-stone-50/80 border border-stone-100 p-3">
+                  <article v-for="post in profileMoments.slice(0, 2)" :key="post.id" class="rounded-2xl bg-stone-50/80 border border-stone-100 p-3">
                     <div class="flex items-center justify-between gap-3 mb-2">
                       <span class="text-[11px] font-bold text-slate-400">{{ post.time }}</span>
-                      <span v-if="post.visibility !== 'public'" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        {{ post.visibility === 'private' ? '仅自己' : '仅战友' }}
+                      <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="momentVisibilityMeta(post.visibility).class">
+                        {{ momentVisibilityMeta(post.visibility).label }}
                       </span>
                     </div>
                     <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line">{{ post.content }}</p>
                     <div v-if="post.images?.length" class="grid grid-cols-3 gap-1.5 mt-2">
-                      <img v-for="(img, idx) in post.images.slice(0, 3)" :key="idx" :src="img" class="w-full aspect-square object-cover rounded-xl bg-slate-100">
+                      <img v-for="(img, idx) in post.images.slice(0, 3)" :key="idx" :src="img" @click.stop="openImageViewer(post.images, idx)" class="w-full aspect-square object-cover rounded-xl bg-slate-100">
                     </div>
                   </article>
+                  <p v-if="profileMoments.length > 2" class="text-center text-[11px] font-bold text-slate-400 pt-1">点击查看全部动态</p>
                 </div>
               </section>
 
@@ -1350,10 +1587,7 @@
             </template>
           </div>
 
-          <footer v-if="!userProfileLoading" class="shrink-0 grid grid-cols-3 gap-2 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+16px)] bg-[#FBF9F5]/95 border-t border-stone-100">
-            <button @click="editProfileRemark" :disabled="!canRemarkProfile" class="py-3.5 rounded-2xl text-[13px] font-black bg-white text-slate-700 border border-slate-100 disabled:bg-slate-100 disabled:text-slate-400 active:scale-95 transition-all">
-              备注
-            </button>
+          <footer v-if="!userProfileLoading" class="shrink-0 grid grid-cols-2 gap-2 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+16px)] bg-[#FBF9F5]/95 border-t border-stone-100">
             <button @click="careFromUserProfile" :disabled="profileUser?.reactedToday" class="py-3.5 rounded-2xl text-[13px] font-black active:scale-95 transition-all" :class="profileUser?.reactedToday ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white'">
               {{ profileUser?.reactedToday ? '今天已关心' : '送上关心' }}
             </button>
@@ -1361,6 +1595,74 @@
               发起密聊
             </button>
           </footer>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ============ 对方的朋友圈详情 ============ -->
+    <transition name="fade-up">
+      <div v-if="showProfileMomentsPanel" class="fixed inset-0 z-[185] bg-slate-900/55 backdrop-blur-md flex flex-col justify-end">
+        <div class="relative bg-[#FBF9F5] rounded-t-[34px] h-[86vh] overflow-hidden flex flex-col shadow-[0_-24px_60px_-26px_rgba(15,23,42,0.45)]">
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-200 rounded-full"></div>
+
+          <header class="shrink-0 px-6 pt-8 pb-4 border-b border-stone-100/80">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <img :src="avatarOf(profileUser, profileUser?.userId)" class="w-11 h-11 rounded-2xl object-cover border-2 border-white shadow-sm bg-slate-100">
+                <div class="min-w-0">
+                  <h2 class="text-[18px] font-black text-slate-950 truncate">{{ profileDisplayName }}的朋友圈</h2>
+                  <p class="text-[11px] text-slate-400 font-bold mt-0.5">{{ profileMoments.length }} 条可见动态</p>
+                </div>
+              </div>
+              <button @click="showProfileMomentsPanel = false" class="w-9 h-9 rounded-full bg-white text-slate-500 flex items-center justify-center shadow-sm active:scale-90 transition-all shrink-0">
+                <i class="ri-close-line text-lg"></i>
+              </button>
+            </div>
+          </header>
+
+          <div class="flex-1 overflow-y-auto custom-scroll px-5 py-4 pb-[calc(env(safe-area-inset-bottom,8px)+20px)] space-y-3.5">
+            <p v-if="profileMoments.length === 0" class="text-center py-16 text-[13px] text-slate-400 font-bold">暂时没有可见动态</p>
+            <article v-for="post in profileMoments" :key="post.id" class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.32)]">
+              <div class="flex items-center justify-between gap-3 mb-3">
+                <span class="text-[11px] font-bold text-slate-400">{{ post.time }}</span>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="momentVisibilityMeta(post.visibility).class">
+                  {{ momentVisibilityMeta(post.visibility).label }}
+                </span>
+              </div>
+              <p class="text-[14px] text-slate-700 leading-[1.75] whitespace-pre-line">{{ post.content }}</p>
+              <div v-if="post.images?.length" :class="imageGridClass(post.images.length)" class="grid gap-1.5 mt-3">
+                <img v-for="(img, idx) in post.images" :key="idx" :src="img" @click="openImageViewer(post.images, idx)" class="w-full object-cover rounded-2xl bg-slate-100 cursor-pointer" :class="post.images.length === 1 ? 'aspect-[4/3]' : 'aspect-square'">
+              </div>
+              <div class="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
+                <span class="text-[11px] font-bold text-slate-400">{{ post.likesCount }} 共鸣 · {{ post.comments.length }} 回复</span>
+                <button @click.stop="toggleLike(post)" class="flex items-center gap-1 text-[11.5px] font-black text-rose-500 active:scale-90 transition-all">
+                  <i :class="post.liked ? 'ri-heart-fill' : 'ri-heart-line'" class="text-base"></i>
+                  {{ post.likesCount }}
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ============ 图片预览 ============ -->
+    <transition name="fade">
+      <div v-if="imageViewer.show" class="fixed inset-0 z-[240] bg-black/95 flex flex-col">
+        <header class="shrink-0 flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-3 text-white">
+          <span class="text-[13px] font-bold text-white/70">{{ imageViewer.index + 1 }} / {{ imageViewer.images.length }}</span>
+          <button @click="closeImageViewer" class="w-9 h-9 rounded-full bg-white/10 backdrop-blur text-white flex items-center justify-center active:scale-90 transition-all">
+            <i class="ri-close-line text-xl"></i>
+          </button>
+        </header>
+        <div class="flex-1 min-h-0 flex items-center justify-center px-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)]">
+          <button v-if="imageViewer.images.length > 1" @click.stop="prevImage" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center active:scale-90 transition-all">
+            <i class="ri-arrow-left-s-line text-2xl"></i>
+          </button>
+          <img :src="imageViewer.images[imageViewer.index]" class="max-w-full max-h-full object-contain rounded-lg select-none" @click="nextImage" />
+          <button v-if="imageViewer.images.length > 1" @click.stop="nextImage" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center active:scale-90 transition-all">
+            <i class="ri-arrow-right-s-line text-2xl"></i>
+          </button>
         </div>
       </div>
     </transition>
@@ -1373,6 +1675,7 @@ import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http'
 import { areaList } from '@vant/area-data'
 import StatusBoard from '@/components/tabs/StatusBoard.vue'
+import { avatarOf } from '@/utils/avatarPool'
 
 const emit = defineEmits(['chat-active'])
 
@@ -1467,6 +1770,12 @@ const isPaperBoatResponding = ref(false)
 const scoopedBoat = ref(null)
 const paperBoatReplyText = ref('')
 const selectedPaperBoatGift = ref('warm_water')
+const isPaperBoatHistoryLoading = ref(false)
+const paperBoatHistoryLoaded = ref(false)
+const paperBoatHistory = ref({
+  released: [],
+  scooped: []
+})
 const paperBoatQuota = ref({
   releaseLimit: 2,
   scoopLimit: 2,
@@ -1483,13 +1792,6 @@ const paperBoatGifts = [
   { type: 'quiet_hug', label: '一个拥抱', icon: '🤍' }
 ]
 
-const mockBurdens = [
-  { content: '今天刚做了肠镜，溃疡面还是很大，什么时候是个头啊...', time: '10分钟前', breezed: false },
-  { content: '明天就要开始打生物制剂了，心里有点害怕，对身体会有影响吗？', time: '1小时前', breezed: false },
-  { content: '连续喝了一星期的全流食白粥，真的好馋，好想痛快吃顿烤肉 😭', time: '3小时前', breezed: false },
-  { content: '因为请假太频繁主管找我谈话了，慢性病病友在职场真难啊...', time: '半天前', breezed: false }
-]
-
 const openPaperBoat = async () => {
   showPaperBoatModal.value = true
   paperBoatText.value = ''
@@ -1499,7 +1801,16 @@ const openPaperBoat = async () => {
   paperBoatReplyText.value = ''
   selectedPaperBoatGift.value = 'warm_water'
   paperBoatTab.value = 'write'
+  paperBoatHistoryLoaded.value = false
   await loadPaperBoatQuota()
+}
+
+const switchPaperBoatTab = async (tab) => {
+  paperBoatTab.value = tab
+  paperBoatHint.value = ''
+  if (tab === 'history') {
+    await loadPaperBoatHistory()
+  }
 }
 
 const loadPaperBoatQuota = async () => {
@@ -1530,13 +1841,78 @@ const normalizePaperBoat = (boat) => {
     id: boat.id,
     content: boat.content,
     time: boat.time || '刚刚',
+    createdAt: boat.createdAt,
+    scoopedAt: boat.scoopedAt,
     breezeCount: boat.breezeCount || 0,
     replyCount: boat.replyCount || 0,
     giftCount: boat.giftCount || 0,
     breezed: !!boat.breezed,
     replied: !!boat.replied,
-    gifted: !!boat.gifted
+    gifted: !!boat.gifted,
+    replyContent: boat.replyContent || '',
+    giftType: boat.giftType || ''
   }
+}
+
+const parsePaperBoatDate = (value) => {
+  if (!value) return null
+  if (Array.isArray(value)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = value
+    return new Date(year, month - 1, day, hour, minute, second)
+  }
+  if (typeof value === 'string') {
+    return new Date(value.replace(' ', 'T'))
+  }
+  return new Date(value)
+}
+
+const formatPaperBoatTime = (value) => {
+  const date = parsePaperBoatDate(value)
+  if (!date || Number.isNaN(date.getTime())) return '刚刚'
+
+  const diff = Date.now() - date.getTime()
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`
+
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${month}.${day}`
+}
+
+const paperBoatGiftLabel = (type) => {
+  return paperBoatGifts.find(gift => gift.type === type)?.label || '一份小礼物'
+}
+
+const loadPaperBoatHistory = async (force = false) => {
+  if (isPaperBoatHistoryLoading.value) return
+  if (paperBoatHistoryLoaded.value && !force) return
+
+  isPaperBoatHistoryLoading.value = true
+  try {
+    const res = await http.get('/heal/paperboat/history')
+    if (res.status === 200 || res.code === 200) {
+      const data = res.data || {}
+      paperBoatHistory.value = {
+        released: (data.released || []).map(normalizePaperBoat).filter(Boolean),
+        scooped: (data.scooped || []).map(normalizePaperBoat).filter(Boolean)
+      }
+      applyPaperBoatQuota(data.quota)
+      paperBoatHistoryLoaded.value = true
+    } else {
+      paperBoatHint.value = res.message || '记录暂时没翻出来。'
+    }
+  } catch (e) {
+    console.error('纸船记录加载失败', e)
+    paperBoatHint.value = '记录暂时没翻出来，稍后再试。'
+  } finally {
+    isPaperBoatHistoryLoading.value = false
+  }
+}
+
+const markPaperBoatHistoryDirty = () => {
+  paperBoatHistoryLoaded.value = false
 }
 
 const disintegratePaperBoat = async () => {
@@ -1553,6 +1929,7 @@ const disintegratePaperBoat = async () => {
     const res = await http.post('/heal/paperboat/release', { content: paperBoatText.value })
     applyPaperBoatQuota(res.data?.quota)
     paperBoatHint.value = res.message || '纸船已经入河。'
+    markPaperBoatHistoryDirty()
   } catch (e) {
     console.error('心事放飞失败', e)
     paperBoatHint.value = e?.response?.data?.message || '放飞失败，稍后再试。'
@@ -1592,6 +1969,7 @@ const scoopAnother = async () => {
     if (res.status === 200 && boat?.content) {
       scoopedBoat.value = normalizePaperBoat(boat)
       paperBoatReplyText.value = ''
+      markPaperBoatHistoryDirty()
     } else {
       scoopedBoat.value = null
       paperBoatHint.value = res.message || '暂时没有新的心事。'
@@ -1614,6 +1992,7 @@ const sendBreezeToScooped = async () => {
       scoopedBoat.value.breezed = true
       scoopedBoat.value.breezeCount = (scoopedBoat.value.breezeCount || 0) + 1
       paperBoatHint.value = res.message || '微风已送达。'
+      markPaperBoatHistoryDirty()
       loadWarmth()
     }
   } catch (e) {
@@ -1649,6 +2028,7 @@ const respondToScooped = async (type) => {
       }
 
       paperBoatHint.value = res.message || '回应已经轻轻送达。'
+      markPaperBoatHistoryDirty()
       loadWarmth()
     }
   } catch (e) {
@@ -1681,7 +2061,48 @@ const lifeTags = [
   { id: 't8', icon: '☕', label: '微醺/咖啡' }
 ]
 const selectedTags = ref(['t1', 't4'])
-const broadcastSign = ref('97年 · 金牛座 · 正在寻找能一起吃火锅的病友！')
+const broadcastSign = ref('缓解期，想认识能互相鼓劲的人。')
+const discoveryEnabled = ref(true)
+const discoverySaving = ref(false)
+
+const normalizeDiscoveryTags = (rawTags) => {
+  if (Array.isArray(rawTags)) return rawTags
+  if (!rawTags) return []
+  try {
+    const parsed = JSON.parse(rawTags)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (e) {
+    return []
+  }
+}
+
+const discoveryTagLabels = (rawTags) => {
+  const ids = normalizeDiscoveryTags(rawTags)
+  const labelMap = new Map(lifeTags.map(tag => [tag.id, tag.label]))
+  return ids.map(id => labelMap.get(id) || id).filter(Boolean)
+}
+
+const saveDiscoverySettings = async () => {
+  if (discoverySaving.value) return
+  discoverySaving.value = true
+  try {
+    await http.post('/center/discovery', {
+      discoveryEnabled: discoveryEnabled.value,
+      radarTags: JSON.stringify(selectedTags.value),
+      radarSign: broadcastSign.value.trim()
+    })
+  } catch (e) {
+    console.error('保存遇见设置失败', e)
+    locationStatus.value = '遇见设置保存失败，稍后再试。'
+  } finally {
+    discoverySaving.value = false
+  }
+}
+
+const toggleDiscoveryEnabled = async () => {
+  discoveryEnabled.value = !discoveryEnabled.value
+  await saveDiscoverySettings()
+}
 
 const toggleTag = (id) => {
   const idx = selectedTags.value.indexOf(id)
@@ -1693,133 +2114,144 @@ const toggleTag = (id) => {
     }
     selectedTags.value.push(id)
   }
+  saveDiscoverySettings()
 }
 
-const premiumsGradients = [
-  'bg-gradient-to-br from-pink-500/80 to-purple-600/90', // 1: 霓虹夕阳
-  'bg-gradient-to-br from-cyan-400 to-blue-600',       // 2: 冰蓝海岸
-  'bg-gradient-to-br from-green-400 to-emerald-600',   // 3: 荧光竹林
-  'bg-gradient-to-br from-orange-500 to-red-600',     // 4: 火焰珊瑚
-  'bg-gradient-to-br from-indigo-500 to-pink-600',     // 5: 薰衣草之夜
-]
+const isCityPicksLoading = ref(false)
+const foundPatients = ref([])
+const discoveryMode = ref('city')
+const discoveryGreetLimit = 2
+const discoveryGreetCount = ref(0)
 
-const mockPatients = [
-  {
-    id: 1,
-    name: '开心.',
-    gender: 'female',
-    distance: '福州',
-    tags: ['桌游', '高尔夫', '网球', '找搭子'],
-    sign: '97年 · 金牛座 · IT/互联网',
-    // 绝美光影女生人像
-    avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 2,
-    name: '沙滩漫步',
-    gender: 'female',
-    distance: '距你 3.2km',
-    tags: ['海边', '摄影', '周末放松'],
-    sign: '00后 · 双子座 · 自由职业',
-    // 海边唯美背影/人像
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 3,
-    name: 'Z-Warrior', // 你的Z战士这次变帅了！
-    gender: 'male',
-    distance: '距你 1.5km',
-    tags: ['运动搭子', '佛系修仙', '健身'],
-    sign: '每天八段锦，只要心态好一切都好。',
-    // 极具质感的风景/背影图
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 4,
-    name: '半夏微凉',
-    gender: 'female',
-    distance: '距你 5.0km',
-    tags: ['寻找饭搭子', '吃货'],
-    sign: '新开的那家椰子鸡咱们能吃吗？',
-    // 咖啡馆氛围感人像
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80'
-  }
-]
+const discoveryTitle = computed(() => discoveryMode.value === 'city' ? '同城精选' : '远方朋友')
+const discoveryGreetRemaining = computed(() => Math.max(0, discoveryGreetLimit - discoveryGreetCount.value))
+const discoveryHeroTitle = computed(() => discoveryMode.value === 'city'
+  ? '不刷人。\n只遇见同一座城。'
+  : '不刷人。\n也能遇见远方的人。'
+)
+const discoveryHeroDesc = computed(() => discoveryMode.value === 'city'
+  ? '克制展示，不暴露精确位置。想认识，再轻轻打一声招呼。'
+  : '不靠距离猎人，按真实资料慢慢遇见天南海北的朋友。'
+)
+const discoveryScopeText = computed(() => discoveryMode.value === 'city'
+  ? (cityDisplay.value || myCity.value || '先确认你的城市')
+  : '不按城市手动挑选'
+)
+const discoveryEmptyText = computed(() => discoveryMode.value === 'city'
+  ? '可能是城市还没选，或者同城用户太少。先把城市定下来，再回来看看。'
+  : '今天暂时没遇到合适的人。别急，朋友不是刷出来的。'
+)
+const discoveryFooterText = computed(() => discoveryMode.value === 'city'
+  ? '同城精选只按城市展示，不显示精确位置。别急着加很多人，慢慢认识就好。'
+  : '远方朋友不支持手动挑城市，避免被当成到处扫人的工具。'
+)
 
-const openRadar = async () => {
-  if (myCity.value) {
-    await saveMyCity(false)
+const getTodayText = () => {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
+const getDiscoveryGreetKey = (mode = discoveryMode.value) => {
+  return `discovery_greet_${myId}_${mode}_${getTodayText()}`
+}
+
+const readDiscoveryGreets = (mode = discoveryMode.value) => {
+  try {
+    return JSON.parse(localStorage.getItem(getDiscoveryGreetKey(mode)) || '[]')
+  } catch (e) {
+    return []
   }
+}
+
+const refreshDiscoveryGreetCount = (mode = discoveryMode.value) => {
+  discoveryGreetCount.value = readDiscoveryGreets(mode).length
+}
+
+const recordDiscoveryGreet = (targetId, mode = discoveryMode.value) => {
+  const greets = readDiscoveryGreets(mode)
+  const idText = String(targetId)
+  if (!greets.includes(idText)) {
+    greets.push(idText)
+    localStorage.setItem(getDiscoveryGreetKey(mode), JSON.stringify(greets))
+  }
+  refreshDiscoveryGreetCount(mode)
+}
+
+const mapCityPick = (user, mode = discoveryMode.value) => {
+  const rawCity = user.city || ''
+  const city = mode === 'city' ? (myCity.value || rawCity) : rawCity
+  const place = mode === 'city' ? (myCity.value || '同城') : (city || '远方')
+  const isCityMode = mode === 'city'
+  const tags = discoveryTagLabels(user.radarTags)
+  return {
+    id: user.userId,
+    name: user.nickname || '未命名朋友',
+    distance: place,
+    tags: tags.length ? tags.slice(0, 3) : (isCityMode ? ['同城', '可先打招呼', '不显示距离'] : ['远方', '慢慢认识', '不显示距离']),
+    sign: user.radarSign || (isCityMode ? `也在${place}，先从一句轻轻的问候开始。` : `${city ? `来自${city}，` : ''}也在认真生活，先从一句问候开始。`),
+    avatar: avatarOf(user, user.userId),
+    requested: false
+  }
+}
+
+const openDiscovery = async (mode = 'city') => {
+  discoveryMode.value = mode
+  refreshDiscoveryGreetCount(mode)
 
   emit('chat-active', true)
   showRadarModal.value = true
-  selectedPatient.value = null
+  isCityPicksLoading.value = true
+  foundPatients.value = []
+
+  if (mode === 'city') {
+    const cityReady = myCity.value || await detectAndSaveLocation()
+    if (!cityReady) {
+      isCityPicksLoading.value = false
+      return
+    }
+    if (myCity.value) {
+      await saveMyCity(false)
+    }
+  }
+
   try {
-    const res = await http.get('/users/nearby')
-    if (res.status === 200 && res.data && res.data.length > 0) {
-      foundPatients.value = res.data.map(u => ({
-        id: u.userId,
-        name: u.nickname || '神秘特工',
-        gender: u.gender === 2 ? 'female' : 'male',
-        distance: u.city || myCity.value || '同城',
-        tags: ['同城战友', u.city || myCity.value || '附近'],
-        sign: '在 ' + (u.city || myCity.value || '附近') + ' 等你来打招呼',
-        avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.userId}`
-      }))
-    } else {
-      foundPatients.value = mockPatients.map(p => ({
-        ...p,
-        distance: myCity.value || p.distance
-      }))
+    const res = await http.get(mode === 'city' ? '/users/nearby' : '/users/distant')
+    if (res.status === 200 && Array.isArray(res.data)) {
+      foundPatients.value = res.data.slice(0, 5).map(user => mapCityPick(user, mode))
     }
   } catch (e) {
-    console.error('拉取同城失败', e)
-    foundPatients.value = mockPatients.map(p => ({
-      ...p,
-      distance: myCity.value || p.distance
-    }))
+    console.error('拉取朋友精选失败', e)
+    foundPatients.value = []
+  } finally {
+    isCityPicksLoading.value = false
   }
 }
 
-const foundPatients = ref([
-  {
-    id: 1,
-    name: '特工 001',
-    distance: '800m',
-    tags: ['造口战神', '经验丰富'],
-    sign: '久病成医，内江市中医院熟人，有事问我。',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=001',
-    // 背景用一张极客暗黑风的风景图/纹理
-    cover: 'https://picsum.photos/id/1015/400/600'
-  },
-  {
-    id: 2,
-    name: 'ANXIOUS_ROOKIE',
-    distance: '3.2km',
-    tags: ['情绪树洞', '求医问药'],
-    sign: '昨天刚拿到肠镜报告，天塌了，有病友能聊聊吗？',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=002',
-    cover: 'https://picsum.photos/id/1043/400/600'
-  },
-  {
-    id: 3,
-    name: '内江干饭人',
-    distance: '1.5km',
-    tags: ['寻找饭搭子', '钢铁之躯'],
-    sign: '新开的那家椰子鸡咱们能吃吗？求组队尝试！',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=003',
-    cover: 'https://picsum.photos/id/1080/400/600'
-  },
-  {
-    id: 4,
-    name: 'Z-Warrior',
-    distance: '5.0km',
-    tags: ['运动搭子', '佛系修仙'],
-    sign: '每天八段锦，只要心态好，一切都会好。',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=004',
-    cover: 'https://picsum.photos/id/1055/400/600'
+const openRadar = () => openDiscovery('city')
+
+const closeCityPicks = () => {
+  showRadarModal.value = false
+  emit('chat-active', false)
+}
+
+const skipCityPick = (targetId) => {
+  foundPatients.value = foundPatients.value.filter(p => p.id !== targetId)
+}
+
+const greetCityPick = async (pick) => {
+  if (!pick || pick.requested) return
+  if (discoveryGreetRemaining.value <= 0) {
+    alert('今天先认识到这里，慢一点更安全。')
+    return
   }
-])
+  const sent = await sendFriendRequest(pick.id, { successMessage: '已打招呼' })
+  if (sent) {
+    pick.requested = true
+    recordDiscoveryGreet(pick.id)
+  }
+}
 
 const emojis = ['😀', '😂', '🤣', '😊', '😍', '😒', '😘', '😁', '😭', '😎', '😢', '😡', '👍', '🙏', '🎉', '❤️', '🔥', '💩', '👻', '💊']
 
@@ -1836,7 +2268,7 @@ const currentTab = ref('status')
 const myCard = ref({
   name: 'Xuan',
   sign: '缓解期 · 每天努力多吃一勺白粥',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Xuan',
+  avatar: avatarOf('', 'Xuan'),
   cover: 'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1200&q=80'
 })
 
@@ -1856,7 +2288,7 @@ const mapMoment = (m) => ({
   userId: m.userId,
   user: {
     name: m.nickname,
-    avatar: m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`,
+    avatar: avatarOf(m, m.userId),
     stage: '',
     online: false
   },
@@ -1876,6 +2308,28 @@ const mapMoment = (m) => ({
   commentInput: '',
   showCommentBox: false
 })
+
+const momentVisibilityMeta = (visibility = 'public') => {
+  if (visibility === 'private') {
+    return {
+      label: '仅自己',
+      icon: 'ri-lock-2-fill',
+      class: 'text-slate-500 bg-slate-100'
+    }
+  }
+  if (visibility === 'comrade') {
+    return {
+      label: '仅好友',
+      icon: 'ri-user-heart-fill',
+      class: 'text-blue-600 bg-blue-50'
+    }
+  }
+  return {
+    label: '好友和小队',
+    icon: 'ri-team-fill',
+    class: 'text-emerald-600 bg-emerald-50'
+  }
+}
 
 const loadMoments = async () => {
   try {
@@ -1924,14 +2378,14 @@ const MAX_MEDIA = 9
 
 // 可见范围三档
 const visibilityOptions = [
-  { value: 'public', label: '公开可见', desc: '所有病友都能看到', icon: 'ri-earth-line' },
-  { value: 'comrade', label: '仅战友可见', desc: '只有已认证的战友能看', icon: 'ri-shield-check-line' },
+  { value: 'public', label: '好友和小队可见', desc: '好友能刷到，同队成员进主页也能看', icon: 'ri-team-line' },
+  { value: 'comrade', label: '仅好友可见', desc: '只给好友看，同队陌生人看不到', icon: 'ri-user-heart-line' },
   { value: 'private', label: '仅自己可见', desc: '只有你自己能看到', icon: 'ri-lock-2-line' }
 ]
 const showVisibilitySheet = ref(false)
 const visibilityLabel = computed(() => {
   const v = visibilityOptions.find(o => o.value === composerVisibility.value)
-  return v ? v.label : '公开可见'
+  return v ? v.label : '好友和小队可见'
 })
 const pickVisibility = (v) => {
   composerVisibility.value = v
@@ -1940,6 +2394,37 @@ const pickVisibility = (v) => {
 
 // 按扩展名判断是不是视频
 const isVideo = (url) => /\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(url || '')
+
+const imageViewer = ref({
+  show: false,
+  images: [],
+  index: 0
+})
+
+const openImageViewer = (images, index = 0) => {
+  const onlyImages = (images || []).filter(item => !isVideo(item))
+  if (!onlyImages.length) return
+  const target = images?.[index]
+  imageViewer.value = {
+    show: true,
+    images: onlyImages,
+    index: Math.max(0, onlyImages.findIndex(item => item === target))
+  }
+}
+
+const closeImageViewer = () => {
+  imageViewer.value.show = false
+}
+
+const nextImage = () => {
+  if (!imageViewer.value.images.length) return
+  imageViewer.value.index = (imageViewer.value.index + 1) % imageViewer.value.images.length
+}
+
+const prevImage = () => {
+  if (!imageViewer.value.images.length) return
+  imageViewer.value.index = (imageViewer.value.index - 1 + imageViewer.value.images.length) % imageViewer.value.images.length
+}
 
 const openComposer = () => {
   showComposer.value = true
@@ -1955,6 +2440,7 @@ const showLocationSheet = ref(false)
 const locationLoading = ref(false)
 const locationKeyword = ref('')
 const poiResults = ref([])
+const TENCENT_MAP_KEY = 'PBBBZ-R7ZKM-W5X6A-6PYR4-Z3XB6-PFFGM'
 
 const openLocationSheet = () => {
   showLocationSheet.value = true
@@ -1973,7 +2459,6 @@ const searchNearbyPoi = () => {
     (position) => {
       const lat = position.coords.latitude
       const lng = position.coords.longitude
-      const tencentKey = 'PBBBZ-R7ZKM-W5X6A-6PYR4-Z3XB6-PFFGM'
       const callbackName = 'jsonp_poi_' + Date.now()
       window[callbackName] = (res) => {
         if (res.status === 0) {
@@ -1986,7 +2471,7 @@ const searchNearbyPoi = () => {
       }
       const keyword = locationKeyword.value ? encodeURIComponent(locationKeyword.value) : encodeURIComponent('附近')
       const script = document.createElement('script')
-      script.src = `https://apis.map.qq.com/ws/place/v1/search?keyword=${keyword}&boundary=nearby(${lat},${lng},2000)&key=${tencentKey}&output=jsonp&callback=${callbackName}`
+      script.src = `https://apis.map.qq.com/ws/place/v1/search?keyword=${keyword}&boundary=nearby(${lat},${lng},2000)&key=${TENCENT_MAP_KEY}&output=jsonp&callback=${callbackName}`
       document.body.appendChild(script)
       script.onload = () => document.body.removeChild(script)
       script.onerror = () => {
@@ -2112,6 +2597,7 @@ let socket = null
 // 联络人状态
 const friendChats = ref([])
 const groupChats = ref([])
+const showQuickCreateMenu = ref(false)
 const chatSearchKeyword = ref('')
 const chatHistorySearchResults = ref([])
 const isChatHistorySearching = ref(false)
@@ -2140,6 +2626,8 @@ const filteredChatList = computed(() => {
 })
 const pendingRequests = ref([])
 const friendSearchKeyword = ref('')
+const addFriendCardRef = ref(null)
+const friendSearchInputRef = ref(null)
 const searchResults = ref([])
 const isSearching = ref(false)
 const searchDone = ref(false)
@@ -2160,11 +2648,7 @@ const hydrateChatSearchResult = (result) => {
     type: result.type,
     id,
     name: result.name || existing?.name || (result.type === 'group' ? '未知小队' : '神秘战友'),
-    avatar: result.avatar || existing?.avatar || (
-      result.type === 'group'
-        ? `https://api.dicebear.com/7.x/identicon/svg?seed=${id}`
-        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`
-    ),
+    avatar: avatarOf(result.avatar || existing?.avatar, id),
     lastMsg: result.lastMsg || existing?.lastMsg,
     time: result.lastTime || existing?.time || '',
     memberCount: existing?.memberCount || result.memberCount || 0,
@@ -2226,10 +2710,24 @@ const copyMyId = async () => {
   const idText = String(myId)
   try {
     await navigator.clipboard.writeText(idText)
-    alert('已复制你的 ID:' + idText + '，发给好友就能搜到你啦')
+    alert('已复制你的编号：' + idText + '，发给好友就能搜到你啦')
   } catch (e) {
-    alert('你的 ID 是:' + idText)
+    alert('你的编号是：' + idText)
   }
+}
+
+const openAddFriendShortcut = async () => {
+  showQuickCreateMenu.value = false
+  currentTab.value = 'contacts'
+  await nextTick()
+  addFriendCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  setTimeout(() => friendSearchInputRef.value?.focus(), 260)
+}
+
+const openComposerFromQuickMenu = () => {
+  showQuickCreateMenu.value = false
+  currentTab.value = 'moments'
+  openComposer()
 }
 
 const searchUsers = async () => {
@@ -2264,7 +2762,7 @@ const loadFriends = async () => {
           id,
           name: friendRemarks.value[String(id)] || rawName,
           rawName,
-          avatar: friend.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + id,
+          avatar: avatarOf(friend.avatar, id),
           role: '小队成员',
           lastMsg: previewMessage(friend.lastMsg),
           time: friend.lastTime || '',
@@ -2287,7 +2785,7 @@ const loadGroups = async () => {
         type: 'group',
         id: g.id,
         name: g.name,
-        avatar: g.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + g.id,
+        avatar: avatarOf(g.avatar, 'group-' + g.id),
         notice: g.notice || '',
         ownerId: g.ownerId,
         memberCount: g.memberCount || 0,
@@ -2522,6 +3020,7 @@ const userProfileLoading = ref(false)
 const userProfileData = ref(null)
 const profileMoments = ref([])
 const profileMomentsLoading = ref(false)
+const showProfileMomentsPanel = ref(false)
 const loadFriendRemarks = () => {
   try {
     return JSON.parse(localStorage.getItem('friend_remarks') || '{}')
@@ -2549,6 +3048,7 @@ const saveFriendRemarks = () => {
 const openUserProfile = async (userId) => {
   if (!userId) return
   showUserProfile.value = true
+  showProfileMomentsPanel.value = false
   userProfileLoading.value = true
   profileMomentsLoading.value = true
   userProfileData.value = null
@@ -2574,9 +3074,14 @@ const openUserProfile = async (userId) => {
   }
 }
 
+const openProfileMomentsPanel = () => {
+  if (profileMomentsLoading.value) return
+  showProfileMomentsPanel.value = true
+}
+
 const editProfileRemark = () => {
   if (!canRemarkProfile.value || !profileUser.value) return
-  const nextRemark = prompt('给 TA 设置一个你看得懂的备注', profileRemark.value || profileUser.value.nickname || '')
+  const nextRemark = prompt('备注', profileRemark.value || profileUser.value.nickname || '')
   if (nextRemark === null) return
   const key = String(profileUser.value.userId)
   const clean = nextRemark.trim()
@@ -2622,7 +3127,7 @@ const startChatFromProfile = () => {
     id: profileUser.value.userId,
     name: profileDisplayName.value,
     rawName: profileUser.value.nickname || '神秘战友',
-    avatar: profileUser.value.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + profileUser.value.userId,
+    avatar: avatarOf(profileUser.value, profileUser.value.userId),
     lastMsg: '点击发起密聊...',
     time: '',
     unread: null
@@ -2717,18 +3222,21 @@ const loadPendingRequests = async () => {
   }
 }
 
-const sendFriendRequest = async (targetId) => {
-  if (!targetId) return
+const sendFriendRequest = async (targetId, options = {}) => {
+  if (!targetId) return false
   try {
     // 对应后端: @RequestBody Friendship request -> { addresseeId: xx }
     const res = await http.post('/friend/request', { addresseeId: Number(targetId) })
     if (res.status === 200) {
-      alert("申请信号已发送！")
+      alert(options.successMessage || "好友申请已发送")
+      return true
     } else {
       alert(res.message || res.msg || "发送失败")
+      return false
     }
   } catch (error) {
-    alert("请求网络异常")
+    alert(error?.response?.data?.message || "请求网络异常")
+    return false
   }
 }
 
@@ -2738,7 +3246,7 @@ const acceptRequest = async (id) => {
     // 对应你的后端: /api/friend/accept/{id}
     const res = await http.post(`/friend/accept/${id}`)
     if (res.status === 200) {
-      alert("已同意接入网络！")
+      alert("已成为伙伴！")
       loadPendingRequests() // 刷新申请列表
       loadFriends() // 刷新好友列表
     }
@@ -2776,7 +3284,11 @@ const locationStatus = ref('')
 const lastLocation = ref(JSON.parse(localStorage.getItem('lastLocation') || 'null'))
 
 const areaDisplay = computed(() => {
-  return [myProvince.value, myCity.value, myDistrict.value].filter(Boolean).join(' / ')
+  return [myProvince.value, myCity.value, myDistrict.value].filter(Boolean).join(' · ')
+})
+
+const cityDisplay = computed(() => {
+  return [myProvince.value, myCity.value].filter(Boolean).join(' · ')
 })
 
 // 根据区县编码反查省/市，兼容只存了 city 字段的旧账号
@@ -2801,6 +3313,18 @@ const lookupAreaByCity = (cityName) => {
 const loadMyCity = async () => {
   try {
     const res = await http.get('/center/info')
+    if (res.status === 200 && res.data) {
+      if (typeof res.data.discoveryEnabled === 'boolean') {
+        discoveryEnabled.value = res.data.discoveryEnabled
+      }
+      if (res.data.radarSign) {
+        broadcastSign.value = res.data.radarSign
+      }
+      const savedTags = normalizeDiscoveryTags(res.data.radarTags || res.data.radarTagList)
+      if (savedTags.length) {
+        selectedTags.value = savedTags.slice(0, 3)
+      }
+    }
     if (res.status === 200 && res.data?.city) {
       const matched = lookupAreaByCity(res.data.city)
       if (matched) {
@@ -2850,7 +3374,7 @@ const saveMyCity = async (showTip = true) => {
       district: myDistrict.value
     })
     if (showTip && (res.status === 200 || res.code === 200)) {
-      locationStatus.value = `已把你的同城雷达切到「${areaDisplay.value}」，现在可以匹配同城好友。`
+      locationStatus.value = `同城精选已切到「${cityDisplay.value || myCity.value}」。`
     }
   } catch (e) {
     console.error('保存城市失败', e)
@@ -2860,14 +3384,71 @@ const saveMyCity = async (showTip = true) => {
   }
 }
 
-const detectAndSaveLocation = () => {
+const reverseGeocodeLocation = (latitude, longitude) => new Promise((resolve, reject) => {
+  const callbackName = 'jsonp_city_' + Date.now()
+  const script = document.createElement('script')
+  const cleanup = () => {
+    delete window[callbackName]
+    if (script.parentNode) {
+      script.parentNode.removeChild(script)
+    }
+  }
+
+  window[callbackName] = (res) => {
+    cleanup()
+    if (res.status === 0 && res.result?.address_component) {
+      resolve(res.result.address_component)
+    } else {
+      reject(new Error(res.message || '城市识别失败'))
+    }
+  }
+
+  script.src = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${TENCENT_MAP_KEY}&get_poi=0&output=jsonp&callback=${callbackName}`
+  script.onerror = () => {
+    cleanup()
+    reject(new Error('城市识别失败'))
+  }
+  document.body.appendChild(script)
+})
+
+const applyLocatedCity = (component) => {
+  if (!component) return false
+  const province = component.province || ''
+  let city = component.city || ''
+  const district = component.district || ''
+
+  if (!city || city === '市辖区' || city === '县') {
+    city = province
+  }
+  if (!city) return false
+
+  myProvince.value = province
+  myCity.value = city
+  myDistrict.value = district
+  areaCode.value = ''
+  localStorage.setItem('myProvince', myProvince.value)
+  localStorage.setItem('myCity', myCity.value)
+  localStorage.setItem('myDistrict', myDistrict.value)
+  localStorage.setItem('myAreaCode', '')
+  return true
+}
+
+const detectAndSaveLocation = () => new Promise((resolve) => {
   if (!navigator.geolocation) {
-    locationStatus.value = '当前设备不支持浏览器定位，请手动选择城市。'
+    locationStatus.value = myCity.value
+      ? `无法重新定位，先按已保存城市「${cityDisplay.value || myCity.value}」匹配。`
+      : '当前设备不支持定位，暂时无法使用同城精选。'
+    resolve(!!myCity.value)
+    return
+  }
+
+  if (isLocating.value) {
+    resolve(!!myCity.value)
     return
   }
 
   isLocating.value = true
-  locationStatus.value = '正在请求定位权限...'
+  locationStatus.value = '正在确认你所在的城市...'
 
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
@@ -2875,8 +3456,27 @@ const detectAndSaveLocation = () => {
       lastLocation.value = { latitude, longitude }
       localStorage.setItem('lastLocation', JSON.stringify(lastLocation.value))
 
-      if (myCity.value) {
+      try {
+        const cityComponent = await reverseGeocodeLocation(latitude, longitude)
+        const applied = applyLocatedCity(cityComponent)
+        if (!applied) {
+          locationStatus.value = myCity.value
+            ? `城市识别暂时失败，先按已保存城市「${cityDisplay.value || myCity.value}」匹配。`
+            : '定位成功，但没有识别到城市，稍后再试一次。'
+          isLocating.value = false
+          resolve(!!myCity.value)
+          return
+        }
+
         await saveMyCity(false)
+      } catch (e) {
+        console.warn('城市识别暂时不可用', e?.message || e)
+        locationStatus.value = myCity.value
+          ? `城市识别暂时失败，先按已保存城市「${cityDisplay.value || myCity.value}」匹配。`
+          : '定位成功，但城市识别失败，稍后再试一次。'
+        isLocating.value = false
+        resolve(!!myCity.value)
+        return
       }
 
       try {
@@ -2886,20 +3486,24 @@ const detectAndSaveLocation = () => {
           city: myCity.value || ''
         })
       } catch (e) {
-        console.error('同步定位到雷达失败', e)
+        console.error('同步定位失败', e)
       }
 
-      locationStatus.value = `定位已准备好：${latitude.toFixed(5)}, ${longitude.toFixed(5)}。聊天里点「位置」可发送地图坐标；同城匹配按你选择的城市「${myCity.value || '未选择'}」筛选。`
+      locationStatus.value = `已通过定位确认：${cityDisplay.value || myCity.value}。同城精选按城市匹配，不显示区县和精确距离。`
       isLocating.value = false
+      resolve(true)
     },
     (err) => {
       console.error('定位失败', err)
-      locationStatus.value = '定位失败或未授权，请手动选择城市后匹配同城好友。'
+      locationStatus.value = myCity.value
+        ? `定位失败或未授权，先按已保存城市「${cityDisplay.value || myCity.value}」匹配。`
+        : '定位失败或未授权，暂时无法查看同城精选。'
       isLocating.value = false
+      resolve(!!myCity.value)
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
   )
-}
+})
 
 const handlePlusItem = async (item) => {
   showPlusMenu.value = false
@@ -3125,6 +3729,53 @@ const scrollToBottom = () => {
   scrollbar-width: none;
 }
 
+.city-picks-page {
+  background:
+    radial-gradient(circle at 76% 10%, rgba(251, 191, 36, 0.18), transparent 9rem),
+    radial-gradient(circle at 12% 20%, rgba(125, 211, 252, 0.2), transparent 10rem),
+    linear-gradient(180deg, #f8f4ec 0%, #f4efe6 46%, #fbf9f5 100%);
+}
+
+.city-picks-orb {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(18px);
+  opacity: 0.54;
+  transform: translateZ(0);
+}
+
+.city-picks-orb-a {
+  right: -40px;
+  top: 18%;
+  width: 140px;
+  height: 140px;
+  background: rgba(251, 191, 36, 0.18);
+}
+
+.city-picks-orb-b {
+  left: -52px;
+  bottom: 18%;
+  width: 170px;
+  height: 170px;
+  background: rgba(56, 189, 248, 0.13);
+}
+
+.city-pick-card {
+  animation: city-pick-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes city-pick-rise {
+  from {
+    transform: translate3d(0, 14px, 0) scale(0.985);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
 @keyframes disintegrate {
   0% {
     transform: translate(0, 0) scale(1) rotate(0deg);
@@ -3281,6 +3932,85 @@ const scrollToBottom = () => {
   font-size: 24px;
   filter: drop-shadow(0 10px 18px rgba(14, 165, 233, 0.22));
   transform: rotate(-7deg);
+}
+
+.paper-history-hero {
+  background:
+    radial-gradient(circle at 92% 12%, rgba(251, 191, 36, 0.18), transparent 5rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(14, 165, 233, 0.07));
+  box-shadow: 0 20px 54px -34px rgba(0, 0, 0, 0.9);
+}
+
+.paper-history-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(240, 249, 255, 0.92);
+  box-shadow: 0 18px 46px -34px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 16px;
+}
+
+.paper-history-card > p {
+  color: rgba(240, 249, 255, 0.92) !important;
+}
+
+.paper-history-empty {
+  border: 1px dashed rgba(186, 230, 253, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(224, 242, 254, 0.58);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  padding: 18px;
+}
+
+.paper-history-stat {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.paper-history-stat b {
+  display: block;
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.paper-history-stat span {
+  display: block;
+  color: rgba(224, 242, 254, 0.44);
+  font-size: 10px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.paper-history-note {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.28);
+  padding: 10px 12px;
+}
+
+.paper-history-note span {
+  display: block;
+  color: rgba(186, 230, 253, 0.5);
+  font-size: 10px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.paper-history-note p {
+  margin: 0;
+  color: rgba(240, 249, 255, 0.86);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
 }
 
 @keyframes paper-stars-drift {

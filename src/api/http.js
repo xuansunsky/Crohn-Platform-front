@@ -1,5 +1,6 @@
 import axios from 'axios'
 import router from '@/router'
+import { clearAuthSession, getValidToken, isAuthExpiredError } from '@/utils/authToken'
 
 const isLocalNetworkHost = (hostname) => {
   if (!hostname) return false
@@ -37,10 +38,14 @@ const service = axios.create({
 
 service.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token')
+    const token = getValidToken()
+    const publicPaths = ['/login', '/login2', '/register']
+    const currentPath = router.currentRoute.value.path
 
     if (token) {
       config.headers['Authorization'] = 'Bearer ' + token
+    } else if (!publicPaths.includes(currentPath)) {
+      router.replace('/login2')
     }
     return config
   },
@@ -54,9 +59,12 @@ service.interceptors.response.use(
     return response.data
   },
   error => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token')
-      router.replace('/login2')
+    if (isAuthExpiredError(error)) {
+      clearAuthSession()
+      const publicPaths = ['/login', '/login2', '/register']
+      if (!publicPaths.includes(router.currentRoute.value.path)) {
+        router.replace('/login2')
+      }
     }
     return Promise.reject(error)
   }

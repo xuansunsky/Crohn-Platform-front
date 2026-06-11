@@ -117,7 +117,7 @@
               <template v-if="m.reactions > 0">
                 <span class="text-slate-200">·</span>
                 <div class="flex -space-x-1.5">
-                  <img v-for="(r, i) in (m.reactors || []).slice(0, 3)" :key="i" :src="r.avatar || avatarOf({ nickname: r.nickname, userId: i })"
+                  <img v-for="(r, i) in (m.reactors || []).slice(0, 3)" :key="i" :src="avatarOf(r, i)"
                        :title="r.nickname" class="w-4 h-4 rounded-full object-cover border border-white bg-slate-100">
                 </div>
                 <p class="text-[10px] font-bold text-rose-400 truncate">
@@ -405,6 +405,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import http from '@/api/http'
+import { avatarOf } from '@/utils/avatarPool'
 
 const myId = Number(localStorage.getItem('userId')) || 0
 
@@ -511,8 +512,6 @@ const zoneCounts = computed(() => {
   if (myStatus.value.zone) c[myStatus.value.zone]++
   return c
 })
-
-const avatarOf = (m) => m.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (m.nickname || m.userId)
 
 const relTime = (t) => {
   const ts = typeof t === 'number' ? t : new Date(t).getTime()

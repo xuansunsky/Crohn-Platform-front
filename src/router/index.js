@@ -6,6 +6,7 @@ import ExperienceCard from '@/components/ExperienceCard.vue'
 import InsuranceMap from '@/components/tabs/PolicyMapTab.vue'
 import SocialTab from '@/components/tabs/SocialTab.vue'
 import LiuShi666 from '@/components/ui/LiuShi666.vue'
+import { getValidToken } from '@/utils/authToken'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -29,7 +30,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
+  const token = getValidToken()
   const roleId = localStorage.getItem('roleId')
   const publicPaths = ['/login', '/login2', '/register']
 

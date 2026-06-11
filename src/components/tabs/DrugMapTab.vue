@@ -225,7 +225,7 @@
               <div v-for="rev in selectedDrug.reviews" :key="rev.id" class="bg-white p-4 rounded-2xl border border-stone-100">
                 <div class="flex justify-between items-center mb-2">
                   <div class="flex items-center gap-2">
-                    <img :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${rev.user}`" class="w-7 h-7 rounded-full bg-stone-50 border border-stone-100 shrink-0">
+                    <img :src="avatarOf('', rev.user)" class="w-7 h-7 rounded-full bg-stone-50 border border-stone-100 shrink-0">
                     <span class="text-[12.5px] font-black text-slate-900 tracking-tight">{{ rev.user }}</span>
                   </div>
                   <span class="text-[10.5px] text-slate-400 font-medium">{{ rev.date }}</span>
@@ -404,6 +404,7 @@
 <script setup>
 import { computed, ref, reactive, onMounted } from 'vue'
 import http from '@/api/http'
+import { avatarOf } from '@/utils/avatarPool'
 
 const emit = defineEmits(['change-tab'])
 

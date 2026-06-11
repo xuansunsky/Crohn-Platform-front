@@ -94,18 +94,24 @@
           <h3 class="text-[18px] font-black tracking-tight text-slate-900">情报库</h3>
           <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ filteredList.length }} 条实测情报 · 持续更新</p>
         </div>
-        <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1">
-          <button
-              v-for="f in filters"
-              :key="f.id"
-              @click="activeFilter = f.id"
-              :class="[
-              'px-3 py-1.5 rounded-full text-[11px] font-bold transition-all',
-              activeFilter === f.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-            ]"
-          >
-            {{ f.label }}
+        <div class="flex items-center gap-2">
+          <button @click="openMyReports" class="px-3 py-2 rounded-full bg-slate-900 text-white text-[11px] font-black shadow-sm active:scale-95 transition-all flex items-center gap-1">
+            <i class="ri-file-list-3-line"></i>
+            我的战报
           </button>
+          <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1">
+            <button
+                v-for="f in filters"
+                :key="f.id"
+                @click="activeFilter = f.id"
+                :class="[
+                'px-3 py-1.5 rounded-full text-[11px] font-bold transition-all',
+                activeFilter === f.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+              ]"
+            >
+              {{ f.label }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -189,7 +195,7 @@
 
     <!-- 浮动新增按钮 -->
     <button
-        @click="showUploadModal = true"
+        @click="openUploadModal"
         class="fixed bottom-[78px] right-5 z-30 w-14 h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-[0_12px_28px_-8px_rgba(15,23,42,0.5)] flex items-center justify-center active:scale-90 transition-all group"
     >
       <i class="ri-add-line text-2xl group-hover:rotate-90 transition-transform duration-300"></i>
@@ -228,7 +234,7 @@
                 :class="currentFood.type === 'danger' ? 'bg-rose-500/30 border-rose-400/50 text-rose-100' : (currentFood.type === 'safe' ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-100' : 'bg-amber-500/30 border-amber-400/50 text-amber-100')"
             >
               <i :class="currentFood.type === 'danger' ? 'ri-fire-fill' : (currentFood.type === 'safe' ? 'ri-leaf-fill' : 'ri-error-warning-fill')"></i>
-              {{ currentFood.type === 'danger' ? '高危雷区' : (currentFood.type === 'safe' ? '安全白名单' : '薛定谔的屎') }}
+              {{ currentFood.type === 'danger' ? '高危雷区' : (currentFood.type === 'safe' ? '安全白名单' : '谨慎试探') }}
             </span>
             <p class="text-[11px] font-bold text-white/70 tracking-wide">{{ currentFood.brand }}</p>
             <h3 class="text-[26px] font-black tracking-tight leading-tight">{{ currentFood.product }}</h3>
@@ -267,7 +273,7 @@
                   <div
                       class="h-full rounded-full transition-all duration-700"
                       :class="level.bgClass"
-                      :style="`width: ${ (getLevelCount(level.val) / currentFood.voteCount) * 100 || 0 }%`"
+                      :style="`width: ${getLevelPercent(level.val)}%`"
                   ></div>
                 </div>
                 <span class="w-7 text-slate-900 font-black text-right">{{ getLevelCount(level.val) }}</span>
@@ -289,12 +295,16 @@
               <div
                   v-for="report in currentFoodReports"
                   :key="report.id"
-                  class="bg-white p-4 rounded-[20px] border border-slate-100 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)] hover:shadow-md transition-all"
+                  @click="report.isMine && editMyReport(report)"
+                  :class="[
+                    'bg-white p-4 rounded-[20px] border border-slate-100 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)] hover:shadow-md transition-all',
+                    report.isMine ? 'cursor-pointer active:scale-[0.995]' : ''
+                  ]"
               >
-                <div class="flex justify-between items-start mb-2">
+                <div class="flex justify-between items-start mb-2 gap-3">
                   <div class="flex items-center gap-2.5">
                     <img
-                        :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${report.userName}`"
+                        :src="report.avatar"
                         class="w-9 h-9 rounded-full bg-slate-50 shrink-0 border border-white shadow-sm"
                     >
                     <div class="flex flex-col gap-0.5">
@@ -312,12 +322,86 @@
                       </span>
                     </div>
                   </div>
-                  <span class="text-[10px] font-medium text-slate-400">{{ report.time }}</span>
+                  <div class="shrink-0 flex flex-col items-end gap-1.5">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[10px] font-medium text-slate-400">{{ formatReportTime(report.time) }}</span>
+                      <button
+                          v-if="report.isMine"
+                          @click.stop="deleteMyReport(report)"
+                          class="w-7 h-7 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center active:scale-90 transition-all"
+                          aria-label="删除战报"
+                      >
+                        <i class="ri-delete-bin-6-line text-[13px]"></i>
+                      </button>
+                    </div>
+                    <span v-if="report.isMine" class="text-[9px] font-bold text-slate-300">轻点编辑</span>
+                  </div>
                 </div>
 
-                <p class="text-[12px] text-slate-600 leading-relaxed pl-[44px]">
+                <p class="text-[12px] text-slate-600 leading-relaxed pl-[44px] whitespace-pre-wrap">
                   {{ report.content }}
                 </p>
+
+                <div class="pl-[44px] mt-3">
+                  <button
+                      @click.stop="toggleReportComments(report)"
+                      class="inline-flex items-center gap-1.5 text-[11px] font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full active:scale-95 transition-all"
+                  >
+                    <i class="ri-chat-3-fill"></i>
+                    {{ report.commentsVisible ? '收起评论区' : (report.commentCount > 0 ? `评论区 ${report.commentCount}` : '打开评论区') }}
+                  </button>
+
+                  <div v-if="report.commentsVisible" @click.stop class="mt-3 rounded-2xl bg-slate-50 border border-slate-100 p-3 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[11px] font-black text-slate-700">战报评论</span>
+                      <span class="text-[10px] font-bold text-slate-400">{{ report.commentCount || 0 }} 条</span>
+                    </div>
+
+                    <div v-if="report.commentsLoading" class="text-[12px] text-slate-400 font-bold py-2">评论加载中…</div>
+
+                    <div v-else-if="report.comments.length" class="space-y-2.5">
+                      <div v-for="comment in report.comments" :key="comment.id || comment.localId" class="flex gap-2">
+                        <img :src="avatarOf(comment.userAvatar, comment.userName || comment.userId || comment.id)" class="w-7 h-7 rounded-full bg-white border border-white shadow-sm shrink-0">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-black text-slate-700 truncate">{{ displayText(comment.userName, '匿名病友') }}</span>
+                            <div class="shrink-0 flex items-center gap-1.5">
+                              <span class="text-[9px] font-bold text-slate-400">{{ formatReportTime(comment.createTime) }}</span>
+                              <button
+                                  v-if="comment.isMine"
+                                  @click.stop="deleteReportComment(report, comment)"
+                                  class="w-5 h-5 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center active:scale-90 transition-all"
+                                  aria-label="删除评论"
+                              >
+                                <i class="ri-delete-bin-6-line text-[12px]"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <p class="text-[11.5px] text-slate-600 leading-relaxed mt-0.5 whitespace-pre-wrap">{{ comment.content }}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p v-else class="text-[12px] text-slate-400 font-bold py-1">还没有评论，轻轻说一句。</p>
+
+                    <div class="flex gap-2 pt-1">
+                      <input
+                          v-model="report.commentInput"
+                          type="text"
+                          placeholder="写一句真实感受…"
+                          class="flex-1 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[12px] outline-none focus:border-blue-200"
+                          @keyup.enter="submitReportComment(report)"
+                      >
+                      <button
+                          @click="submitReportComment(report)"
+                          :disabled="!report.commentInput || !report.commentInput.trim() || report.commentSubmitting"
+                          class="px-3 rounded-xl bg-slate-900 text-white text-[11px] font-black disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 transition-all"
+                      >
+                        发送
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div
@@ -344,7 +428,7 @@
 
     <!-- 上传 Modal -->
     <div v-if="showUploadModal" class="fixed inset-0 z-[120] flex items-end sm:items-center justify-center">
-      <div @click="showUploadModal = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+      <div @click="closeUploadModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
 
       <div class="bg-white w-full sm:w-[500px] sm:rounded-[32px] rounded-t-[32px] relative z-10 animate-slide-up shadow-2xl max-h-[92vh] flex flex-col overflow-hidden">
 
@@ -353,9 +437,9 @@
         <header class="shrink-0 flex justify-between items-center px-6 pt-7 pb-4 border-b border-slate-100">
           <div>
             <div class="text-[10px] font-black text-blue-600 tracking-[0.18em] mb-1">新的实测</div>
-            <h3 class="text-[20px] font-black text-slate-900 tracking-tight">发布实测情报</h3>
+            <h3 class="text-[20px] font-black text-slate-900 tracking-tight">{{ editingReportId ? '编辑实测情报' : '发布实测情报' }}</h3>
           </div>
-          <button @click="showUploadModal = false" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center active:scale-90 transition-all">
+          <button @click="closeUploadModal" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center active:scale-90 transition-all">
             <i class="ri-close-line text-lg"></i>
           </button>
         </header>
@@ -365,17 +449,45 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">品牌/餐厅</label>
-              <input v-model="formData.brand" type="text" placeholder="肯德基" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3 text-[13.5px] font-medium outline-none focus:bg-white focus:border-slate-900 transition-all">
+              <input v-model="formData.brand" :disabled="!!editingReportId" type="text" placeholder="肯德基" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3 text-[13.5px] font-medium outline-none focus:bg-white focus:border-slate-900 disabled:text-slate-400 disabled:bg-slate-100 transition-all">
             </div>
             <div>
               <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">食物单品</label>
-              <input v-model="formData.product" type="text" placeholder="吮指原味鸡" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3 text-[13.5px] font-medium outline-none focus:bg-white focus:border-slate-900 transition-all">
+              <input v-model="formData.product" :disabled="!!editingReportId" type="text" placeholder="吮指原味鸡" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3 text-[13.5px] font-medium outline-none focus:bg-white focus:border-slate-900 disabled:text-slate-400 disabled:bg-slate-100 transition-all">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">消费门店 · 周边美食扫描</label>
+            <div class="relative">
+              <div class="flex gap-2 relative">
+                <i class="ri-map-pin-2-line absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+                <input v-model="formData.location" type="text" placeholder="点击右侧扫描，或手动输入..." class="flex-1 bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-3 py-3 text-[13px] outline-none focus:bg-white focus:border-slate-900 transition-all">
+                <button @click="fetchNearby" :disabled="isLocating" class="bg-slate-900 hover:bg-slate-800 text-white px-4 rounded-xl text-[11.5px] font-black active:scale-95 transition-all shrink-0 flex items-center gap-1.5 disabled:opacity-70">
+                  <i :class="isLocating ? 'ri-loader-4-line animate-spin' : 'ri-radar-line text-sm'"></i>
+                  {{ isLocating ? '扫描中' : '扫描' }}
+                </button>
+              </div>
+
+              <div v-if="poiList.length > 0" class="absolute z-20 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-56 overflow-y-auto custom-scrollbar animate-slide-up">
+                <div class="sticky top-0 bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-500 border-b border-slate-100 flex justify-between tracking-widest uppercase">
+                  <span>探测到以下门店</span>
+                  <span @click="poiList = []" class="text-blue-500 cursor-pointer">关闭</span>
+                </div>
+                <div v-for="poi in poiList" :key="poi.id" @click="selectPoi(poi)" class="p-3 border-b border-slate-50 hover:bg-blue-50/40 cursor-pointer transition-colors">
+                  <div class="font-bold text-[13px] text-slate-800">{{ poi.title }}</div>
+                  <div class="text-[10.5px] text-slate-400 mt-1 flex justify-between items-center">
+                    <span class="truncate pr-2">{{ poi.address }}</span>
+                    <span class="text-blue-500 font-black bg-blue-50 px-1.5 py-0.5 rounded">{{ poi._distance }}m</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           <div>
             <label class="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5 flex justify-between items-center">
-              <span>实测图片 · 选填</span>
+              <span>实测图片 · 必填</span>
               <span v-if="isUploading" class="text-blue-500 animate-pulse normal-case tracking-normal flex items-center gap-1">
                 <i class="ri-loader-4-line animate-spin"></i> 上传中...
               </span>
@@ -387,7 +499,7 @@
               <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload" accept="image/*">
               <div v-if="!formData.coverImg" class="text-center transition-transform group-hover:scale-105">
                 <i class="ri-image-add-line text-3xl text-slate-300 group-hover:text-slate-900 transition-colors"></i>
-                <p class="text-[11px] font-bold text-slate-400 mt-2 tracking-wide">点击上传食物照片</p>
+                <p class="text-[11px] font-bold text-slate-400 mt-2 tracking-wide">上传真实照片后才能发布</p>
               </div>
               <img v-else :src="formData.coverImg" class="absolute inset-0 w-full h-full object-cover">
               <button v-if="formData.coverImg" @click.stop="formData.coverImg = ''" class="absolute top-2 right-2 bg-slate-900/70 backdrop-blur-md text-white rounded-full p-1.5 hover:bg-rose-500 transition-colors">
@@ -426,43 +538,83 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1.5">消费门店 · 周边美食扫描</label>
-            <div class="relative">
-              <div class="flex gap-2 relative">
-                <i class="ri-map-pin-2-line absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
-                <input v-model="formData.location" type="text" placeholder="点击右侧扫描，或手动输入..." class="flex-1 bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-3 py-3 text-[13px] outline-none focus:bg-white focus:border-slate-900 transition-all">
-                <button @click="fetchNearby" :disabled="isLocating" class="bg-slate-900 hover:bg-slate-800 text-white px-4 rounded-xl text-[11.5px] font-black active:scale-95 transition-all shrink-0 flex items-center gap-1.5 disabled:opacity-70">
-                  <i :class="isLocating ? 'ri-loader-4-line animate-spin' : 'ri-radar-line text-sm'"></i>
-                  {{ isLocating ? '扫描中' : '扫描' }}
-                </button>
-              </div>
-
-              <div v-if="poiList.length > 0" class="absolute z-20 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-56 overflow-y-auto custom-scrollbar animate-slide-up">
-                <div class="sticky top-0 bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-500 border-b border-slate-100 flex justify-between tracking-widest uppercase">
-                  <span>探测到以下门店</span>
-                  <span @click="poiList = []" class="text-blue-500 cursor-pointer">关闭</span>
-                </div>
-                <div v-for="poi in poiList" :key="poi.id" @click="selectPoi(poi)" class="p-3 border-b border-slate-50 hover:bg-blue-50/40 cursor-pointer transition-colors">
-                  <div class="font-bold text-[13px] text-slate-800">{{ poi.title }}</div>
-                  <div class="text-[10.5px] text-slate-400 mt-1 flex justify-between items-center">
-                    <span class="truncate pr-2">{{ poi.address }}</span>
-                    <span class="text-blue-500 font-black bg-blue-50 px-1.5 py-0.5 rounded">{{ poi._distance }}m</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <footer class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white/80 backdrop-blur-xl flex items-center justify-end gap-3">
-          <button @click="showUploadModal = false" class="px-5 py-3 rounded-xl text-[13.5px] font-bold text-slate-500 hover:bg-slate-100 transition-all">
+          <button @click="closeUploadModal" class="px-5 py-3 rounded-xl text-[13.5px] font-bold text-slate-500 hover:bg-slate-100 transition-all">
             取消
           </button>
-          <button @click="submitForm" class="px-6 py-3 rounded-xl text-[14px] font-black text-white bg-slate-900 hover:bg-slate-800 shadow-[0_8px_20px_-6px_rgba(15,23,42,0.4)] active:scale-95 transition-all flex items-center gap-2">
-            发布情报 <i class="ri-arrow-right-up-line"></i>
+          <button
+              @click="submitForm"
+              :disabled="isUploading || !formData.coverImg"
+              class="px-6 py-3 rounded-xl text-[14px] font-black text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none shadow-[0_8px_20px_-6px_rgba(15,23,42,0.4)] active:scale-95 transition-all flex items-center gap-2"
+          >
+            {{ editingReportId ? '保存修改' : '发布情报' }} <i class="ri-arrow-right-up-line"></i>
           </button>
         </footer>
+      </div>
+    </div>
+
+    <!-- 我的战报 -->
+    <div v-if="showMyReportsModal" class="fixed inset-0 z-[125] flex items-end sm:items-center justify-center">
+      <div @click="showMyReportsModal = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+
+      <div class="relative z-10 w-full sm:w-[520px] h-[82vh] sm:h-[78vh] bg-white rounded-t-[32px] sm:rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+        <div class="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
+
+        <header class="shrink-0 px-6 pt-7 pb-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] font-black text-blue-600 tracking-[0.18em] mb-1">我的记录</div>
+            <h3 class="text-[20px] font-black text-slate-900 tracking-tight">我发布的战报</h3>
+          </div>
+          <button @click="showMyReportsModal = false" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center active:scale-90 transition-all">
+            <i class="ri-close-line text-lg"></i>
+          </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar px-5 py-5 space-y-3 bg-slate-50">
+          <div v-if="isMyReportsLoading" class="text-center py-12 text-slate-400 text-[13px] font-bold">
+            正在拉取你的战报…
+          </div>
+
+          <div v-else-if="myReports.length === 0" class="text-center py-16">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-white text-slate-300 flex items-center justify-center mb-3 shadow-sm">
+              <i class="ri-file-list-3-line text-2xl"></i>
+            </div>
+            <p class="text-[13px] text-slate-400 font-bold">你还没有发布过战报。</p>
+          </div>
+
+          <article v-for="report in myReports" :key="report.id" class="bg-white rounded-[22px] border border-slate-100 p-3.5 shadow-sm">
+            <div class="flex gap-3">
+              <img :src="report.coverImg || DEFAULT_FOOD_COVER" class="w-20 h-20 rounded-2xl object-cover bg-slate-100 shrink-0">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="text-[11px] text-slate-400 font-bold truncate">{{ report.brand }}</p>
+                    <h4 class="text-[15px] font-black text-slate-900 truncate">{{ report.product }}</h4>
+                  </div>
+                  <span class="text-[10px] font-bold text-slate-400 shrink-0">{{ formatReportTime(report.time) }}</span>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="px-2 py-1 rounded-lg text-[10px] font-black" :class="getLevelStyle(report.levelId)">
+                    {{ getLevelInfo(report.levelId).name.split('·')[1] }}
+                  </span>
+                  <span class="text-[10px] text-slate-400 font-bold">{{ report.commentCount || 0 }} 评论</span>
+                </div>
+                <p class="mt-2 text-[12px] text-slate-600 leading-relaxed line-clamp-2">{{ report.content }}</p>
+              </div>
+            </div>
+
+            <div class="mt-3 flex justify-end gap-2">
+              <button @click="editMyReport(report)" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-[12px] font-black active:scale-95 transition-all">
+                编辑
+              </button>
+              <button @click="deleteMyReport(report)" class="px-3 py-2 rounded-xl bg-rose-50 text-rose-600 text-[12px] font-black active:scale-95 transition-all">
+                删除
+              </button>
+            </div>
+          </article>
+        </div>
       </div>
     </div>
   </div>
@@ -472,10 +624,13 @@
 import { computed, onMounted, ref } from 'vue'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http.js'
+import { avatarOf } from '@/utils/avatarPool'
 
 const emit = defineEmits(['change-tab'])
 
 const fileInput = ref(null)
+const DEFAULT_FOOD_COVER = '/img/food-placeholder.svg'
+const currentUserId = Number(localStorage.getItem('userId') || 0)
 
 onMounted(() => {
   fetchFoodList()
@@ -523,7 +678,7 @@ const fetchNearby = () => {
 
         script.onload = () => document.body.removeChild(script)
         script.onerror = () => {
-          alert("网络请求被拦截，请检查是否在本地 localhost 测试")
+          alert("网络请求被拦截，请确认当前页面和后端服务都已连通")
           isLocating.value = false
           document.body.removeChild(script)
         }
@@ -606,33 +761,94 @@ const levels = [
   }
 ]
 
+const usefulText = (value) => {
+  const text = String(value || '').trim()
+  return text.length >= 2 && !/^\d+$/.test(text)
+}
+
+const displayText = (value, fallback) => {
+  const text = String(value || '').trim()
+  return usefulText(text) ? text : fallback
+}
+
+const parseJsonArray = (value) => {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (e) {
+    return []
+  }
+}
+
+const pickUploadUrl = (res) => {
+  if (typeof res === 'string') return res
+  if (typeof res?.data === 'string') return res.data
+  if (typeof res?.url === 'string') return res.url
+  return ''
+}
+
+const normalizeReportContent = (content) => {
+  const text = String(content || '').trim()
+  if (!usefulText(text)) {
+    return '这位病友只留下了体感等级，没有写文字战报。'
+  }
+  return text
+}
+
+const parseReportDate = (value) => {
+  if (!value) return null
+  if (Array.isArray(value)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = value
+    return new Date(year, month - 1, day, hour, minute, second)
+  }
+  if (typeof value === 'string') {
+    return new Date(value.replace(' ', 'T'))
+  }
+  return new Date(value)
+}
+
+const formatReportTime = (value) => {
+  const date = parseReportDate(value)
+  if (!date || Number.isNaN(date.getTime())) return '刚刚'
+  const diff = Date.now() - date.getTime()
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+}
+
 // 核心数据
 const foodList = ref([])
 const fetchFoodList = async () => {
   try {
     const res = await http.get('/diet/list')
-    console.log("你好", res)
-    const rawData = res
+    const rawData = Array.isArray(res) ? res : (res.data || [])
 
     foodList.value = rawData.map(dbItem => {
       let currentType = 'warning'
-      if (dbItem.safeRate >= 80) currentType = 'safe'
-      if (dbItem.safeRate <= 40) currentType = 'danger'
+      const safeRate = Number(dbItem.safeRate || 0)
+      const voteCount = Number(dbItem.totalVotes || 0)
+      if (safeRate >= 80) currentType = 'safe'
+      if (safeRate <= 40) currentType = 'danger'
 
       return {
         id: dbItem.id,
-        brand: dbItem.brandName,
-        product: dbItem.foodName,
+        brandRaw: String(dbItem.brandName || '').trim(),
+        productRaw: String(dbItem.foodName || '').trim(),
+        brand: displayText(dbItem.brandName, '未命名来源'),
+        product: displayText(dbItem.foodName, '待补充单品'),
         type: currentType,
-        image: dbItem.coverImg || 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80',
-        safeRate: dbItem.safeRate,
-        voteCount: dbItem.totalVotes,
-        tags: dbItem.tagsJson ? JSON.parse(dbItem.tagsJson) : [],
-        desc: dbItem.summaryDesc || '这道菜暂无描述，全是实战数据！',
+        image: dbItem.coverImg || DEFAULT_FOOD_COVER,
+        safeRate,
+        voteCount,
+        tags: parseJsonArray(dbItem.tagsJson),
+        desc: dbItem.summaryDesc || `已有 ${voteCount} 条实测，安心率 ${safeRate}%`,
         levelStats: {
-          1: dbItem.level1Votes, 2: dbItem.level2Votes,
-          3: dbItem.level3Votes, 4: dbItem.level4Votes,
-          5: dbItem.level5Votes, 6: dbItem.level6Votes
+          1: Number(dbItem.level1Votes || 0), 2: Number(dbItem.level2Votes || 0),
+          3: Number(dbItem.level3Votes || 0), 4: Number(dbItem.level4Votes || 0),
+          5: Number(dbItem.level5Votes || 0), 6: Number(dbItem.level6Votes || 0)
         }
       }
     })
@@ -645,8 +861,12 @@ const fetchFoodList = async () => {
 const keyword = ref('')
 const showUploadModal = ref(false)
 const showDetailModal = ref(false)
+const showMyReportsModal = ref(false)
 const currentFood = ref(null)
 const activeFilter = ref('all')
+const isMyReportsLoading = ref(false)
+const myReports = ref([])
+const editingReportId = ref(null)
 
 const filters = [
   { id: 'all', label: '全部' },
@@ -659,6 +879,22 @@ const formData = ref({
   brand: '', product: '', content: '', level: 1, location: '',
   coverImg: ''
 })
+
+const resetFormData = () => {
+  formData.value = {brand: '', product: '', content: '', location: '', level: 1, coverImg: ''}
+}
+
+const openUploadModal = () => {
+  editingReportId.value = null
+  resetFormData()
+  showUploadModal.value = true
+}
+
+const closeUploadModal = () => {
+  showUploadModal.value = false
+  editingReportId.value = null
+  poiList.value = []
+}
 
 const triggerFileInput = () => {
   if (!formData.value.coverImg) {
@@ -681,8 +917,10 @@ const handleFileUpload = async (event) => {
       headers: {'Content-Type': 'multipart/form-data'}
     })
 
-    formData.value.coverImg = res.data
-    console.log("图片上传成功！直链：", formData.value.coverImg)
+    formData.value.coverImg = pickUploadUrl(res)
+    if (!formData.value.coverImg) {
+      throw new Error('empty upload url')
+    }
   } catch (error) {
     console.error("图片上传失败：", error)
     alert("上传失败，请检查网络或秘钥配置")
@@ -702,7 +940,9 @@ const filteredList = computed(() => {
     const k = keyword.value.toLowerCase().trim()
     list = list.filter(item =>
         item.brand.toLowerCase().includes(k) ||
-        item.product.toLowerCase().includes(k)
+        item.product.toLowerCase().includes(k) ||
+        item.brandRaw.toLowerCase().includes(k) ||
+        item.productRaw.toLowerCase().includes(k)
     )
   }
   return list
@@ -717,20 +957,35 @@ const todayPick = computed(() => {
 
 // 当前食物战报列表
 const currentFoodReports = ref([])
+const normalizeDietReport = (dbItem, foodFallback = null) => ({
+  id: dbItem.id,
+  foodId: dbItem.foodId || foodFallback?.id,
+  userId: Number(dbItem.userId || 0),
+  brand: displayText(dbItem.brand || foodFallback?.brand, '未命名来源'),
+  product: displayText(dbItem.product || foodFallback?.product, '待补充单品'),
+  coverImg: dbItem.coverImg || dbItem.imagesJson || foodFallback?.image || DEFAULT_FOOD_COVER,
+  userName: displayText(dbItem.userName, '匿名病友'),
+  avatar: avatarOf(dbItem.userAvatar, dbItem.userId || dbItem.userName || dbItem.id),
+  isMine: currentUserId > 0 && Number(dbItem.userId || 0) === currentUserId,
+  levelId: Number(dbItem.reactionLevel || dbItem.level || 1),
+  location: usefulText(dbItem.location) ? dbItem.location : '',
+  content: normalizeReportContent(dbItem.content),
+  rawContent: String(dbItem.content || '').trim(),
+  time: dbItem.createTime || '刚刚',
+  commentCount: Number(dbItem.commentCount || 0),
+  commentsVisible: false,
+  commentsLoaded: false,
+  commentsLoading: false,
+  commentSubmitting: false,
+  comments: [],
+  commentInput: ''
+})
+
 const fetchReports = async (foodId) => {
   try {
     const res = await http.get(`/diet/reports/${foodId}`)
-    console.log("你好,2", res.data)
-    currentFoodReports.value = res.data.map(dbItem => {
-      return {
-        id: dbItem.id,
-        userName: '病友_' + (dbItem.userId || '神秘人'),
-        levelId: dbItem.reactionLevel,
-        location: dbItem.location || '未知战场',
-        content: dbItem.content || '该病友什么也没留，只留下了一个打分...',
-        time: dbItem.createTime || '刚刚'
-      }
-    })
+    const rawReports = Array.isArray(res) ? res : (res.data || [])
+    currentFoodReports.value = rawReports.map(dbItem => normalizeDietReport(dbItem, currentFood.value))
   } catch (error) {
     console.error("获取战报失败：", error)
   }
@@ -743,9 +998,116 @@ const openDetail = (item) => {
 }
 
 const openUploadFromDetail = () => {
-  formData.value.brand = currentFood.value.brand
-  formData.value.product = currentFood.value.product
+  editingReportId.value = null
+  resetFormData()
+  formData.value.brand = usefulText(currentFood.value.brandRaw) ? currentFood.value.brandRaw : ''
+  formData.value.product = usefulText(currentFood.value.productRaw) ? currentFood.value.productRaw : ''
   showUploadModal.value = true
+}
+
+const openMyReports = async () => {
+  showMyReportsModal.value = true
+  await loadMyReports(true)
+}
+
+const loadMyReports = async (force = false) => {
+  if (isMyReportsLoading.value) return
+  if (myReports.value.length && !force) return
+  isMyReportsLoading.value = true
+  try {
+    const res = await http.get('/diet/my-reports')
+    const rows = Array.isArray(res) ? res : (res.data || [])
+    myReports.value = rows.map(row => normalizeDietReport(row))
+  } catch (error) {
+    console.error('我的战报加载失败：', error)
+    alert('我的战报暂时没拉出来')
+  } finally {
+    isMyReportsLoading.value = false
+  }
+}
+
+const editMyReport = (report) => {
+  editingReportId.value = report.id
+  formData.value = {
+    brand: report.brand,
+    product: report.product,
+    content: report.rawContent || report.content,
+    location: report.location || '',
+    level: report.levelId || 1,
+    coverImg: report.coverImg === DEFAULT_FOOD_COVER ? '' : report.coverImg
+  }
+  showMyReportsModal.value = false
+  showUploadModal.value = true
+}
+
+const deleteMyReport = async (report) => {
+  if (!confirm('确定删除这条战报吗？')) return
+  try {
+    const res = await http.post(`/diet/reports/${report.id}/delete`)
+    if (res.status && res.status !== 200) {
+      alert(res.message || '删除失败')
+      return
+    }
+    alert(res.message || '战报已删除')
+    await fetchFoodList()
+    await loadMyReports(true)
+    if (currentFood.value?.id) {
+      const updatedFood = foodList.value.find(item => item.id === currentFood.value.id)
+      if (updatedFood) currentFood.value = updatedFood
+      await fetchReports(currentFood.value.id)
+    }
+  } catch (error) {
+    console.error('删除战报失败：', error)
+    alert('删除失败，稍后再试')
+  }
+}
+
+const loadReportComments = async (report, force = false) => {
+  if (report.commentsLoading) return
+  if (report.commentsLoaded && !force) return
+  report.commentsLoading = true
+  try {
+    const res = await http.get(`/diet/reports/${report.id}/comments`)
+    const rows = Array.isArray(res) ? res : (res.data || [])
+    report.comments = rows.map(comment => ({
+      ...comment,
+      localId: `comment-${comment.id || Math.random()}`
+    }))
+    report.commentsLoaded = true
+    report.commentCount = report.comments.length
+  } catch (error) {
+    console.error('评论加载失败：', error)
+    alert('评论暂时没拉出来')
+  } finally {
+    report.commentsLoading = false
+  }
+}
+
+const toggleReportComments = async (report) => {
+  report.commentsVisible = !report.commentsVisible
+  if (report.commentsVisible) {
+    await loadReportComments(report)
+  }
+}
+
+const submitReportComment = async (report) => {
+  const content = String(report.commentInput || '').trim()
+  if (!content || report.commentSubmitting) return
+  report.commentSubmitting = true
+  try {
+    const res = await http.post(`/diet/reports/${report.id}/comments`, { content })
+    if (res.status && res.status !== 200) {
+      alert(res.message || '评论失败')
+      return
+    }
+    report.commentInput = ''
+    await loadReportComments(report, true)
+  } catch (error) {
+    console.error('评论失败：', error)
+    alert('评论失败，稍后再试')
+  } finally {
+    report.commentSubmitting = false
+  }
 }
 
 const isLocating = ref(false)
@@ -776,23 +1138,50 @@ const autoLocate = () => {
 
 const submitForm = async () => {
   try {
-    if (!formData.value.brand || !formData.value.product) {
-      alert("兄弟，品牌和单品名字得填啊！")
+    if (!usefulText(formData.value.brand) || !usefulText(formData.value.product)) {
+      alert("品牌和食物名字至少写 2 个字")
       return
     }
 
-    const res = await http.post('/diet/publish', formData.value)
-    console.log("你好，", res)
-    alert(`牛逼！战报发布成功！`)
+    if (!formData.value.level) {
+      alert("请选择身体反馈")
+      return
+    }
 
-    showUploadModal.value = false
+    if (!formData.value.coverImg) {
+      alert("请上传一张实测图片")
+      return
+    }
 
-    formData.value = {brand: '', product: '', content: '', location: '', level: 1, coverImg: ''}
+    const endpoint = editingReportId.value
+        ? `/diet/reports/${editingReportId.value}/update`
+        : '/diet/publish'
+    const res = await http.post(endpoint, formData.value)
+    if (res.status && res.status !== 200) {
+      alert(res.message || '发布失败')
+      return
+    }
 
-    fetchFoodList()
+    alert(res.message || (editingReportId.value ? '战报已更新' : '战报已收录'))
+
+    const wasEditing = !!editingReportId.value
+    closeUploadModal()
+
+    resetFormData()
+
+    await fetchFoodList()
+    if (currentFood.value?.id) {
+      const updatedFood = foodList.value.find(item => item.id === currentFood.value.id)
+      if (updatedFood) currentFood.value = updatedFood
+      await fetchReports(currentFood.value.id)
+    }
+    if (wasEditing) {
+      showMyReportsModal.value = true
+      await loadMyReports(true)
+    }
   } catch (error) {
     console.error("战报发布失败：", error)
-    alert("发布失败了兄弟，按 F12 看看控制台报啥错？")
+    alert("发布失败，稍后再试")
   }
 }
 
@@ -814,6 +1203,12 @@ const getLevelInfo = (val) => levels.find(l => l.val === val) || levels[0]
 
 const getLevelCount = (levelVal) => {
   return currentFood.value?.levelStats?.[levelVal] || 0
+}
+
+const getLevelPercent = (levelVal) => {
+  const total = Number(currentFood.value?.voteCount || 0)
+  if (!total) return 0
+  return Math.round((getLevelCount(levelVal) / total) * 100)
 }
 
 const getLevelStyle = (val) => {

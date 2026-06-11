@@ -226,7 +226,7 @@
             <i class="ri-arrow-left-line text-[22px] text-slate-800"></i>
           </button>
           <div v-if="detail && !detailLoading" class="flex-1 flex items-center gap-2.5 min-w-0">
-            <img :src="detail.authorAvatar || defaultAvatar" class="w-8 h-8 rounded-full object-cover bg-slate-100 border border-slate-100 shrink-0" />
+            <img :src="avatarOf(detail.authorAvatar || defaultAvatar, detail.authorName || detail.userId || detail.id)" class="w-8 h-8 rounded-full object-cover bg-slate-100 border border-slate-100 shrink-0" />
             <span class="text-[15px] font-bold text-slate-900 truncate">{{ detail.authorName || '匿名战友' }}</span>
           </div>
           <div v-else class="flex-1"></div>
@@ -332,6 +332,7 @@ import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import ExperienceCard from '@/components/ExperienceCard.vue'
 import { useAuth } from '@/components/useAuth.js'
 import http from '@/api/http'
+import { avatarOf } from '@/utils/avatarPool'
 
 const { currentUserId, checkPermission } = useAuth()
 
@@ -386,7 +387,7 @@ const loadPosts = async () => {
           coverImage: cover,
           media: mediaList,
           authorName: p.authorName,
-          authorAvatar: p.authorAvatar,
+          authorAvatar: avatarOf(p.authorAvatar, p.authorName || p.userId || p.id),
           likes: 0,
           comments: 0,
           category: categoryOf(p.tags ? p.tags.split(',') : []),
@@ -421,7 +422,7 @@ const deleteCard = async (id) => {
 }
 
 // 媒体辅助
-const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=story'
+const defaultAvatar = avatarOf('', 'story')
 const isVideo = (url) => /\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(url || '')
 
 // ============ 文章详情 ============

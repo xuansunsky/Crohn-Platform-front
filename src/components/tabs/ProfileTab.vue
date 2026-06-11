@@ -14,14 +14,12 @@
 
       <div class="profile-content">
         <div class="avatar-wrapper">
-          <img class="avatar" :src="userInfo.avatar" alt="头像" />
-
-          <van-uploader
-              :after-read="afterRead"
-              class="avatar-uploader"
-          >
-            <div class="uploader-trigger"></div>
-          </van-uploader>
+          <button type="button" class="avatar-button" @click="showAvatarPicker = true">
+            <img class="avatar" :src="userInfo.avatar" alt="头像" />
+            <span class="avatar-edit-badge">
+              <i class="ri-camera-line"></i>
+            </span>
+          </button>
         </div>
 
         <div class="profile-info">
@@ -57,6 +55,66 @@
                 class="app-input"
                 maxlength="15"
             />
+          </div>
+        </van-popup>
+
+        <van-popup
+            v-model:show="showAvatarPicker"
+            position="bottom"
+            round
+            class="avatar-picker-popup"
+            teleport="body"
+        >
+          <div class="avatar-picker">
+            <div class="avatar-picker-header">
+              <div>
+                <h3 class="avatar-picker-title">换个头像</h3>
+                <p class="avatar-picker-subtitle">选一个温暖的默认头像，或者上传自己的照片</p>
+              </div>
+              <button type="button" class="avatar-picker-close" @click="showAvatarPicker = false">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+
+            <div class="avatar-preview-card">
+              <img :src="userInfo.avatar" class="avatar-preview-img" alt="当前头像" />
+              <div>
+                <p class="avatar-preview-title">{{ userInfo.nickname || '我的头像' }}</p>
+                <p class="avatar-preview-text">当前正在使用</p>
+              </div>
+            </div>
+
+            <div class="default-avatar-grid">
+              <button
+                  v-for="avatar in avatarOptions"
+                  :key="avatar"
+                  type="button"
+                  class="default-avatar-option"
+                  :class="{ 'default-avatar-option-active': userInfo.avatar === avatar }"
+                  :disabled="avatarSaving"
+                  @click="selectDefaultAvatar(avatar)"
+              >
+                <img :src="avatar" alt="默认头像" />
+                <i v-if="userInfo.avatar === avatar" class="ri-check-line"></i>
+              </button>
+            </div>
+
+            <van-uploader
+                :after-read="afterRead"
+                accept="image/*"
+                :disabled="avatarSaving"
+                class="avatar-upload-action"
+            >
+              <div class="avatar-upload-card">
+                <span class="avatar-upload-icon">
+                  <i class="ri-image-add-line"></i>
+                </span>
+                <div>
+                  <p class="avatar-upload-title">上传自己的头像</p>
+                  <p class="avatar-upload-text">从相册选一张，马上换上</p>
+                </div>
+              </div>
+            </van-uploader>
           </div>
         </van-popup>
 
@@ -327,6 +385,7 @@ import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import { areaList } from '@vant/area-data'
 import { closeToast, showToast } from 'vant'
 import http from '@/api/http.js'
+import { DEFAULT_AVATARS, avatarOf } from '@/utils/avatarPool'
 
 const emit = defineEmits(['change-tab'])
 
@@ -404,29 +463,78 @@ const currentEditType = ref('')
 
 const userInfo = ref({
   nickname: '全栈架构师_小轩',
-  avatar: 'https://picsum.photos/id/64/300/300',
+  avatar: avatarOf('', 'me'),
   userId: null,
   city: ''
 })
+
+const showAvatarPicker = ref(false)
+const avatarSaving = ref(false)
+const avatarOptions = DEFAULT_AVATARS
+
+const persistAvatar = async (avatar, successMessage) => {
+  if (!avatar || avatarSaving.value) return
+  avatarSaving.value = true
+  showToast({ type: 'loading', message: '正在换头像', duration: 0, forbidClick: true })
+
+  try {
+    await http.post('/center/update-basic', { avatar })
+    userInfo.value.avatar = avatar
+    showAvatarPicker.value = false
+    closeToast()
+    showToast({ message: successMessage, icon: 'success' })
+  } catch (err) {
+    closeToast()
+    showToast({ type: 'fail', message: '头像没换上，再试一次' })
+  } finally {
+    avatarSaving.value = false
+  }
+}
+
+const selectDefaultAvatar = async (avatar) => {
+  if (avatar === userInfo.value.avatar) {
+    showAvatarPicker.value = false
+    return
+  }
+  await persistAvatar(avatar, '头像已换好')
+}
+
+const pickUploadUrl = (uploadRes) => {
+  if (typeof uploadRes === 'string') return uploadRes
+  if (typeof uploadRes?.data === 'string') return uploadRes.data
+  if (typeof uploadRes?.url === 'string') return uploadRes.url
+  return ''
+}
 
 const afterRead = async (file) => {
   const formData = new FormData()
 
   formData.append('file', file.file)
+  if (avatarSaving.value) return
+  avatarSaving.value = true
+  showToast({ type: 'loading', message: '正在上传', duration: 0, forbidClick: true })
+
   try {
     const uploadRes = await http.post('/upload', formData)
-    const newAvatarUrl = uploadRes.data
+    const newAvatarUrl = pickUploadUrl(uploadRes)
+
+    if (!newAvatarUrl) {
+      throw new Error('empty avatar url')
+    }
 
     await http.post('/center/update-basic', {
       avatar: newAvatarUrl
     })
 
     userInfo.value.avatar = newAvatarUrl
-    showToast('头像已在位 🚀')
-  } catch (err) {
-    showToast('链路中断')
-  } finally {
+    showAvatarPicker.value = false
     closeToast()
+    showToast({ message: '头像已上传', icon: 'success' })
+  } catch (err) {
+    closeToast()
+    showToast({ type: 'fail', message: '上传失败，再试一次' })
+  } finally {
+    avatarSaving.value = false
   }
 }
 
@@ -521,7 +629,7 @@ const loadData = async () => {
     if (profile) {
       // 1. 同步基础信息
       userInfo.value.nickname = profile.nickname || '未命名特工';
-      userInfo.value.avatar = profile.avatar || 'https://picsum.photos/id/64/300/300';
+      userInfo.value.avatar = avatarOf(profile.avatar, profile.userId || profile.nickname || 'me');
       userInfo.value.userId = profile.userId;
       userInfo.value.city = profile.city || '';
 
@@ -665,7 +773,42 @@ const onSelectCity = async (city) => {
 
 .profile-content { position: relative; z-index: 1; display: flex; align-items: center; }
 .avatar-wrapper { position: relative; width: 72px; height: 72px; margin-right: 14px; flex-shrink: 0; }
-.avatar { width: 72px; height: 72px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.1); z-index: 3; }
+.avatar-button {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+.avatar-button:active { transform: scale(0.97); }
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  border: 3px solid #fff;
+  box-shadow: 0 10px 24px rgba(101, 85, 143, 0.16);
+  object-fit: cover;
+  display: block;
+}
+.avatar-edit-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #ec4899);
+  border: 2px solid #fff;
+  box-shadow: 0 8px 16px rgba(124, 58, 237, 0.22);
+  font-size: 13px;
+}
 .vip-name { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(90deg, #1e2937, #475569); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .name-wrapper { display: flex; align-items: center; cursor: pointer; }
 .edit-pencil {
@@ -915,6 +1058,183 @@ const onSelectCity = async (city) => {
   backdrop-filter: blur(10px);
 }
 
+.avatar-picker-popup {
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(18px);
+}
+
+.avatar-picker {
+  padding: 20px 18px 22px;
+}
+
+.avatar-picker-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.avatar-picker-title {
+  margin: 0;
+  color: #171717;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+}
+
+.avatar-picker-subtitle {
+  margin: 5px 0 0;
+  color: #8a8178;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.avatar-picker-close {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 14px;
+  color: #78716c;
+  background: #f5f5f4;
+  font-size: 18px;
+}
+
+.avatar-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(250, 250, 249, 0.96), rgba(255, 247, 237, 0.9));
+  border: 1px solid rgba(231, 229, 228, 0.9);
+}
+
+.avatar-preview-img {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 10px 20px rgba(120, 113, 108, 0.12);
+}
+
+.avatar-preview-title {
+  margin: 0;
+  color: #292524;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.avatar-preview-text {
+  margin: 4px 0 0;
+  color: #a8a29e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.default-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.default-avatar-option {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 4px;
+  border: 1.5px solid rgba(231, 229, 228, 0.9);
+  border-radius: 22px;
+  background: rgba(250, 250, 249, 0.82);
+  transition: all 0.18s ease;
+}
+
+.default-avatar-option:active { transform: scale(0.95); }
+
+.default-avatar-option img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 18px;
+  object-fit: cover;
+}
+
+.default-avatar-option i {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 19px;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #ec4899);
+  border: 2px solid #fff;
+  font-size: 12px;
+  box-shadow: 0 6px 12px rgba(124, 58, 237, 0.2);
+}
+
+.default-avatar-option-active {
+  border-color: rgba(124, 58, 237, 0.58);
+  background: #fff;
+  box-shadow: 0 12px 22px rgba(124, 58, 237, 0.12);
+}
+
+.avatar-upload-action {
+  width: 100%;
+  display: block;
+}
+
+.avatar-upload-action :deep(.van-uploader__wrapper),
+.avatar-upload-action :deep(.van-uploader__input-wrapper) {
+  width: 100%;
+  display: block;
+}
+
+.avatar-upload-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 22px;
+  background: #1c1917;
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(28, 25, 23, 0.18);
+}
+
+.avatar-upload-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 20px;
+}
+
+.avatar-upload-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.avatar-upload-text {
+  margin: 3px 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .popup-header {
   display: flex;
   justify-content: space-between;
@@ -941,23 +1261,6 @@ const onSelectCity = async (city) => {
   color: #ccc;
   margin-top: 12px;
   text-align: center;
-}
-
-/* 头像上传 */
-.avatar-uploader {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10;
-  opacity: 0;
-}
-
-.uploader-trigger {
-  width: 72px;
-  height: 72px;
-  cursor: pointer;
 }
 
 /* 动画 */
