@@ -1,5 +1,6 @@
 import axios from 'axios'
 import router from '@/router'
+import { Capacitor } from '@capacitor/core'
 import { clearAuthSession, getValidToken, isAuthExpiredError } from '@/utils/authToken'
 
 const isLocalNetworkHost = (hostname) => {
@@ -15,6 +16,10 @@ const isLocalNetworkHost = (hostname) => {
 
 // 甩手掌柜专属黑科技：动态智能识别 Web (Nginx 转发) 与 App 原生环境
 const getBaseURL = () => {
+  if (Capacitor.isNativePlatform()) {
+    return 'http://106.55.249.7/api'
+  }
+
   if (typeof window !== 'undefined') {
     const { hostname, origin, protocol } = window.location
     // 如果是在本地开发环境/局域网真机调试，或者云服务器 Web 端访问 (106.55.249.7)

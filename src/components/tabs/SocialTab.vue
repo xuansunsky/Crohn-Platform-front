@@ -40,6 +40,14 @@
             <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5 line-clamp-2">{{ myCard.sign }}</p>
           </div>
 
+          <button
+            @click="openMyMoments"
+            class="absolute bottom-3 right-4 z-20 flex flex-col items-center gap-1 active:scale-95 transition-all"
+          >
+            <img :src="myCard.avatar" class="w-14 h-14 rounded-2xl border-[3px] border-white shadow-xl bg-white object-cover" />
+            <span class="px-2 py-0.5 rounded-full bg-black/35 backdrop-blur text-[9px] font-black text-white">朋友圈</span>
+          </button>
+
         </div>
 
         <!-- 档案框标题 -->
@@ -205,7 +213,23 @@
                   <span v-if="post.device" class="flex items-center gap-0.5"><span class="w-0.5 h-0.5 rounded-full bg-slate-300"></span> {{ post.device }}</span>
                 </p>
               </div>
-              <button class="text-slate-300 hover:text-slate-600 transition-all active:scale-90 -mr-1 -mt-1 p-1">
+              <div v-if="post.isMine" class="flex items-center gap-1 -mr-1 -mt-1">
+                <button
+                  @click="editMoment(post)"
+                  class="w-7 h-7 rounded-full text-slate-300 hover:text-blue-500 hover:bg-blue-50 flex items-center justify-center active:scale-90 transition-all"
+                  aria-label="编辑动态"
+                >
+                  <i class="ri-edit-2-line text-[14px]"></i>
+                </button>
+                <button
+                  @click="deleteMoment(post)"
+                  class="w-7 h-7 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center active:scale-90 transition-all"
+                  aria-label="删除动态"
+                >
+                  <i class="ri-delete-bin-6-line text-[14px]"></i>
+                </button>
+              </div>
+              <button v-else class="text-slate-300 hover:text-slate-600 transition-all active:scale-90 -mr-1 -mt-1 p-1">
                 <i class="ri-more-2-fill text-lg"></i>
               </button>
             </header>
@@ -1133,7 +1157,7 @@
 
         <!-- 顶栏：返回 -->
         <header class="shrink-0 flex items-center h-14 px-2.5 border-b border-slate-50">
-          <button @click="showComposer = false" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-slate-100 transition-all">
+          <button @click="closeComposer" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-slate-100 transition-all">
             <i class="ri-arrow-left-line text-[26px] text-slate-800"></i>
           </button>
         </header>
@@ -1217,7 +1241,7 @@
 
         <!-- 底栏：存草稿 / 发布 -->
         <footer class="shrink-0 flex items-center gap-3 px-5 pt-3 pb-7 border-t border-slate-100 bg-white">
-          <button @click="showComposer = false" class="px-6 py-3.5 rounded-full text-[14px] font-bold text-slate-600 bg-slate-100 active:scale-95 transition-all">
+          <button @click="closeComposer" class="px-6 py-3.5 rounded-full text-[14px] font-bold text-slate-600 bg-slate-100 active:scale-95 transition-all">
             存草稿
           </button>
           <button
@@ -1226,7 +1250,7 @@
             class="flex-1 py-3.5 rounded-full text-[15px] font-black text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 shadow-lg active:scale-[0.98] transition-all flex justify-center items-center gap-2"
           >
             <i class="ri-send-plane-fill" :class="{ 'animate-pulse': isPublishing }"></i>
-            {{ isPublishing ? '发布中...' : '发布到密友圈' }}
+            {{ isPublishing ? (editingMomentId ? '保存中...' : '发布中...') : (editingMomentId ? '保存修改' : '发布到密友圈') }}
           </button>
         </footer>
 
@@ -1610,7 +1634,7 @@
               <div class="flex items-center gap-3 min-w-0">
                 <img :src="avatarOf(profileUser, profileUser?.userId)" class="w-11 h-11 rounded-2xl object-cover border-2 border-white shadow-sm bg-slate-100">
                 <div class="min-w-0">
-                  <h2 class="text-[18px] font-black text-slate-950 truncate">{{ profileDisplayName }}的朋友圈</h2>
+                  <h2 class="text-[18px] font-black text-slate-950 truncate">{{ profileMomentsTitle }}</h2>
                   <p class="text-[11px] text-slate-400 font-bold mt-0.5">{{ profileMoments.length }} 条可见动态</p>
                 </div>
               </div>
@@ -1625,9 +1649,27 @@
             <article v-for="post in profileMoments" :key="post.id" class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.32)]">
               <div class="flex items-center justify-between gap-3 mb-3">
                 <span class="text-[11px] font-bold text-slate-400">{{ post.time }}</span>
-                <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="momentVisibilityMeta(post.visibility).class">
-                  {{ momentVisibilityMeta(post.visibility).label }}
-                </span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="momentVisibilityMeta(post.visibility).class">
+                    {{ momentVisibilityMeta(post.visibility).label }}
+                  </span>
+                  <button
+                    v-if="post.isMine"
+                    @click.stop="editMoment(post)"
+                    class="w-6 h-6 rounded-full text-slate-300 hover:text-blue-500 hover:bg-blue-50 flex items-center justify-center active:scale-90 transition-all"
+                    aria-label="编辑动态"
+                  >
+                    <i class="ri-edit-2-line text-[13px]"></i>
+                  </button>
+                  <button
+                    v-if="post.isMine"
+                    @click.stop="deleteMoment(post)"
+                    class="w-6 h-6 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center active:scale-90 transition-all"
+                    aria-label="删除动态"
+                  >
+                    <i class="ri-delete-bin-6-line text-[13px]"></i>
+                  </button>
+                </div>
               </div>
               <p class="text-[14px] text-slate-700 leading-[1.75] whitespace-pre-line">{{ post.content }}</p>
               <div v-if="post.images?.length" :class="imageGridClass(post.images.length)" class="grid gap-1.5 mt-3">
@@ -2272,6 +2314,7 @@ const myCard = ref({
   cover: 'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1200&q=80'
 })
 
+const myId = Number(localStorage.getItem('userId')) || 1
 const moments = ref([])
 
 const parseMomentImages = (imagesJson) => {
@@ -2286,6 +2329,7 @@ const parseMomentImages = (imagesJson) => {
 const mapMoment = (m) => ({
   id: m.id,
   userId: m.userId,
+  isMine: Number(m.userId) === myId,
   user: {
     name: m.nickname,
     avatar: avatarOf(m, m.userId),
@@ -2367,6 +2411,7 @@ const toggleLike = async (post) => {
 
 // ============ 发布动态（全屏沉浸 · 小红书布局）============
 const showComposer = ref(false)
+const editingMomentId = ref(null)
 const composerText = ref('')
 const composerTitle = ref('')          // 标题（选填）
 const composerImages = ref([])          // 图片 / 视频 URL 混存，最多 9 条
@@ -2427,12 +2472,48 @@ const prevImage = () => {
 }
 
 const openComposer = () => {
+  editingMomentId.value = null
   showComposer.value = true
   composerText.value = ''
   composerTitle.value = ''
   composerImages.value = []
   composerLocation.value = ''
   composerVisibility.value = 'public'
+}
+
+const closeComposer = () => {
+  showComposer.value = false
+  editingMomentId.value = null
+}
+
+const editMoment = (post) => {
+  editingMomentId.value = post.id
+  composerTitle.value = ''
+  composerText.value = post.content || ''
+  composerImages.value = [...(post.images || [])]
+  composerLocation.value = post.location || ''
+  composerVisibility.value = post.visibility || 'public'
+  showProfileMomentsPanel.value = false
+  showUserProfile.value = false
+  showComposer.value = true
+}
+
+const deleteMoment = async (post) => {
+  if (!post?.id) return
+  if (!confirm('确定删除这条动态吗？')) return
+  try {
+    const res = await http.delete(`/moment/delete/${post.id}`)
+    if (res.status === 200 || res.code === 200) {
+      moments.value = moments.value.filter(item => item.id !== post.id)
+      if (profileMoments.value.length) {
+        profileMoments.value = profileMoments.value.filter(item => item.id !== post.id)
+      }
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (e) {
+    alert('删除失败，请检查网络')
+  }
 }
 
 // ---- 标记地点（复用腾讯地图 POI 附近搜索）----
@@ -2545,14 +2626,16 @@ const publishMoment = async () => {
   const content = title ? (body ? title + '\n' + body : title) : body
   isPublishing.value = true
   try {
-    const res = await http.post('/moment/publish', {
+    const payload = {
       content,
       imagesJson: composerImages.value.length ? JSON.stringify(composerImages.value) : null,
       location: composerLocation.value || null,
       visibility: composerVisibility.value || 'public'
-    })
+    }
+    const endpoint = editingMomentId.value ? `/moment/update/${editingMomentId.value}` : '/moment/publish'
+    const res = await http.post(endpoint, payload)
     if (res.status === 200 || res.code === 200) {
-      showComposer.value = false
+      closeComposer()
       composerText.value = ''
       composerTitle.value = ''
       composerImages.value = []
@@ -2587,7 +2670,6 @@ const showRadarModal = ref(false)
 const currentView = ref('list')
 const showFabMenu = ref(false)
 const activeChat = ref(null)
-const myId = Number(localStorage.getItem('userId')) || 1
 const showEmojiMenu = ref(false)
 const showPlusMenu = ref(false)
 const inputMsg = ref('')
@@ -3038,7 +3120,11 @@ const profileRemark = computed(() => {
   if (!profileUser.value) return ''
   return friendRemarks.value[String(profileUser.value.userId)] || ''
 })
-const profileDisplayName = computed(() => profileRemark.value || profileUser.value?.nickname || '神秘战友')
+const profileDisplayName = computed(() => {
+  if (Number(profileUser.value?.userId) === myId) return '我'
+  return profileRemark.value || profileUser.value?.nickname || '神秘战友'
+})
+const profileMomentsTitle = computed(() => Number(profileUser.value?.userId) === myId ? '我的朋友圈' : `${profileDisplayName.value}的朋友圈`)
 const canRemarkProfile = computed(() => !!profileFriendChat.value && Number(profileUser.value?.userId) !== myId)
 
 const saveFriendRemarks = () => {
@@ -3077,6 +3163,30 @@ const openUserProfile = async (userId) => {
 const openProfileMomentsPanel = () => {
   if (profileMomentsLoading.value) return
   showProfileMomentsPanel.value = true
+}
+
+const openMyMoments = async () => {
+  showUserProfile.value = false
+  showProfileMomentsPanel.value = true
+  profileMomentsLoading.value = true
+  userProfileData.value = {
+    user: {
+      userId: myId,
+      nickname: myCard.value.name,
+      avatar: myCard.value.avatar
+    }
+  }
+  profileMoments.value = []
+  try {
+    const res = await http.get(`/moment/user/${myId}`)
+    if (res.status === 200 || res.code === 200) {
+      profileMoments.value = (res.data || []).map(mapMoment)
+    }
+  } catch (e) {
+    console.error('我的朋友圈加载失败', e)
+  } finally {
+    profileMomentsLoading.value = false
+  }
 }
 
 const editProfileRemark = () => {

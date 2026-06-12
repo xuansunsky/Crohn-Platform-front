@@ -218,25 +218,37 @@
 
     <!-- ============ 文章详情 · 小红书风 ============ -->
     <transition name="modal-fade">
-      <div v-if="showDetail" class="fixed inset-0 z-[110] bg-white flex flex-col">
+      <div v-if="showDetail" class="fixed inset-0 z-[110] bg-[#FFFCF8] flex flex-col">
 
-        <!-- 顶栏：返回 + 头像名字 -->
-        <header class="shrink-0 flex items-center gap-2 px-3 h-[52px] bg-white border-b border-slate-50">
-          <button @click="closeDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-slate-100 transition-all shrink-0">
-            <i class="ri-arrow-left-line text-[22px] text-slate-800"></i>
-          </button>
-          <div v-if="detail && !detailLoading" class="flex-1 flex items-center gap-2.5 min-w-0">
-            <img :src="avatarOf(detail.authorAvatar || defaultAvatar, detail.authorName || detail.userId || detail.id)" class="w-8 h-8 rounded-full object-cover bg-slate-100 border border-slate-100 shrink-0" />
-            <span class="text-[15px] font-bold text-slate-900 truncate">{{ detail.authorName || '匿名战友' }}</span>
+        <!-- 顶栏：返回 + 作者 + 收藏 -->
+        <header class="detail-topbar shrink-0 bg-[#FFFCF8]/95 backdrop-blur-xl border-b border-stone-100/80">
+          <div class="h-[54px] px-3 flex items-center gap-2">
+            <button @click="closeDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-stone-100 transition-all shrink-0">
+              <i class="ri-arrow-left-line text-[22px] text-stone-900"></i>
+            </button>
+            <div v-if="detail && !detailLoading" class="flex-1 flex items-center gap-2.5 min-w-0">
+              <img :src="avatarOf(detail.authorAvatar || defaultAvatar, detail.authorName || detail.userId || detail.id)" class="w-9 h-9 rounded-full object-cover bg-stone-100 ring-1 ring-stone-100 shrink-0" />
+              <div class="min-w-0">
+                <p class="text-[14px] font-black text-stone-950 truncate">{{ detail.authorName || '匿名病友' }}</p>
+                <p class="text-[10px] text-stone-400 font-medium">{{ fmtDate(detail.createdAt) }}</p>
+              </div>
+            </div>
+            <div v-else class="flex-1"></div>
+            <button
+              v-if="detail && !checkPermission(detail.userId)"
+              @click="toggleFavorite"
+              :disabled="favoriteBusy"
+              class="h-8 px-3 rounded-full bg-stone-950 text-white text-[12px] font-black active:scale-95 disabled:opacity-60 transition-all shrink-0"
+            >
+              {{ detail.favorited ? '已收藏' : '收藏' }}
+            </button>
+            <button v-if="detail && checkPermission(detail.userId)" @click="deleteFromDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-rose-50 text-rose-500 shrink-0">
+              <i class="ri-delete-bin-line text-lg"></i>
+            </button>
           </div>
-          <div v-else class="flex-1"></div>
-          <button v-if="detail && checkPermission(detail.userId)" @click="deleteFromDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-rose-50 text-rose-500 shrink-0">
-            <i class="ri-delete-bin-line text-lg"></i>
-          </button>
-          <span v-else class="w-10 shrink-0"></span>
         </header>
 
-        <div class="flex-1 overflow-y-auto custom-scroll bg-white">
+        <div class="flex-1 overflow-y-auto custom-scroll bg-[#FFFCF8]">
           <div v-if="detailLoading" class="flex items-center justify-center py-24 text-slate-400">
             <i class="ri-loader-4-line text-2xl animate-spin"></i>
           </div>
@@ -283,41 +295,109 @@
             </div>
 
             <!-- 标题 + 标签 + 正文 -->
-            <div class="px-5 pb-24" :class="detailMedia.length <= 1 ? 'pt-4' : ''">
-              <h1 class="text-[20px] leading-[1.45] font-black tracking-tight text-slate-900 mb-3">{{ detail.title }}</h1>
+            <div class="px-5 pb-6" :class="detailMedia.length <= 1 ? 'pt-5' : ''">
+              <h1 class="text-[22px] leading-[1.35] font-black tracking-tight text-stone-950 mb-3">{{ detail.title }}</h1>
 
-              <p v-if="detail.summary" class="text-[15px] leading-[1.75] text-slate-700 whitespace-pre-line mb-4">{{ detail.summary }}</p>
+              <p v-if="detail.summary" class="text-[15px] leading-[1.85] text-stone-700 whitespace-pre-line mb-4">{{ detail.summary }}</p>
 
               <!-- 话题标签 -->
               <div v-if="detailTags.length" class="flex flex-wrap gap-2 mb-3">
-                <span v-for="t in detailTags" :key="t" class="text-[13px] font-bold text-blue-600">#{{ t }}</span>
+                <span v-for="t in detailTags" :key="t" class="text-[13px] font-black text-[#315C9A]">#{{ t }}</span>
               </div>
 
-              <!-- 日期 · 来源 -->
-              <p class="text-[12px] text-slate-400 font-medium">
-                {{ fmtDate(detail.createdAt) }}
-                <span v-if="detail.icon" class="ml-2">{{ detail.icon }}</span>
-              </p>
+              <button
+                v-if="detailSearchHint"
+                @click="jumpToRelated"
+                class="w-full mt-5 px-4 py-3 rounded-2xl bg-white border border-stone-100 shadow-[0_10px_26px_-22px_rgba(28,25,23,0.5)] flex items-center gap-3 active:scale-[0.99] transition-all text-left"
+              >
+                <span class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <i class="ri-search-2-line text-base"></i>
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-[11px] font-bold text-stone-400 mb-0.5">猜你想搜</span>
+                  <span class="block text-[14px] font-black text-stone-900 truncate">{{ detailSearchHint }}</span>
+                </span>
+                <i class="ri-arrow-right-s-line text-xl text-stone-300"></i>
+              </button>
             </div>
+
+            <!-- 评论区 -->
+            <section class="mx-4 mb-28 rounded-[28px] bg-white border border-stone-100 shadow-[0_16px_50px_-36px_rgba(28,25,23,0.45)] overflow-hidden">
+              <div class="px-4 pt-4 pb-3 flex items-center justify-between">
+                <h2 class="text-[15px] font-black text-stone-950">评论 {{ detail.commentCount || comments.length || 0 }}</h2>
+                <span class="text-[11px] font-bold text-stone-400">温柔一点说</span>
+              </div>
+
+              <div v-if="commentsLoading" class="py-10 flex items-center justify-center text-stone-300">
+                <i class="ri-loader-4-line text-xl animate-spin"></i>
+              </div>
+
+              <div v-else-if="comments.length === 0" class="px-5 py-10 text-center">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-stone-50 flex items-center justify-center text-stone-300">
+                  <i class="ri-chat-smile-2-line text-2xl"></i>
+                </div>
+                <p class="text-[13px] font-bold text-stone-400">还没有评论，来坐第一排</p>
+              </div>
+
+              <div v-else class="divide-y divide-stone-100">
+                <div v-for="comment in comments" :key="comment.id" class="px-4 py-4 flex gap-3">
+                  <img
+                    :src="avatarOf(comment.userAvatar, comment.userName || comment.userId || comment.id)"
+                    class="w-9 h-9 rounded-full object-cover bg-stone-100 ring-1 ring-stone-100 shrink-0"
+                    alt=""
+                  />
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-[13px] font-black text-stone-800 truncate">{{ comment.userName || '匿名病友' }}</span>
+                      <span class="text-[10px] text-stone-300 shrink-0">{{ fmtDate(comment.createdAt) }}</span>
+                    </div>
+                    <p class="text-[14px] leading-relaxed text-stone-700 break-words">{{ comment.content }}</p>
+                  </div>
+                  <button
+                    v-if="checkPermission(comment.userId)"
+                    @click="deleteComment(comment)"
+                    class="w-8 h-8 rounded-full text-stone-300 active:bg-rose-50 active:text-rose-500 flex items-center justify-center shrink-0"
+                  >
+                    <i class="ri-delete-bin-6-line text-[15px]"></i>
+                  </button>
+                </div>
+              </div>
+            </section>
           </article>
         </div>
 
-        <!-- 底栏互动（占位，后续接点赞评论） -->
-        <footer v-if="detail && !detailLoading" class="shrink-0 flex items-center gap-3 px-4 py-3 border-t border-slate-100 bg-white safe-area-bottom">
-          <div class="flex-1 h-10 rounded-full bg-slate-100 flex items-center px-4 text-[13px] text-slate-400 font-medium">
-            <i class="ri-edit-line mr-1.5"></i> 说点什么…
-          </div>
-          <button class="flex flex-col items-center gap-0.5 text-slate-600 active:scale-95 px-1">
-            <i class="ri-heart-3-line text-[22px]"></i>
-            <span class="text-[10px] font-bold">0</span>
+        <!-- 底栏互动 -->
+        <footer v-if="detail && !detailLoading" class="shrink-0 flex items-center gap-2 px-3 py-3 border-t border-stone-100/90 bg-white/95 backdrop-blur-xl safe-area-bottom">
+          <form @submit.prevent="submitComment" class="flex-1 min-w-0 h-10 rounded-full bg-stone-100 flex items-center px-3 gap-2">
+            <i class="ri-edit-line text-stone-400 shrink-0"></i>
+            <input
+              ref="commentInputEl"
+              v-model="commentDraft"
+              type="text"
+              maxlength="300"
+              placeholder="说点什么…"
+              class="flex-1 min-w-0 bg-transparent outline-none text-[13px] font-medium text-stone-800 placeholder-stone-400"
+            />
+            <button
+              v-if="commentDraft.trim()"
+              type="submit"
+              :disabled="commentSending"
+              class="px-2.5 py-1 rounded-full bg-stone-950 text-white text-[11px] font-black disabled:opacity-50 active:scale-95"
+            >
+              发送
+            </button>
+          </form>
+          <button @click="toggleLike" :disabled="likeBusy" class="flex flex-col items-center gap-0.5 active:scale-95 px-1.5 disabled:opacity-60" :class="detail.liked ? 'text-rose-500' : 'text-stone-600'">
+            <i :class="detail.liked ? 'ri-heart-3-fill' : 'ri-heart-3-line'" class="text-[22px]"></i>
+            <span class="text-[10px] font-black tabular-nums">{{ detail.likeCount || 0 }}</span>
           </button>
-          <button class="flex flex-col items-center gap-0.5 text-slate-600 active:scale-95 px-1">
-            <i class="ri-star-line text-[22px]"></i>
-            <span class="text-[10px] font-bold">0</span>
+          <button @click="toggleFavorite" :disabled="favoriteBusy" class="flex flex-col items-center gap-0.5 active:scale-95 px-1.5 disabled:opacity-60" :class="detail.favorited ? 'text-amber-500' : 'text-stone-600'">
+            <i :class="detail.favorited ? 'ri-star-fill' : 'ri-star-line'" class="text-[22px]"></i>
+            <span class="text-[10px] font-black tabular-nums">{{ detail.favoriteCount || 0 }}</span>
           </button>
-          <button class="flex flex-col items-center gap-0.5 text-slate-600 active:scale-95 px-1">
+          <button @click="focusComment" class="flex flex-col items-center gap-0.5 text-stone-600 active:scale-95 px-1.5">
             <i class="ri-chat-3-line text-[22px]"></i>
-            <span class="text-[10px] font-bold">0</span>
+            <span class="text-[10px] font-black tabular-nums">{{ detail.commentCount || comments.length || 0 }}</span>
           </button>
         </footer>
       </div>
@@ -327,7 +407,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import ExperienceCard from '@/components/ExperienceCard.vue'
 import { useAuth } from '@/components/useAuth.js'
@@ -366,34 +446,54 @@ const fmtDate = (iso) => {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 
+const mapExperiencePost = (p) => {
+  let mediaList = []
+  if (p.media) {
+    try { mediaList = JSON.parse(p.media) } catch (e) { mediaList = [] }
+  }
+  const tags = p.tags ? p.tags.split(',').filter(Boolean) : []
+  const cover = p.coverImage || mediaList.find(m => !/\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(m)) || mediaList[0] || ''
+  return {
+    id: p.id,
+    userId: p.userId,
+    theme: p.theme || 'editorial',
+    title: p.title,
+    summary: p.summary,
+    icon: p.icon || '✍️',
+    tags,
+    coverImage: cover,
+    media: mediaList,
+    authorName: p.authorName,
+    authorAvatar: avatarOf(p.authorAvatar, p.authorName || p.userId || p.id),
+    likes: Number(p.likeCount || 0),
+    comments: Number(p.commentCount || 0),
+    favoriteCount: Number(p.favoriteCount || 0),
+    liked: !!p.liked,
+    favorited: !!p.favorited,
+    category: categoryOf(tags),
+    date: fmtDate(p.createdAt)
+  }
+}
+
+const syncPostCard = (post) => {
+  if (!post?.id) return
+  const idx = libraryItems.value.findIndex(item => Number(item.id) === Number(post.id))
+  if (idx === -1) return
+  libraryItems.value[idx] = {
+    ...libraryItems.value[idx],
+    likes: Number(post.likeCount || 0),
+    comments: Number(post.commentCount || 0),
+    favoriteCount: Number(post.favoriteCount || 0),
+    liked: !!post.liked,
+    favorited: !!post.favorited
+  }
+}
+
 const loadPosts = async () => {
   try {
     const res = await http.get('/experience/list')
     if (res.status === 200 || res.code === 200) {
-      libraryItems.value = (res.data || []).map(p => {
-        let mediaList = []
-        if (p.media) {
-          try { mediaList = JSON.parse(p.media) } catch (e) { mediaList = [] }
-        }
-        const cover = p.coverImage || mediaList.find(m => !/\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(m)) || mediaList[0] || ''
-        return {
-          id: p.id,
-          userId: p.userId,
-          theme: p.theme || 'editorial',
-          title: p.title,
-          summary: p.summary,
-          icon: p.icon || '✍️',
-          tags: p.tags ? p.tags.split(',').filter(Boolean) : [],
-          coverImage: cover,
-          media: mediaList,
-          authorName: p.authorName,
-          authorAvatar: avatarOf(p.authorAvatar, p.authorName || p.userId || p.id),
-          likes: 0,
-          comments: 0,
-          category: categoryOf(p.tags ? p.tags.split(',') : []),
-          date: fmtDate(p.createdAt)
-        }
-      })
+      libraryItems.value = (res.data || []).map(mapExperiencePost)
     }
   } catch (e) {
     console.error('加载金库失败', e)
@@ -431,7 +531,21 @@ const detailLoading = ref(false)
 const detail = ref(null)
 const galleryEl = ref(null)
 const galleryIndex = ref(0)
+const comments = ref([])
+const commentsLoading = ref(false)
+const commentDraft = ref('')
+const commentSending = ref(false)
+const likeBusy = ref(false)
+const favoriteBusy = ref(false)
+const commentInputEl = ref(null)
 const detailTags = computed(() => detail.value && detail.value.tags ? detail.value.tags.split(',').filter(Boolean) : [])
+const detailSearchHint = computed(() => {
+  if (!detail.value) return ''
+  const tag = detailTags.value.find(t => t && t !== '新故事')
+  if (tag) return `${tag}经验`
+  const title = (detail.value.title || '').replace(/[，。！？、\s]/g, '').slice(0, 14)
+  return title || '克罗恩经验'
+})
 const detailMedia = computed(() => {
   if (!detail.value) return []
   let list = []
@@ -454,11 +568,19 @@ const openDetail = async (id) => {
   showDetail.value = true
   detailLoading.value = true
   detail.value = null
+  comments.value = []
+  commentDraft.value = ''
   galleryIndex.value = 0
+  commentsLoading.value = true
   try {
-    const res = await http.get(`/experience/detail/${id}`)
+    const [res, commentRes] = await Promise.all([
+      http.get(`/experience/detail/${id}`),
+      http.get(`/experience/${id}/comments`)
+    ])
     if (res.status === 200 || res.code === 200) {
       detail.value = res.data
+      comments.value = (commentRes.status === 200 || commentRes.code === 200) ? (commentRes.data || []) : []
+      syncPostCard(res.data)
     } else {
       alert(res.message || '文章打不开了')
       showDetail.value = false
@@ -468,10 +590,97 @@ const openDetail = async (id) => {
     showDetail.value = false
   } finally {
     detailLoading.value = false
+    commentsLoading.value = false
   }
 }
 
 const closeDetail = () => { showDetail.value = false }
+
+const submitComment = async () => {
+  if (!detail.value?.id) return
+  const content = commentDraft.value.trim()
+  if (!content || commentSending.value) return
+  commentSending.value = true
+  try {
+    const res = await http.post(`/experience/${detail.value.id}/comments`, { content })
+    if (res.status === 200 || res.code === 200) {
+      commentDraft.value = ''
+      if (res.data) comments.value.unshift(res.data)
+      detail.value.commentCount = Number(detail.value.commentCount || 0) + 1
+      syncPostCard(detail.value)
+    } else {
+      alert(res.message || '评论失败')
+    }
+  } catch (e) {
+    alert('评论失败，检查网络')
+  } finally {
+    commentSending.value = false
+  }
+}
+
+const deleteComment = async (comment) => {
+  if (!detail.value?.id || !comment?.id) return
+  if (!confirm('确定删除这条评论吗？')) return
+  try {
+    const res = await http.post(`/experience/${detail.value.id}/comments/${comment.id}/delete`)
+    if (res.status === 200 || res.code === 200) {
+      comments.value = comments.value.filter(item => item.id !== comment.id)
+      detail.value.commentCount = Math.max(Number(detail.value.commentCount || 0) - 1, 0)
+      syncPostCard(detail.value)
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (e) {
+    alert('删除失败，检查网络')
+  }
+}
+
+const toggleLike = async () => {
+  if (!detail.value?.id || likeBusy.value) return
+  likeBusy.value = true
+  try {
+    const res = await http.post(`/experience/${detail.value.id}/like`)
+    if (res.status === 200 || res.code === 200) {
+      detail.value = res.data
+      syncPostCard(res.data)
+    } else {
+      alert(res.message || '操作失败')
+    }
+  } catch (e) {
+    alert('操作失败，检查网络')
+  } finally {
+    likeBusy.value = false
+  }
+}
+
+const toggleFavorite = async () => {
+  if (!detail.value?.id || favoriteBusy.value) return
+  favoriteBusy.value = true
+  try {
+    const res = await http.post(`/experience/${detail.value.id}/favorite`)
+    if (res.status === 200 || res.code === 200) {
+      detail.value = res.data
+      syncPostCard(res.data)
+    } else {
+      alert(res.message || '操作失败')
+    }
+  } catch (e) {
+    alert('操作失败，检查网络')
+  } finally {
+    favoriteBusy.value = false
+  }
+}
+
+const focusComment = async () => {
+  await nextTick()
+  commentInputEl.value?.focus()
+}
+
+const jumpToRelated = () => {
+  const category = categoryOf(detailTags.value)
+  if (category && category !== 'all') activeCategory.value = category
+  closeDetail()
+}
 
 const deleteFromDetail = async () => {
   if (!detail.value) return
@@ -635,5 +844,13 @@ const publishPost = async () => {
 }
 .modal-fade-enter-from, .modal-fade-leave-to {
   opacity: 0;
+}
+
+.detail-topbar {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
 }
 </style>

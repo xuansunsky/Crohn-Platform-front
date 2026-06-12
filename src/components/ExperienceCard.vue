@@ -67,8 +67,8 @@
           />
           <span class="text-[11px] text-stone-500 truncate">{{ authorName || '匿名战友' }}</span>
         </div>
-        <span class="flex items-center gap-0.5 text-[11px] text-stone-400 shrink-0 tabular-nums">
-          <i class="ri-heart-3-line text-[13px]"></i>
+        <span class="flex items-center gap-0.5 text-[11px] shrink-0 tabular-nums" :class="liked ? 'text-rose-500' : 'text-stone-400'">
+          <i :class="liked ? 'ri-heart-3-fill' : 'ri-heart-3-line'" class="text-[13px]"></i>
           {{ likes ?? 0 }}
         </span>
       </div>
@@ -102,6 +102,7 @@ const props = defineProps({
   authorAvatar: { type: String, default: '' },
   likes: { type: Number, default: 0 },
   comments: { type: Number, default: 0 },
+  liked: { type: Boolean, default: false },
   canEdit: { type: Boolean, default: false }
 })
 
