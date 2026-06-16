@@ -4,15 +4,25 @@
     <div class="bg"></div>
     <div class="stars"></div>
     <div class="overlay"></div>
-    <CyberAlert
-        v-if="showSuccessAlert"
-        title="身份验证通过"
-        msg="welcome back to Paradise,Architect-Xuan！"
-    />
+
+    <transition name="welcome-gate">
+      <div v-if="showWelcomeGate" class="welcome-gate">
+        <div class="welcome-art">
+          <img src="/img/bg-stars-lite.jpg" alt="" decoding="async" />
+        </div>
+        <div class="welcome-copy">
+          <p class="welcome-label">{{ welcomeName === '欢迎回来' ? '身份已确认' : '欢迎回来' }}</p>
+          <h2>{{ welcomeName }}</h2>
+          <p>今天也一起慢慢把生活找回来</p>
+        </div>
+        <p class="welcome-credit">created by godxuan</p>
+      </div>
+    </transition>
+
     <!-- 登录卡片 -->
     <main class="login-card" :class="{ 'floating': isHovered }">
       <div class="hero-container" @mouseenter="heroHover = true" @mouseleave="heroHover = false">
-        <img src="/img/hero-boy.png" alt="Hero" class="hero-art" :class="{ 'hover': heroHover }" />
+        <img src="/img/hero-boy-lite.jpg" alt="Hero" class="hero-art" :class="{ 'hover': heroHover }" fetchpriority="high" decoding="async" />
         <div class="glow"></div>
       </div>
 
@@ -100,7 +110,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginUser } from '@/api/user.js'
-import CyberAlert from '@/components/CyberAlert.vue'
+import { parseJwtPayload } from '@/utils/authToken'
 
 const router = useRouter()
 
@@ -113,7 +123,8 @@ const loading = ref(false)
 const error = ref('')
 const isHovered = ref(false)
 const heroHover = ref(false)
-const showSuccessAlert = ref(false)
+const showWelcomeGate = ref(false)
+const welcomeName = ref('')
 
 // 页面加载时，尝试读取记住的密码
 onMounted(() => {
@@ -153,10 +164,14 @@ async function submit() {
 
     if (response.status === 200) {
       const res = response.data
+      const tokenPayload = parseJwtPayload(res.token)
+      const nickname = res.nickname || tokenPayload?.nickname || localStorage.getItem('nickname') || ''
       localStorage.setItem('token', res.token)
       localStorage.setItem('roleId', res.roleId)
       localStorage.setItem('userId', res.userId)
-      localStorage.setItem('nickname', res.nickname)
+      if (nickname) localStorage.setItem('nickname', nickname)
+      else localStorage.removeItem('nickname')
+      welcomeName.value = nickname || '欢迎回来'
 
       // 保存或清除记住的密码
       if (rememberMe.value) {
@@ -167,12 +182,12 @@ async function submit() {
         localStorage.removeItem('remember_password')
       }
 
-      showSuccessAlert.value = true
+      showWelcomeGate.value = true
       console.log("前端热更新成功")
 
       setTimeout(async () => {
         await router.replace('/dashboard')
-      }, 1500)
+      }, 2200)
 
     } else {
       error.value = response.message || '登录失败，请检查账号密码'
@@ -240,6 +255,113 @@ async function submit() {
       radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 184, 108, 0.15), transparent 50%),
       linear-gradient(120deg, rgba(255, 184, 108, .1), rgba(255, 107, 107, .08));
   transition: background 0.3s ease;
+}
+
+/* 登录成功后的进站仪式 */
+.welcome-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #FFFDF8;
+}
+
+.welcome-art {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(20px, env(safe-area-inset-top)) 20px 0;
+  background:
+      radial-gradient(circle at 50% 18%, rgba(255,255,255,0.9), rgba(255,253,248,0.42) 45%, #FFFDF8 100%),
+      linear-gradient(180deg, #f8fbff 0%, #fff8ee 100%);
+}
+
+.welcome-art img {
+  width: min(92vw, 520px);
+  max-height: 76vh;
+  object-fit: contain;
+  border-radius: 18px;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.14);
+  animation: welcome-image-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.welcome-art::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72px;
+  background: linear-gradient(to bottom, transparent, #FFFDF8);
+}
+
+.welcome-copy {
+  position: relative;
+  z-index: 1;
+  padding: 22px 28px 54px;
+  text-align: center;
+  color: #1e293b;
+  animation: welcome-copy-in 0.8s ease 0.16s both;
+}
+
+.welcome-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 5px;
+  color: #94a3b8;
+}
+
+.welcome-copy h2 {
+  margin: 0 0 10px;
+  font-size: clamp(26px, 8vw, 36px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
+}
+
+.welcome-copy p:last-child {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.welcome-credit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 2;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #cbd5e1;
+}
+
+.welcome-gate-enter-active,
+.welcome-gate-leave-active {
+  transition: opacity 0.45s ease;
+}
+
+.welcome-gate-enter-from,
+.welcome-gate-leave-to {
+  opacity: 0;
+}
+
+@keyframes welcome-image-in {
+  from { opacity: 0; transform: scale(1.04) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes welcome-copy-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* 登录卡片 */

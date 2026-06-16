@@ -6,7 +6,7 @@
 
     <main class="login-card">
       <div class="hero-container">
-        <img src="/img/hero-boy.png" alt="Hero" class="hero-art" />
+        <img src="/img/hero-boy-lite.jpg" alt="Hero" class="hero-art" fetchpriority="high" decoding="async" />
         <div class="glow"></div>
       </div>
 
@@ -126,7 +126,7 @@ async function register() {
     })
 
     if (resData.status === 200) {
-      alert('注册成功！✨ 欢迎加入克罗恩王国')
+      alert('注册成功！✨ 欢迎加入乐园')
       await router.push('/login2')
     } else {
       error.value = resData.message || '注册失败，请稍后重试'

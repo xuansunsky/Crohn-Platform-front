@@ -29,15 +29,23 @@
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div v-for="v in pendingList" :key="v.userId"
                class="rounded-2xl bg-black/20 border border-white/10 p-4 flex gap-4">
-            <a :href="v.proofImageUrl" target="_blank" class="shrink-0">
-              <img :src="v.proofImageUrl" class="w-24 h-24 rounded-xl object-cover bg-black/40 border border-white/10">
-            </a>
+            <div class="shrink-0 grid grid-cols-2 gap-1.5 w-24">
+              <a
+                v-for="url in proofImagesOf(v)"
+                :key="url"
+                :href="url"
+                target="_blank"
+                class="block aspect-square rounded-xl overflow-hidden bg-black/40 border border-white/10"
+              >
+                <img :src="url" class="w-full h-full object-cover">
+              </a>
+            </div>
             <div class="flex-1 min-w-0 flex flex-col">
               <div class="flex items-center gap-2">
                 <img v-if="v.avatar" :src="v.avatar" class="w-6 h-6 rounded-full object-cover">
                 <span class="font-bold text-white/90 truncate">{{ v.nickname || ('用户 ' + v.userId) }}</span>
               </div>
-              <p class="text-[11px] text-white/40 mt-1">点击左侧大图核验证明材料</p>
+              <p class="text-[11px] text-white/40 mt-1">点击左侧图片核验证明材料</p>
               <div class="flex gap-2 mt-auto pt-3">
                 <button @click="review(v.userId, true)"
                         class="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all">
@@ -150,6 +158,18 @@ const updateRole = async (userId, roleId) => {
 
 const promote = (u) => updateRole(u.id, 1)
 const demote = (u) => updateRole(u.id, 2)
+
+const proofImagesOf = (v) => {
+  if (!v) return []
+  if (Array.isArray(v.proofImageUrls)) return v.proofImageUrls.filter(Boolean)
+  if (v.proofImagesJson) {
+    try {
+      const list = JSON.parse(v.proofImagesJson)
+      if (Array.isArray(list)) return list.filter(Boolean)
+    } catch (e) {}
+  }
+  return v.proofImageUrl ? [v.proofImageUrl] : []
+}
 
 const fetchPending = async () => {
   try {

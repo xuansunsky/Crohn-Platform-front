@@ -34,19 +34,18 @@
           </div>
 
           <!-- 右下：用户信息 -->
-          <div class="absolute bottom-3 left-4 right-24 z-10">
-            <p class="text-white/70 text-[10px] font-bold tracking-wide mb-0.5">我的主页</p>
-            <h2 class="text-white text-[20px] font-bold tracking-tight leading-tight drop-shadow-md">{{ myCard.name }}</h2>
-            <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5 line-clamp-2">{{ myCard.sign }}</p>
+          <div class="absolute bottom-3 left-4 right-4 z-10">
+            <div class="flex items-end justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-white/70 text-[10px] font-bold tracking-wide mb-0.5">我的主页</p>
+                <h2 class="text-white text-[20px] font-bold tracking-tight leading-tight drop-shadow-md">{{ myCard.name }}</h2>
+                <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5 line-clamp-2">{{ myCard.sign }}</p>
+              </div>
+              <button @click="openProfileConfig" class="shrink-0 px-3 py-2 rounded-2xl bg-white/16 backdrop-blur-md border border-white/20 text-white text-[11px] font-black active:scale-95 transition-all">
+                编辑主页
+              </button>
+            </div>
           </div>
-
-          <button
-            @click="openMyMoments"
-            class="absolute bottom-3 right-4 z-20 flex flex-col items-center gap-1 active:scale-95 transition-all"
-          >
-            <img :src="myCard.avatar" class="w-14 h-14 rounded-2xl border-[3px] border-white shadow-xl bg-white object-cover" />
-            <span class="px-2 py-0.5 rounded-full bg-black/35 backdrop-blur text-[9px] font-black text-white">朋友圈</span>
-          </button>
 
         </div>
 
@@ -190,6 +189,25 @@
 
         <!-- ============ 动态 Feed（纯净列表流）============ -->
         <div v-show="currentTab === 'moments'" class="space-y-3.5 pt-1">
+          <section class="relative overflow-hidden rounded-[28px] bg-white/82 backdrop-blur-xl p-4 border border-white/90 shadow-[0_12px_34px_-26px_rgba(15,23,42,0.35)]">
+            <div class="absolute -right-8 -top-10 w-28 h-28 rounded-full bg-blue-100/70 blur-2xl pointer-events-none"></div>
+            <div class="relative z-10 flex items-center gap-3">
+              <button @click="openMyMoments" class="relative shrink-0 active:scale-95 transition-all" aria-label="打开我的动态">
+                <img :src="myCard.avatar" class="w-[54px] h-[54px] rounded-[20px] border-[3px] border-white shadow-md bg-white object-cover" />
+                <span class="absolute -right-1 -bottom-1 w-7 h-7 rounded-2xl bg-slate-950 text-white border-[3px] border-white flex items-center justify-center shadow-md">
+                  <i class="ri-camera-lens-line text-[13px]"></i>
+                </span>
+              </button>
+              <button @click="openMyMoments" class="flex-1 min-w-0 text-left active:scale-[0.99] transition-all">
+                <p class="text-[10px] font-black tracking-[0.16em] text-blue-500">我的动态</p>
+                <h3 class="text-[17px] font-black tracking-tight truncate mt-0.5 text-slate-950">{{ myCard.name }}</h3>
+                <p class="text-[11.5px] text-slate-500 font-medium truncate mt-0.5">{{ myCard.sign }}</p>
+              </button>
+              <button @click="openComposerFromQuickMenu" class="w-10 h-10 rounded-2xl bg-slate-950 text-white flex items-center justify-center active:scale-90 transition-all shrink-0 shadow-md">
+                <i class="ri-add-line text-[22px]"></i>
+              </button>
+            </div>
+          </section>
 
           <!-- Feed -->
           <article
@@ -536,15 +554,15 @@
 
           <div v-if="pendingRequests.length > 0">
             <h3 class="text-[12px] font-black text-slate-400 tracking-widest uppercase mb-3 px-2">新请求接入</h3>
-            <div v-for="req in pendingRequests" :key="req.id" class="bg-white/50 backdrop-blur-lg rounded-[28px] p-4 flex items-center justify-between border border-white/60 shadow-sm mb-3">
-              <div class="flex items-center gap-3">
+            <div v-for="req in pendingRequests" :key="req.id" class="bg-white/50 backdrop-blur-lg rounded-[28px] p-4 flex items-center justify-between border border-white/60 shadow-sm mb-3 gap-3">
+              <button @click="openUserProfile(req.friendId)" class="flex items-center gap-3 min-w-0 text-left active:scale-[0.99] transition-all">
                 <img :src="avatarOf(req, req.id)" class="w-[46px] h-[46px] rounded-[18px] object-cover border-2 border-white shadow-sm">
-                <div>
+                <div class="min-w-0">
                   <h4 class="text-[15px] font-bold text-slate-800">{{ req.nickname || '神秘特工' }}</h4>
-                  <p class="text-[11px] text-slate-500 font-medium">想和你成为朋友</p>
+                  <p class="text-[11px] text-slate-500 font-medium">想和你成为朋友 · 点头像看主页</p>
                 </div>
-              </div>
-              <button @click="acceptRequest(req.friendshipId)" class="px-5 py-2 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white text-[13px] font-bold rounded-full shadow-md shadow-emerald-500/30 hover:shadow-lg active:scale-95 transition-all">
+              </button>
+              <button @click.stop="acceptRequest(req.friendshipId)" class="px-5 py-2 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white text-[13px] font-bold rounded-full shadow-md shadow-emerald-500/30 hover:shadow-lg active:scale-95 transition-all shrink-0">
                 授权
               </button>
             </div>
@@ -590,19 +608,41 @@
 
             <button v-if="msg.senderId !== myId && activeChat?.type === 'group'" @click="openUserProfile(msg.senderId)" class="text-[10px] text-slate-400 font-bold mb-0.5 ml-1 text-left active:text-blue-500 transition-colors">{{ msg.senderName || '队友' }}</button>
 
-            <div v-if="msg.senderId !== myId" class="bg-white text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-md text-[14.5px] max-w-[78%] leading-relaxed border border-slate-100 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <div v-if="msg.senderId !== myId" class="bg-white text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-md text-[14.5px] max-w-[78%] leading-relaxed border border-slate-100 shadow-[0_1px_2px_rgba(15,23,42,0.04)]" :class="msg.secret ? 'ring-1 ring-violet-200 bg-violet-50' : ''">
               <img v-if="msg.type === 'image'" :src="msg.content" class="max-w-full rounded-xl" />
+              <a v-else-if="msg.type === 'file'" :href="filePayload(msg).url" target="_blank" class="flex items-center gap-2.5 min-w-[190px]">
+                <span class="w-10 h-10 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0"><i class="ri-file-3-line text-xl"></i></span>
+                <span class="min-w-0">
+                  <span class="block text-[13px] font-black truncate">{{ filePayload(msg).name }}</span>
+                  <span class="block text-[10px] text-slate-400 font-bold mt-0.5">{{ filePayload(msg).sizeText || '文件' }}</span>
+                </span>
+              </a>
+              <span v-else-if="msg.secret">🔒 {{ msg.content }}</span>
               <span v-else>{{ msg.content }}</span>
+              <p v-if="msg.secret" class="text-[10px] text-violet-400 font-bold mt-1">密聊消息，10 秒后消失</p>
             </div>
 
-            <div v-else class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-md text-[14.5px] max-w-[78%] leading-relaxed shadow-[0_1px_2px_rgba(37,99,235,0.15)]">
+            <div v-else class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-md text-[14.5px] max-w-[78%] leading-relaxed shadow-[0_1px_2px_rgba(37,99,235,0.15)]" :class="msg.secret ? 'bg-violet-600' : ''">
               <img v-if="msg.type === 'image'" :src="msg.content" class="max-w-full rounded-xl" />
+              <a v-else-if="msg.type === 'file'" :href="filePayload(msg).url" target="_blank" class="flex items-center gap-2.5 min-w-[190px] text-white">
+                <span class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center shrink-0"><i class="ri-file-3-line text-xl"></i></span>
+                <span class="min-w-0">
+                  <span class="block text-[13px] font-black truncate">{{ filePayload(msg).name }}</span>
+                  <span class="block text-[10px] text-white/70 font-bold mt-0.5">{{ filePayload(msg).sizeText || '文件' }}</span>
+                </span>
+              </a>
+              <span v-else-if="msg.secret">🔒 {{ msg.content }}</span>
               <span v-else>{{ msg.content }}</span>
+              <p v-if="msg.secret" class="text-[10px] text-white/70 font-bold mt-1">不保存 · 10 秒后消失</p>
             </div>
           </div>
         </div>
 
         <div class="shrink-0 px-3 pt-2 pb-[calc(env(safe-area-inset-bottom,8px)+8px)] bg-white/80 backdrop-blur-xl border-t border-slate-100/80 relative">
+          <div v-if="secretMode" class="mb-2 mx-1 rounded-2xl bg-violet-50 border border-violet-100 px-3 py-2 text-[11px] font-black text-violet-600 flex items-center justify-between gap-2">
+            <span><i class="ri-lock-2-fill"></i> 密聊中：不保存，10 秒后消失</span>
+            <button @click="secretMode = false" class="text-violet-400 active:scale-95">退出</button>
+          </div>
 
           <div class="flex items-end gap-2">
             <button @click="showPlusMenu = !showPlusMenu; showEmojiMenu = false" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all hover:bg-slate-100 active:scale-90" :class="showPlusMenu ? 'rotate-45 text-blue-600 bg-blue-50' : 'text-slate-500'">
@@ -610,7 +650,7 @@
             </button>
 
             <div class="flex-1 bg-slate-100/80 rounded-3xl flex items-center min-h-[40px] focus-within:bg-white focus-within:ring-1 focus-within:ring-slate-200 transition-all">
-              <input v-model="inputMsg" @keydown.enter="sendMessage" @focus="showPlusMenu = false; showEmojiMenu = false" type="text" placeholder="输入消息..." class="w-full bg-transparent px-4 py-2.5 text-[14.5px] outline-none placeholder-slate-400 text-slate-800">
+              <input v-model="inputMsg" @keydown.enter="sendMessage" @focus="showPlusMenu = false; showEmojiMenu = false" type="text" :placeholder="secretMode ? '密聊：不会保存，10 秒后消失' : '输入消息...'" class="w-full bg-transparent px-4 py-2.5 text-[14.5px] outline-none placeholder-slate-400 text-slate-800">
               <button @click="showEmojiMenu = !showEmojiMenu; showPlusMenu = false" class="p-2.5 mr-1 text-slate-400 hover:text-slate-600 transition-colors shrink-0">
                 <i class="ri-emotion-line text-[20px]"></i>
               </button>
@@ -629,7 +669,7 @@
             </div>
           </div>
 
-          <div v-show="showPlusMenu" class="grid grid-cols-3 gap-y-5 pt-5 pb-3 mt-2 border-t border-slate-100">
+          <div v-show="showPlusMenu" class="grid grid-cols-4 gap-y-5 pt-5 pb-3 mt-2 border-t border-slate-100">
             <div v-for="item in plusMenuItems" :key="item.label" @click="handlePlusItem(item)" class="flex flex-col items-center gap-2 cursor-pointer group active:scale-95 transition-transform">
               <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-slate-100 transition-all">
                 <i :class="[item.icon, item.color, 'text-[22px]']"></i>
@@ -639,6 +679,7 @@
           </div>
           <input id="chat-album-input" type="file" accept="image/*" class="hidden" @change="sendImageFile" />
           <input id="chat-camera-input" type="file" accept="image/*" capture="environment" class="hidden" @change="sendImageFile" />
+          <input id="chat-file-input" type="file" class="hidden" @change="sendGenericFile" />
 
         </div>
       </div>
@@ -674,7 +715,7 @@
                 <span class="w-8 h-8 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
                   <i class="ri-sparkling-2-line text-amber-100"></i>
                 </span>
-                <span class="text-[11px] font-black tracking-[0.16em] text-white/55">今天最多 5 位 · 还能打招呼 {{ discoveryGreetRemaining }} 次</span>
+                <span class="text-[11px] font-black tracking-[0.16em] text-white/55">一个个看 · 还能打招呼 {{ discoveryGreetRemaining }} 次</span>
               </div>
               <h1 class="text-[28px] font-black tracking-tight leading-[1.08] whitespace-pre-line">{{ discoveryHeroTitle }}</h1>
               <p class="text-[12.5px] text-white/58 font-medium leading-relaxed mt-3 max-w-[17rem]">
@@ -701,54 +742,76 @@
               </div>
             </div>
 
-            <div v-else-if="foundPatients.length > 0" class="space-y-3.5">
+            <div v-else-if="currentDiscoveryPick" class="space-y-4">
               <article
-                v-for="(p, index) in foundPatients"
-                :key="p.id"
-                class="city-pick-card relative overflow-hidden rounded-[30px] bg-white/76 backdrop-blur-xl border border-white/90 p-4 shadow-[0_16px_45px_-34px_rgba(15,23,42,0.75)]"
-                :style="`animation-delay: ${index * 70}ms;`"
+                :key="currentDiscoveryPick.id"
+                class="city-pick-card discovery-profile-card relative overflow-hidden rounded-[36px] bg-white/82 backdrop-blur-xl border border-white/90 shadow-[0_28px_70px_-42px_rgba(15,23,42,0.9)]"
               >
-                <div class="absolute right-4 top-4 text-[10px] font-black text-slate-300 tracking-[0.16em]">0{{ index + 1 }}</div>
-                <div class="flex items-start gap-3.5 pr-8">
-                  <div class="relative shrink-0">
-                    <img :src="p.avatar" class="w-[58px] h-[58px] rounded-[22px] object-cover bg-slate-100 border-2 border-white shadow-sm">
-                    <span class="absolute -right-1 -bottom-1 w-5 h-5 rounded-full bg-emerald-400 border-2 border-white flex items-center justify-center">
-                      <i class="ri-check-line text-white text-[11px]"></i>
+                <div class="absolute inset-x-0 top-0 h-40 bg-gradient-to-br from-indigo-100 via-rose-50 to-amber-100"></div>
+                <div class="absolute -right-8 -top-10 w-32 h-32 rounded-full bg-white/50 blur-2xl"></div>
+                <div class="relative p-5 pt-7">
+                  <div class="flex items-center justify-between mb-8">
+                    <span class="rounded-full bg-white/70 border border-white px-3 py-1.5 text-[10.5px] font-black text-slate-500 shadow-sm">
+                      {{ discoveryProgressText }}
+                    </span>
+                    <span class="rounded-full bg-slate-950/88 text-white px-3 py-1.5 text-[10.5px] font-black shadow-sm">
+                      {{ currentDiscoveryPick.distance }}
                     </span>
                   </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <h3 class="text-[17px] font-black text-slate-950 tracking-tight truncate max-w-[9rem]">{{ p.name }}</h3>
-                      <span class="rounded-full bg-slate-100 text-slate-500 px-2 py-0.5 text-[10px] font-black">
-                        {{ p.distance }}
+
+                  <div class="flex flex-col items-center text-center">
+                    <div class="relative">
+                      <img :src="currentDiscoveryPick.avatar" class="w-28 h-28 rounded-[36px] object-cover bg-slate-100 border-[5px] border-white shadow-[0_22px_46px_-24px_rgba(15,23,42,0.9)]">
+                      <span class="absolute -right-1 bottom-2 w-8 h-8 rounded-2xl bg-emerald-400 border-[3px] border-white flex items-center justify-center shadow-lg">
+                        <i class="ri-check-line text-white text-[16px]"></i>
                       </span>
                     </div>
-                    <p class="mt-2 text-[12.5px] text-slate-500 font-medium leading-relaxed">
-                      {{ p.sign }}
+                    <h3 class="mt-4 text-[26px] font-black text-slate-950 tracking-tight">{{ currentDiscoveryPick.name }}</h3>
+                    <p class="mt-2 max-w-[17rem] text-[13.5px] text-slate-500 font-semibold leading-relaxed">
+                      {{ currentDiscoveryPick.sign }}
                     </p>
-                    <div class="flex flex-wrap gap-1.5 mt-3">
-                      <span v-for="tag in p.tags" :key="tag" class="rounded-full bg-stone-100/80 text-slate-500 px-2.5 py-1 text-[10.5px] font-black">
+
+                    <div class="flex flex-wrap justify-center gap-1.5 mt-4">
+                      <span v-for="tag in currentDiscoveryPick.tags" :key="tag" class="rounded-full bg-stone-100/90 text-slate-600 px-3 py-1.5 text-[11px] font-black">
                         {{ tag }}
                       </span>
                     </div>
                   </div>
-                </div>
 
-                <div class="grid grid-cols-[0.82fr_1.18fr] gap-2 mt-4">
-                  <button @click="skipCityPick(p.id)" class="py-2.5 rounded-2xl bg-slate-100/80 text-slate-500 text-[12px] font-black active:scale-95 transition-all">
-                    暂时跳过
-                  </button>
+                  <div class="grid grid-cols-3 gap-2 mt-6">
+                    <button @click="skipCurrentDiscoveryPick" class="py-3 rounded-2xl bg-slate-100/90 text-slate-500 text-[12px] font-black active:scale-95 transition-all flex flex-col items-center gap-1">
+                      <i class="ri-arrow-go-forward-line text-[18px]"></i>
+                      下一个
+                    </button>
+                    <button @click="openDiscoveryProfile(currentDiscoveryPick)" class="py-3 rounded-2xl bg-white text-slate-700 border border-slate-100 text-[12px] font-black active:scale-95 transition-all flex flex-col items-center gap-1 shadow-sm">
+                      <i class="ri-camera-lens-line text-[18px]"></i>
+                      朋友圈
+                    </button>
+                    <button
+                      @click="greetCityPick(currentDiscoveryPick)"
+                      :disabled="currentDiscoveryPick.requested || discoveryGreetRemaining <= 0"
+                      class="py-3 rounded-2xl text-[12px] font-black active:scale-95 transition-all flex flex-col items-center gap-1"
+                      :class="currentDiscoveryPick.requested ? 'bg-emerald-50 text-emerald-600' : (discoveryGreetRemaining <= 0 ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white shadow-[0_14px_26px_-20px_rgba(15,23,42,0.9)]')"
+                    >
+                      <i :class="currentDiscoveryPick.requested ? 'ri-check-line' : 'ri-user-heart-line'" class="text-[18px]"></i>
+                      {{ currentDiscoveryPick.requested ? '已打招呼' : (discoveryGreetRemaining <= 0 ? '已满' : '打招呼') }}
+                    </button>
+                  </div>
+
                   <button
-                    @click="greetCityPick(p)"
-                    :disabled="p.requested || discoveryGreetRemaining <= 0"
-                    class="py-2.5 rounded-2xl text-[12px] font-black active:scale-95 transition-all flex items-center justify-center gap-1.5"
-                    :class="p.requested ? 'bg-emerald-50 text-emerald-600' : (discoveryGreetRemaining <= 0 ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white shadow-[0_14px_26px_-20px_rgba(15,23,42,0.9)]')"
+                    v-if="currentDiscoveryPick.isFriend"
+                    @click="chatWithDiscoveryPick(currentDiscoveryPick)"
+                    class="w-full mt-2 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-[12px] font-black active:scale-95 transition-all shadow-[0_16px_30px_-24px_rgba(79,70,229,0.9)]"
                   >
-                    <i :class="p.requested ? 'ri-check-line' : 'ri-user-heart-line'"></i>
-                    {{ p.requested ? '已打招呼' : (discoveryGreetRemaining <= 0 ? '今日已满' : '打个招呼') }}
+                    <i class="ri-message-3-line mr-1"></i>
+                    发一句私信
                   </button>
                 </div>
               </article>
+
+              <p class="text-center text-[11px] font-bold text-slate-400">
+                不展示精确距离，不做无限刷人。慢慢认识一个人。
+              </p>
             </div>
 
             <div v-else class="rounded-[32px] bg-white/76 border border-white/90 p-7 text-center shadow-sm">
@@ -783,8 +846,8 @@
 
           <div class="flex justify-between items-center mb-6 mt-4 shrink-0">
             <div>
-              <h2 class="text-slate-900 text-[22px] font-black tracking-tight">同城偏好</h2>
-              <p class="text-slate-500 text-[12px] mt-1">让推荐更接近你的真实需要</p>
+              <h2 class="text-slate-900 text-[22px] font-black tracking-tight">我的主页</h2>
+              <p class="text-slate-500 text-[12px] mt-1">封面、签名和遇见偏好放在这里</p>
             </div>
             <button @click="showProfileConfig = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 active:scale-90 transition-all">
               <i class="ri-close-line text-lg"></i>
@@ -792,6 +855,46 @@
           </div>
 
           <div class="flex-1 overflow-y-auto custom-scroll space-y-8 pb-6">
+            <div>
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-1.5 h-4 bg-slate-900 rounded-full"></div>
+                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">主页封面</h3>
+              </div>
+              <div class="relative h-40 rounded-[26px] overflow-hidden bg-slate-100 border border-slate-100 shadow-inner">
+                <img :src="profileEdit.cover || myCard.cover" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-transparent"></div>
+                <button @click="pickProfileCover" class="absolute right-3 bottom-3 px-3.5 py-2 rounded-2xl bg-white text-slate-900 text-[12px] font-black shadow-lg active:scale-95 transition-all">
+                  <i class="ri-image-edit-line"></i> 换封面
+                </button>
+                <input id="profile-cover-input" type="file" accept="image/*" class="hidden" @change="onProfileCoverChange" />
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-1.5 h-4 bg-rose-500 rounded-full"></div>
+                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">个人签名</h3>
+              </div>
+              <textarea v-model="profileEdit.sign" rows="3" maxlength="80" placeholder="一句话，让别人一眼记住你。"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-800 text-[14px] font-medium outline-none focus:border-slate-900 focus:bg-white transition-all resize-none"></textarea>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-1.5 h-4 bg-amber-500 rounded-full"></div>
+                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">主页风格</h3>
+              </div>
+              <div class="grid grid-cols-4 gap-2">
+                <button
+                  v-for="style in profileStyleOptions"
+                  :key="style.id"
+                  @click="profileEdit.style = style.id"
+                  class="h-14 rounded-2xl border-2 active:scale-95 transition-all"
+                  :class="[style.class, profileEdit.style === style.id ? 'border-slate-950 shadow-lg' : 'border-white']"
+                  :aria-label="style.label"
+                ></button>
+              </div>
+            </div>
 
             <div>
               <div class="flex items-center gap-2 mb-4">
@@ -848,8 +951,8 @@
           </div>
 
           <div class="shrink-0 pt-4 border-t border-slate-100">
-            <button @click="showProfileConfig = false" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-[16px] py-4 rounded-[20px] shadow-[0_10px_20px_rgba(15,23,42,0.2)] active:scale-95 transition-all flex justify-center items-center gap-2">
-              保存偏好 <i class="ri-check-line"></i>
+            <button @click="saveProfileConfig" :disabled="isSavingProfileConfig || discoverySaving" class="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-black text-[16px] py-4 rounded-[20px] shadow-[0_10px_20px_rgba(15,23,42,0.2)] active:scale-95 transition-all flex justify-center items-center gap-2">
+              {{ isSavingProfileConfig || discoverySaving ? '保存中...' : '保存主页' }} <i class="ri-check-line"></i>
             </button>
           </div>
 
@@ -1376,11 +1479,29 @@
             <h2 class="text-slate-900 text-[20px] font-black tracking-tight">群发广播</h2>
             <button @click="showBroadcast = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
           </div>
-          <p class="text-[12px] text-slate-400 font-medium mb-4">这条消息会单独发给你的每一位好友。</p>
+          <p class="text-[12px] text-slate-400 font-medium mb-4">先选人，再发送。不会默认打扰所有人。</p>
+          <div class="max-h-44 overflow-y-auto custom-scroll space-y-2 mb-4">
+            <button
+              v-for="friend in friendChats"
+              :key="friend.id"
+              @click="toggleBroadcastReceiver(friend.id)"
+              class="w-full flex items-center gap-3 p-2.5 rounded-2xl border text-left active:scale-[0.99] transition-all"
+              :class="broadcastReceiverIds.includes(friend.id) ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-100'"
+            >
+              <img :src="friend.avatar" class="w-9 h-9 rounded-2xl object-cover bg-white shrink-0">
+              <span class="flex-1 min-w-0 text-[13px] font-black text-slate-700 truncate">{{ friend.name }}</span>
+              <i :class="broadcastReceiverIds.includes(friend.id) ? 'ri-checkbox-circle-fill text-rose-500' : 'ri-checkbox-blank-circle-line text-slate-300'" class="text-xl"></i>
+            </button>
+            <p v-if="friendChats.length === 0" class="text-center py-6 text-[12px] text-slate-400 font-bold">还没有好友可以广播</p>
+          </div>
+          <div class="flex gap-2 mb-3">
+            <button @click="broadcastReceiverIds = friendChats.map(f => f.id)" class="flex-1 py-2 rounded-xl bg-slate-100 text-[11px] font-black text-slate-600 active:scale-95">全选</button>
+            <button @click="broadcastReceiverIds = []" class="flex-1 py-2 rounded-xl bg-slate-100 text-[11px] font-black text-slate-600 active:scale-95">清空</button>
+          </div>
           <textarea v-model="broadcastText" rows="4" placeholder="想对全体战友说点什么?如:今晚八段锦走起!" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-800 text-[14px] font-medium outline-none focus:border-rose-400 focus:bg-white transition-all resize-none mb-4"></textarea>
-          <button @click="sendBroadcast" :disabled="isSendingBroadcast || !broadcastText.trim()" class="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 text-white font-black text-[15px] py-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2">
+          <button @click="sendBroadcast" :disabled="isSendingBroadcast || !broadcastText.trim() || broadcastReceiverIds.length === 0" class="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 text-white font-black text-[15px] py-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2">
             <i class="ri-broadcast-line" :class="{ 'animate-pulse': isSendingBroadcast }"></i>
-            {{ isSendingBroadcast ? '广播中...' : '发射广播' }}
+            {{ isSendingBroadcast ? '广播中...' : `发给 ${broadcastReceiverIds.length} 人` }}
           </button>
         </div>
       </div>
@@ -1511,8 +1632,12 @@
         <div class="relative bg-[#FBF9F5] rounded-t-[34px] max-h-[82vh] overflow-hidden flex flex-col shadow-[0_-24px_60px_-26px_rgba(15,23,42,0.45)]">
           <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-200 rounded-full"></div>
 
-          <header class="shrink-0 px-6 pt-8 pb-5">
-            <div class="flex justify-between items-start gap-3">
+          <header class="relative shrink-0 px-6 pt-8 pb-5 overflow-hidden">
+            <div v-if="profileUser?.profileCover" class="absolute inset-0 pointer-events-none">
+              <img :src="profileUser.profileCover" class="w-full h-full object-cover opacity-35 blur-[1px] scale-[1.03]">
+              <div class="absolute inset-0 bg-gradient-to-b from-white/78 via-[#FBF9F5]/88 to-[#FBF9F5]"></div>
+            </div>
+            <div class="relative z-10 flex justify-between items-start gap-3">
               <div class="flex items-center gap-4 min-w-0">
                 <img :src="avatarOf(profileUser, profileUser?.userId)" class="w-16 h-16 rounded-[24px] object-cover border-2 border-white shadow-md bg-slate-100">
                 <div class="min-w-0">
@@ -1523,6 +1648,7 @@
                     </button>
                   </div>
                   <p v-if="profileRemark" class="text-[11px] text-slate-400 font-bold mt-0.5 truncate">昵称：{{ profileUser?.nickname }}</p>
+                  <p v-if="profileUser?.radarSign" class="text-[12px] text-slate-500 font-bold mt-1 truncate">{{ profileUser.radarSign }}</p>
                   <div class="flex items-center gap-2 mt-2">
                     <span v-if="profileUser?.verified" class="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
                       <i class="ri-shield-check-fill"></i> 已认证
@@ -1539,7 +1665,7 @@
             </div>
           </header>
 
-          <div class="flex-1 overflow-y-auto custom-scroll px-6 pb-6 space-y-3">
+          <div class="relative z-10 flex-1 overflow-y-auto custom-scroll px-6 pb-6 space-y-3">
             <p v-if="userProfileLoading" class="text-center py-12 text-[13px] text-slate-400 font-bold">加载资料中...</p>
 
             <template v-else>
@@ -1611,7 +1737,7 @@
             </template>
           </div>
 
-          <footer v-if="!userProfileLoading" class="shrink-0 grid grid-cols-2 gap-2 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+16px)] bg-[#FBF9F5]/95 border-t border-stone-100">
+          <footer v-if="!userProfileLoading" class="relative z-10 shrink-0 grid grid-cols-2 gap-2 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+16px)] bg-[#FBF9F5]/95 border-t border-stone-100">
             <button @click="careFromUserProfile" :disabled="profileUser?.reactedToday" class="py-3.5 rounded-2xl text-[13px] font-black active:scale-95 transition-all" :class="profileUser?.reactedToday ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white'">
               {{ profileUser?.reactedToday ? '今天已关心' : '送上关心' }}
             </button>
@@ -2083,6 +2209,18 @@ const respondToScooped = async (type) => {
 
 // 社交名片配置
 const showProfileConfig = ref(false)
+const isSavingProfileConfig = ref(false)
+const profileEdit = ref({
+  cover: '',
+  sign: '',
+  style: 'warm'
+})
+const profileStyleOptions = [
+  { id: 'warm', label: '暖光', class: 'bg-gradient-to-br from-amber-100 via-rose-100 to-orange-200' },
+  { id: 'night', label: '夜航', class: 'bg-gradient-to-br from-slate-950 via-indigo-900 to-blue-700' },
+  { id: 'forest', label: '绿洲', class: 'bg-gradient-to-br from-emerald-100 via-teal-100 to-lime-200' },
+  { id: 'clean', label: '清白', class: 'bg-gradient-to-br from-white via-slate-100 to-blue-100' }
+]
 const mainPurposes = [
   { id: 'food', icon: '🍲', label: '找饭搭子' },
   { id: 'chat', icon: '🫂', label: '情绪树洞' },
@@ -2106,6 +2244,55 @@ const selectedTags = ref(['t1', 't4'])
 const broadcastSign = ref('缓解期，想认识能互相鼓劲的人。')
 const discoveryEnabled = ref(true)
 const discoverySaving = ref(false)
+
+const openProfileConfig = () => {
+  profileEdit.value = {
+    cover: myCard.value.cover,
+    sign: myCard.value.sign,
+    style: myCard.value.style || 'warm'
+  }
+  showProfileConfig.value = true
+}
+
+const pickProfileCover = () => {
+  document.getElementById('profile-cover-input')?.click()
+}
+
+const onProfileCoverChange = async (event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  try {
+    const url = await uploadOneMedia(file)
+    if (!url) throw new Error('empty cover url')
+    profileEdit.value.cover = url
+  } catch (e) {
+    alert('封面上传失败，稍后再试')
+  }
+}
+
+const saveProfileConfig = async () => {
+  if (isSavingProfileConfig.value) return
+  isSavingProfileConfig.value = true
+  try {
+    const nextSign = (profileEdit.value.sign || '').trim()
+    await http.post('/center/profile-style', {
+      radarSign: nextSign,
+      profileCover: profileEdit.value.cover,
+      profileStyle: profileEdit.value.style
+    })
+    broadcastSign.value = nextSign
+    await saveDiscoverySettings()
+    myCard.value.sign = nextSign || myCard.value.sign
+    myCard.value.cover = profileEdit.value.cover || myCard.value.cover
+    myCard.value.style = profileEdit.value.style || myCard.value.style
+    showProfileConfig.value = false
+  } catch (e) {
+    alert('保存失败，稍后再试')
+  } finally {
+    isSavingProfileConfig.value = false
+  }
+}
 
 const normalizeDiscoveryTags = (rawTags) => {
   if (Array.isArray(rawTags)) return rawTags
@@ -2161,6 +2348,7 @@ const toggleTag = (id) => {
 
 const isCityPicksLoading = ref(false)
 const foundPatients = ref([])
+const discoveryIndex = ref(0)
 const discoveryMode = ref('city')
 const discoveryGreetLimit = 2
 const discoveryGreetCount = ref(0)
@@ -2187,6 +2375,11 @@ const discoveryFooterText = computed(() => discoveryMode.value === 'city'
   ? '同城精选只按城市展示，不显示精确位置。别急着加很多人，慢慢认识就好。'
   : '远方朋友不支持手动挑城市，避免被当成到处扫人的工具。'
 )
+const currentDiscoveryPick = computed(() => foundPatients.value[discoveryIndex.value] || null)
+const discoveryProgressText = computed(() => {
+  if (!foundPatients.value.length) return '今日 0 / 0'
+  return `今日 ${Math.min(discoveryIndex.value + 1, foundPatients.value.length)} / ${foundPatients.value.length}`
+})
 
 const getTodayText = () => {
   const now = new Date()
@@ -2234,7 +2427,8 @@ const mapCityPick = (user, mode = discoveryMode.value) => {
     tags: tags.length ? tags.slice(0, 3) : (isCityMode ? ['同城', '可先打招呼', '不显示距离'] : ['远方', '慢慢认识', '不显示距离']),
     sign: user.radarSign || (isCityMode ? `也在${place}，先从一句轻轻的问候开始。` : `${city ? `来自${city}，` : ''}也在认真生活，先从一句问候开始。`),
     avatar: avatarOf(user, user.userId),
-    requested: false
+    requested: false,
+    isFriend: friendChats.value.some(friend => Number(friend.id) === Number(user.userId))
   }
 }
 
@@ -2246,6 +2440,7 @@ const openDiscovery = async (mode = 'city') => {
   showRadarModal.value = true
   isCityPicksLoading.value = true
   foundPatients.value = []
+  discoveryIndex.value = 0
 
   if (mode === 'city') {
     const cityReady = myCity.value || await detectAndSaveLocation()
@@ -2262,6 +2457,7 @@ const openDiscovery = async (mode = 'city') => {
     const res = await http.get(mode === 'city' ? '/users/nearby' : '/users/distant')
     if (res.status === 200 && Array.isArray(res.data)) {
       foundPatients.value = res.data.slice(0, 5).map(user => mapCityPick(user, mode))
+      discoveryIndex.value = 0
     }
   } catch (e) {
     console.error('拉取朋友精选失败', e)
@@ -2280,6 +2476,41 @@ const closeCityPicks = () => {
 
 const skipCityPick = (targetId) => {
   foundPatients.value = foundPatients.value.filter(p => p.id !== targetId)
+  if (discoveryIndex.value >= foundPatients.value.length) {
+    discoveryIndex.value = Math.max(0, foundPatients.value.length - 1)
+  }
+}
+
+const skipCurrentDiscoveryPick = () => {
+  if (!currentDiscoveryPick.value) return
+  if (discoveryIndex.value < foundPatients.value.length - 1) {
+    discoveryIndex.value += 1
+  } else {
+    skipCityPick(currentDiscoveryPick.value.id)
+  }
+}
+
+const openDiscoveryProfile = async (pick) => {
+  if (!pick?.id) return
+  await openUserProfile(pick.id)
+}
+
+const chatWithDiscoveryPick = (pick) => {
+  if (!pick?.id) return
+  const friend = friendChats.value.find(item => Number(item.id) === Number(pick.id))
+  const chat = friend || {
+    type: 'single',
+    id: pick.id,
+    name: pick.name,
+    rawName: pick.name,
+    avatar: pick.avatar,
+    lastMsg: '可以先发一句问候。',
+    time: '',
+    unread: null
+  }
+  showRadarModal.value = false
+  emit('chat-active', true)
+  openChat(chat)
 }
 
 const greetCityPick = async (pick) => {
@@ -2292,6 +2523,11 @@ const greetCityPick = async (pick) => {
   if (sent) {
     pick.requested = true
     recordDiscoveryGreet(pick.id)
+    setTimeout(() => {
+      if (currentDiscoveryPick.value?.id === pick.id) {
+        skipCurrentDiscoveryPick()
+      }
+    }, 520)
   }
 }
 
@@ -2311,7 +2547,8 @@ const myCard = ref({
   name: 'Xuan',
   sign: '缓解期 · 每天努力多吃一勺白粥',
   avatar: avatarOf('', 'Xuan'),
-  cover: 'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1200&q=80'
+  cover: 'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1200&q=80',
+  style: 'warm'
 })
 
 const myId = Number(localStorage.getItem('userId')) || 1
@@ -2672,6 +2909,7 @@ const showFabMenu = ref(false)
 const activeChat = ref(null)
 const showEmojiMenu = ref(false)
 const showPlusMenu = ref(false)
+const secretMode = ref(false)
 const inputMsg = ref('')
 const chatHistory = ref([])
 let socket = null
@@ -2716,7 +2954,33 @@ const searchDone = ref(false)
 
 const previewMessage = (content, type = 'text') => {
   if (type === 'image') return '[图片]'
+  if (type === 'file') return '[文件]'
+  if (type === 'secret') return '[密聊]'
   return content || '点击进入聊天...'
+}
+
+const formatFileSize = (size = 0) => {
+  const bytes = Number(size || 0)
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`
+}
+
+const filePayload = (msg) => {
+  try {
+    const parsed = JSON.parse(msg?.content || '{}')
+    return {
+      url: parsed.url || msg?.content || '#',
+      name: parsed.name || '未命名文件',
+      sizeText: parsed.sizeText || ''
+    }
+  } catch (e) {
+    return {
+      url: msg?.content || '#',
+      name: '文件',
+      sizeText: ''
+    }
+  }
 }
 
 const chatKey = (item) => `${item.type}-${item.id}`
@@ -2901,6 +3165,7 @@ const showBroadcast = ref(false)
 const newGroupName = ref('')
 const selectedMembers = ref([])
 const broadcastText = ref('')
+const broadcastReceiverIds = ref([])
 const isSendingBroadcast = ref(false)
 
 // ============ 小队成员面板 / 邀请 ============
@@ -3243,7 +3508,9 @@ const startChatFromProfile = () => {
     unread: null
   }
   showUserProfile.value = false
+  showRadarModal.value = false
   showMemberPanel.value = false
+  emit('chat-active', true)
   openChat(chat)
 }
 
@@ -3264,6 +3531,7 @@ const openCreateGroup = () => {
 const openBroadcast = () => {
   showFabMenu.value = false
   broadcastText.value = ''
+  broadcastReceiverIds.value = friendChats.value.map(f => f.id)
   showBroadcast.value = true
 }
 
@@ -3304,12 +3572,17 @@ const createGroup = async () => {
 const sendBroadcast = async () => {
   const content = broadcastText.value.trim()
   if (!content) return
+  if (broadcastReceiverIds.value.length === 0) {
+    alert('先选择要广播给谁')
+    return
+  }
   isSendingBroadcast.value = true
   try {
-    const res = await http.post('/chat/broadcast', { content })
+    const res = await http.post('/chat/broadcast', { content, receiverIds: broadcastReceiverIds.value })
     if (res.status === 200 || res.code === 200) {
       showBroadcast.value = false
       broadcastText.value = ''
+      broadcastReceiverIds.value = []
       alert(res.message || '已群发给全体战友 📡')
     } else {
       alert(res.message || '广播失败')
@@ -3319,6 +3592,12 @@ const sendBroadcast = async () => {
   } finally {
     isSendingBroadcast.value = false
   }
+}
+
+const toggleBroadcastReceiver = (id) => {
+  const idx = broadcastReceiverIds.value.indexOf(id)
+  if (idx > -1) broadcastReceiverIds.value.splice(idx, 1)
+  else broadcastReceiverIds.value.push(id)
 }
 
 const loadPendingRequests = async () => {
@@ -3379,9 +3658,10 @@ const plusMenuItems = [
   { icon: 'ri-image-2-line', label: '相册', color: 'text-blue-500', action: 'album' },
   { icon: 'ri-camera-3-line', label: '拍摄', color: 'text-slate-700', action: 'camera' },
   { icon: 'ri-map-pin-line', label: '位置', color: 'text-red-500', action: 'location' },
-  { icon: 'ri-folder-2-line', label: '文件', color: 'text-orange-500', action: 'soon' },
-  { icon: 'ri-vidicon-line', label: '视频通话', color: 'text-green-500', action: 'soon' },
-  { icon: 'ri-bank-card-line', label: '红包', color: 'text-yellow-500', action: 'redpacket' }
+  { icon: 'ri-folder-2-line', label: '文件', color: 'text-orange-500', action: 'file' },
+  { icon: 'ri-vidicon-line', label: '视频通话', color: 'text-green-500', action: 'call' },
+  { icon: 'ri-lock-2-line', label: '密聊', color: 'text-violet-500', action: 'secret' },
+  { icon: 'ri-bank-card-line', label: '心意', color: 'text-yellow-500', action: 'redpacket' }
 ]
 
 const myCity = ref(localStorage.getItem('myCity') || '')
@@ -3424,6 +3704,12 @@ const loadMyCity = async () => {
   try {
     const res = await http.get('/center/info')
     if (res.status === 200 && res.data) {
+      myCard.value.name = res.data.nickname || localStorage.getItem('nickname') || myCard.value.name
+      myCard.value.avatar = avatarOf(res.data.avatar, res.data.userId || res.data.nickname || myId)
+      myCard.value.sign = res.data.radarSign || res.data.healthPhase || myCard.value.sign
+      myCard.value.cover = res.data.profileCover || myCard.value.cover
+      myCard.value.style = res.data.profileStyle || myCard.value.style
+      myCard.value.city = res.data.city || myCard.value.city
       if (typeof res.data.discoveryEnabled === 'boolean') {
         discoveryEnabled.value = res.data.discoveryEnabled
       }
@@ -3621,16 +3907,23 @@ const handlePlusItem = async (item) => {
     document.getElementById('chat-album-input')?.click()
   } else if (item.action === 'camera') {
     document.getElementById('chat-camera-input')?.click()
+  } else if (item.action === 'file') {
+    document.getElementById('chat-file-input')?.click()
   } else if (item.action === 'location') {
     sendLocationMessage()
   } else if (item.action === 'redpacket') {
     sendRedPacket()
-  } else {
-    if (typeof showToast === 'function') {
-      showToast('该功能即将上线 🚧')
-    } else {
-      alert('该功能即将上线 🚧')
+  } else if (item.action === 'secret') {
+    if (!activeChat.value || activeChat.value.type === 'group') {
+      alert('密聊只适合一对一。')
+      return
     }
+    secretMode.value = !secretMode.value
+    alert(secretMode.value ? '已进入密聊：不保存记录，10 秒后消失。' : '已退出密聊。')
+  } else if (item.action === 'call') {
+    alert('视频通话先不硬上半成品，发布版先保证聊天稳定。')
+  } else {
+    alert('这个功能稍后再开。')
   }
 }
 
@@ -3648,6 +3941,28 @@ const sendImageFile = async (e) => {
   }
 }
 
+const sendGenericFile = async (event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (file.size > 20 * 1024 * 1024) {
+    alert('文件先限制 20MB 以内，避免手机网络炸掉。')
+    return
+  }
+  try {
+    const url = await uploadOneMedia(file)
+    if (!url) throw new Error('上传接口没有返回文件地址')
+    await dispatchMessage(JSON.stringify({
+      url,
+      name: file.name || '文件',
+      sizeText: formatFileSize(file.size)
+    }), 'file')
+  } catch (err) {
+    console.error('文件发送失败', err)
+    alert('文件发送失败，可能是网络慢或文件过大')
+  }
+}
+
 const sendLocationMessage = async () => {
   const city = myCity.value || '神秘地点'
   const mapText = lastLocation.value
@@ -3658,8 +3973,7 @@ const sendLocationMessage = async () => {
 }
 
 const sendRedPacket = async () => {
-  const amount = (Math.random() * 8.88 + 0.88).toFixed(2)
-  const content = `🧧 给你撒个虚拟红包：¥${amount}（仅供娱乐，暖暖心）`
+  const content = '🧧 想给你一点心意。平台不经手钱款，需要的话请去对方主页查看自愿公开的收款码。'
   await dispatchMessage(content, 'text')
 }
 const openChat = async (item) => {
@@ -3698,17 +4012,27 @@ const openChat = async (item) => {
 // 统一发送：根据当前会话类型走单聊或群聊接口
 const dispatchMessage = async (content, type = 'text') => {
   if (!activeChat.value) return
+  const isSecret = secretMode.value && activeChat.value.type !== 'group'
   const tempMsg = {
     id: Date.now(),
     senderId: myId,
     receiverId: activeChat.value.id,
     content,
     type,
-    senderName: myCard.value.name
+    senderName: myCard.value.name,
+    secret: isSecret
   }
   chatHistory.value.push(tempMsg)
   scrollToBottom()
   try {
+    if (isSecret) {
+      await http.post('/chat/secret', { receiverId: activeChat.value.id, content, type })
+      touchChatPreview(activeChat.value.type, activeChat.value.id, content, 'secret')
+      setTimeout(() => {
+        chatHistory.value = chatHistory.value.filter(msg => msg.id !== tempMsg.id)
+      }, 10000)
+      return
+    }
     if (activeChat.value.type === 'group') {
       await http.post(`/group/${activeChat.value.id}/send`, { content, type })
     } else {
@@ -3724,6 +4048,7 @@ const dispatchMessage = async (content, type = 'text') => {
 const closeChat = () => {
   currentView.value = 'list'
   activeChat.value = null
+  secretMode.value = false
   emit('chat-active', false)
 }
 
@@ -3799,17 +4124,28 @@ const initWebSocket = () => {
       }
     } else {
       const inThisChat = activeChat.value && activeChat.value.type !== 'group' && Number(activeChat.value.id) === Number(data.senderId)
+      const displayType = data.type || 'text'
+      const previewType = data.secret ? 'secret' : displayType
       if (inThisChat) {
-        chatHistory.value.push({
+        const incomingMsg = {
           id: Date.now(),
           senderId: data.senderId,
           content: data.content,
-          type: data.type || 'text'
-        })
-        touchChatPreview('single', data.senderId, data.content, data.type || 'text')
+          type: displayType,
+          senderName: data.senderName,
+          senderAvatar: data.senderAvatar,
+          secret: !!data.secret
+        }
+        chatHistory.value.push(incomingMsg)
+        touchChatPreview('single', data.senderId, data.content, previewType)
         scrollToBottom()
+        if (data.secret) {
+          setTimeout(() => {
+            chatHistory.value = chatHistory.value.filter(msg => msg.id !== incomingMsg.id)
+          }, Number(data.ttl || 10) * 1000)
+        }
       } else {
-        bumpUnread('single', data.senderId, data.content, data.type || 'text')
+        bumpUnread('single', data.senderId, data.content, previewType)
       }
     }
   }

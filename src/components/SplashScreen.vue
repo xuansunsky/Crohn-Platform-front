@@ -2,10 +2,17 @@
   <transition name="splash-out">
     <div v-if="visible" class="splash">
       <div class="splash-img" :class="{ 'img-ready': imgLoaded }">
-        <img src="/img/bg-stars.png" @load="imgLoaded = true" alt="" />
+        <img
+          src="/img/bg-stars-lite.jpg"
+          fetchpriority="high"
+          decoding="async"
+          @load="imgLoaded = true"
+          @error="imgLoaded = true"
+          alt=""
+        />
       </div>
 
-      <div class="splash-content" :class="{ 'content-ready': imgLoaded }">
+      <div class="splash-content content-ready">
         <p class="welcome-label">欢迎来到</p>
         <h1 class="title">Crohn Paradise</h1>
         <p class="subtitle">最坚强的灵魂，在这里相遇</p>
@@ -14,7 +21,7 @@
         </div>
       </div>
 
-      <p class="credit" :class="{ 'content-ready': imgLoaded }">created by godxuan</p>
+      <p class="credit content-ready">created by godxuan</p>
     </div>
   </transition>
 </template>
@@ -26,7 +33,7 @@ const visible = ref(true)
 const imgLoaded = ref(false)
 
 onMounted(() => {
-  setTimeout(() => { visible.value = false }, 2800)
+  setTimeout(() => { visible.value = false }, 3300)
 })
 </script>
 
@@ -41,11 +48,14 @@ onMounted(() => {
 .splash-img {
   flex: 1; position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
-  opacity: 0; transform: scale(1.05);
+  opacity: 1; transform: scale(1.02);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255,255,255,0.88), rgba(255,253,248,0.45) 45%, #FFFDF8 100%),
+    linear-gradient(180deg, #f8fbff 0%, #fff8ee 100%);
   transition: opacity 0.8s ease, transform 1.6s cubic-bezier(0.16,1,0.3,1);
 }
 .splash-img.img-ready {
-  opacity: 1; transform: scale(1);
+  transform: scale(1);
 }
 .splash-img img {
   width: 92%; max-height: 90%; object-fit: contain;

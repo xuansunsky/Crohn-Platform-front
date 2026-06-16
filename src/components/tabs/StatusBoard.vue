@@ -41,9 +41,9 @@
             <button @click="showPicker = true" class="flex-1 py-2.5 rounded-2xl bg-white/90 text-slate-800 text-[13px] font-black active:scale-95 transition-all shadow-sm">
               <i class="ri-edit-2-line"></i> {{ myStatus.text ? '换个状态' : '设置状态' }}
             </button>
-            <div class="px-3.5 py-2.5 rounded-2xl bg-black/15 text-white text-[12px] font-black flex items-center gap-1.5">
+            <button @click="openReactionDetails" class="px-3.5 py-2.5 rounded-2xl bg-black/15 text-white text-[12px] font-black flex items-center gap-1.5 active:scale-95 transition-all">
               <i class="ri-hand-heart-fill"></i> {{ myStatus.received || 0 }} 份关心
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -67,7 +67,7 @@
 
     <!-- 上传病例软提示（不挡状态墙，未上传时温柔推荐） -->
     <div v-if="!isVerified" class="px-5 pt-4">
-      <button @click="showVerify = true"
+      <button @click="openVerifyUpload"
               class="w-full text-left relative overflow-hidden rounded-[22px] px-4 py-3.5 bg-gradient-to-br from-slate-800 to-slate-900 shadow-lg active:scale-[0.99] transition-all">
         <div class="absolute -top-6 -right-4 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl"></div>
         <div class="relative flex items-center gap-3">
@@ -252,7 +252,7 @@
                 <div class="relative">
                   <p class="text-[13.5px] font-black flex items-center gap-1.5"><i class="ri-lock-2-fill text-blue-400"></i> 想看你们的往来与更多资料？</p>
                   <p class="text-white/65 text-[11px] font-medium mt-1.5 leading-relaxed">上传你自己的病例（可涂黑姓名、医院），就能解锁战友资料、看到你们之间的关心往来。也让大家交流得更没距离。</p>
-                  <button @click="showProfile = false; showVerify = true" class="mt-3 w-full py-2.5 rounded-2xl bg-white text-slate-900 text-[13px] font-black active:scale-95 transition-all">
+                  <button @click="showProfile = false; openVerifyUpload()" class="mt-3 w-full py-2.5 rounded-2xl bg-white text-slate-900 text-[13px] font-black active:scale-95 transition-all">
                     <i class="ri-upload-cloud-2-line"></i> 上传病例，立即解锁
                   </button>
                 </div>
@@ -270,6 +270,48 @@
                 </button>
                 <button @click="transferFromProfile" class="py-3 rounded-2xl bg-gradient-to-r from-rose-400 to-pink-500 text-white text-[13px] font-black active:scale-95 transition-all shadow-sm shadow-rose-500/20">
                   <i class="ri-hand-coin-fill"></i> 转款送温暖
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
+
+    <!-- 收到的关心 -->
+    <Teleport to="body">
+      <transition name="sheet">
+        <div v-if="showReactionDetails" class="fixed inset-0 z-[1910] flex flex-col justify-end">
+          <div @click="showReactionDetails = false" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+          <div class="sheet-panel relative bg-white rounded-t-[32px] max-h-[72vh] flex flex-col shadow-[0_-20px_50px_rgba(0,0,0,0.2)]">
+            <div class="pt-3 pb-2"><div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto"></div></div>
+            <div class="px-5 pb-3 flex items-center justify-between">
+              <div>
+                <h2 class="text-[18px] font-black text-slate-900">谁关心了你</h2>
+                <p class="text-[11px] text-slate-400 font-bold mt-0.5">这些微光都留在这里</p>
+              </div>
+              <button @click="showReactionDetails = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+            <div class="flex-1 overflow-y-auto no-scrollbar px-5 pb-6">
+              <p v-if="reactionDetailsLoading" class="text-center py-10 text-[13px] text-slate-400 font-bold">正在拉取关心…</p>
+              <p v-else-if="reactionDetails.length === 0" class="text-center py-10 text-[13px] text-slate-400 font-bold">还没有收到关心，先给自己一点耐心</p>
+              <div v-else class="space-y-2.5">
+                <button
+                  v-for="item in reactionDetails"
+                  :key="`${item.senderId}-${item.createdAt}`"
+                  @click="openReactionSender(item)"
+                  class="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-left active:scale-[0.99] transition-all"
+                >
+                  <img :src="avatarOf(item, item.senderId)" class="w-11 h-11 rounded-2xl object-cover bg-white border border-white shadow-sm shrink-0">
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[13.5px] font-black text-slate-800 truncate">{{ item.nickname || '神秘战友' }}</p>
+                    <p class="text-[11px] text-slate-400 font-bold mt-0.5">
+                      {{ reactionLabel(item.type) }} · {{ relTime(item.createdAt) }}
+                    </p>
+                  </div>
+                  <span class="text-[24px]">{{ REACTIONS[item.type]?.emoji || '❤️' }}</span>
                 </button>
               </div>
             </div>
@@ -382,17 +424,32 @@
               上传确诊单 / 肠镜报告 / 药单照片，<br>可把姓名、医院等信息<span class="text-rose-500 font-bold">涂黑遮盖</span>再传
             </p>
 
-            <label class="block w-full h-48 rounded-2xl bg-slate-50 border border-dashed border-slate-200 p-2 flex items-center justify-center mb-4 cursor-pointer active:scale-95 transition-all overflow-hidden">
-              <img v-if="proofUrl" :src="proofUrl" class="w-full h-full object-contain rounded-xl">
-              <span v-else-if="proofUploading" class="text-[12px] text-slate-400 font-bold">上传中…</span>
-              <span v-else class="text-[12px] text-slate-400 font-bold text-center px-3"><i class="ri-image-add-line text-[26px] block mb-1"></i>点这里上传证明图片</span>
-              <input type="file" accept="image/*" class="hidden" @change="uploadProof" :disabled="proofUploading">
-            </label>
+            <div class="mb-4">
+              <div v-if="proofUrls.length" class="grid grid-cols-3 gap-2 mb-2">
+                <div v-for="(url, index) in proofUrls" :key="url" class="relative aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
+                  <img :src="url" class="w-full h-full object-cover">
+                  <button @click="removeProof(index)" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-slate-950/70 text-white flex items-center justify-center active:scale-90">
+                    <i class="ri-close-line text-[13px]"></i>
+                  </button>
+                </div>
+                <label v-if="proofUrls.length < MAX_PROOF_IMAGES" class="aspect-square rounded-2xl bg-slate-50 border border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-all text-slate-400">
+                  <i :class="proofUploading ? 'ri-loader-4-line animate-spin text-[24px]' : 'ri-add-line text-[28px]'"></i>
+                  <span class="text-[10px] font-black">{{ proofUploading ? '上传中' : proofUrls.length + '/' + MAX_PROOF_IMAGES }}</span>
+                  <input type="file" accept="image/*" multiple class="hidden" @change="uploadProof" :disabled="proofUploading">
+                </label>
+              </div>
+
+              <label v-else class="block w-full h-48 rounded-2xl bg-slate-50 border border-dashed border-slate-200 p-2 flex items-center justify-center cursor-pointer active:scale-95 transition-all overflow-hidden">
+                <span v-if="proofUploading" class="text-[12px] text-slate-400 font-bold">上传中…</span>
+                <span v-else class="text-[12px] text-slate-400 font-bold text-center px-3"><i class="ri-image-add-line text-[26px] block mb-1"></i>上传证明图片，可多选</span>
+                <input type="file" accept="image/*" multiple class="hidden" @change="uploadProof" :disabled="proofUploading">
+              </label>
+            </div>
 
             <p class="text-[10px] text-slate-400 font-medium leading-snug mb-3 text-center">
               <i class="ri-lock-line text-blue-500"></i> 仅用于解锁战友权限，上传后立即点亮「战友」标识。
             </p>
-            <button @click="submitVerify" :disabled="!proofUrl || proofUploading || verifySubmitting" class="w-full bg-blue-600 text-white font-black text-[14px] py-3 rounded-2xl active:scale-95 transition-all disabled:bg-slate-200">
+            <button @click="submitVerify" :disabled="!proofUrls.length || proofUploading || verifySubmitting" class="w-full bg-blue-600 text-white font-black text-[14px] py-3 rounded-2xl active:scale-95 transition-all disabled:bg-slate-200">
               {{ verifySubmitting ? '上传中…' : '上传，立即解锁' }}
             </button>
           </div>
@@ -480,6 +537,9 @@ const loading = ref(true)
 const showPicker = ref(false)
 const showReact = ref(false)
 const reactTarget = ref(null)
+const showReactionDetails = ref(false)
+const reactionDetails = ref([])
+const reactionDetailsLoading = ref(false)
 const customText = ref('')
 const customEmoji = ref('✏️')
 const toast = ref('')
@@ -496,9 +556,15 @@ const qrUploading = ref(false)
 const myVerifyStatus = ref('NONE') // NONE / PENDING / APPROVED / REJECTED
 const isVerified = computed(() => myVerifyStatus.value === 'APPROVED')
 const showVerify = ref(false)
-const proofUrl = ref('')
+const proofUrls = ref([])
 const proofUploading = ref(false)
 const verifySubmitting = ref(false)
+const MAX_PROOF_IMAGES = 6
+
+const openVerifyUpload = () => {
+  proofUrls.value = []
+  showVerify.value = true
+}
 
 // 战友资料卡
 const showProfile = ref(false)
@@ -526,6 +592,7 @@ const relTime = (t) => {
 const flash = (msg) => { toast.value = msg; setTimeout(() => { toast.value = '' }, 1600) }
 
 const ok = (res) => res && (res.status === 200 || res.code === 200)
+const reactionLabel = (type) => REACTIONS[type]?.label || '送来关心'
 
 // 把后端行映射成前端结构（无有效状态/已过期 → 留白，不再回落默认）
 const mapRow = (r) => {
@@ -613,6 +680,30 @@ const openProfile = async (m) => {
   }
 }
 
+const openReactionDetails = async () => {
+  showReactionDetails.value = true
+  reactionDetailsLoading.value = true
+  try {
+    const res = await http.get('/team/status/reactions')
+    reactionDetails.value = ok(res) ? (res.data || []) : []
+  } catch (e) {
+    reactionDetails.value = []
+    flash('关心记录暂时没拉出来')
+  } finally {
+    reactionDetailsLoading.value = false
+  }
+}
+
+const openReactionSender = (item) => {
+  const mapped = mapRow({
+    userId: item.senderId,
+    nickname: item.nickname,
+    avatar: item.avatar
+  })
+  showReactionDetails.value = false
+  openProfile(mapped)
+}
+
 const careFromProfile = () => {
   if (!profileTarget.value) return
   reactTarget.value = profileTarget.value
@@ -697,28 +788,45 @@ const saveMyQr = async () => {
 }
 
 const uploadProof = async (e) => {
-  const file = e.target.files && e.target.files[0]
-  if (!file) return
+  const picked = Array.from(e.target.files || [])
+  e.target.value = ''
+  if (!picked.length) return
+  const remaining = MAX_PROOF_IMAGES - proofUrls.value.length
+  if (remaining <= 0) { flash(`最多上传 ${MAX_PROOF_IMAGES} 张`); return }
+  const files = picked.slice(0, remaining)
   proofUploading.value = true
   try {
-    const fd = new FormData()
-    fd.append('file', file)
-    const res = await http.post('/upload', fd)
-    if (ok(res)) proofUrl.value = res.data
-    else flash(res.message || '上传失败')
+    const uploads = files.map(file => {
+      const fd = new FormData()
+      fd.append('file', file)
+      return http.post('/upload', fd)
+    })
+    const results = await Promise.allSettled(uploads)
+    const urls = results
+      .filter(r => r.status === 'fulfilled' && ok(r.value) && r.value.data)
+      .map(r => r.value.data)
+    if (urls.length) proofUrls.value.push(...urls)
+    const failed = results.length - urls.length
+    if (failed > 0) flash(`有 ${failed} 张没传上，重新选一下`)
   } catch (err) {
     flash('上传失败，检查网络')
   } finally {
     proofUploading.value = false
-    e.target.value = ''
   }
 }
 
+const removeProof = (index) => {
+  proofUrls.value.splice(index, 1)
+}
+
 const submitVerify = async () => {
-  if (!proofUrl.value) { flash('请先上传证明图片'); return }
+  if (!proofUrls.value.length) { flash('请先上传证明图片'); return }
   verifySubmitting.value = true
   try {
-    const res = await http.post('/verify/submit', { proofImageUrl: proofUrl.value })
+    const res = await http.post('/verify/submit', {
+      proofImageUrl: proofUrls.value[0],
+      proofImageUrls: proofUrls.value
+    })
     if (ok(res)) {
       myVerifyStatus.value = 'APPROVED'
       flash('上传成功，战友权限已解锁 🛡️')
@@ -734,6 +842,10 @@ const submitVerify = async () => {
 
 onMounted(() => {
   loadFeed()
+  if (localStorage.getItem('openVerifyUpload') === '1') {
+    localStorage.removeItem('openVerifyUpload')
+    openVerifyUpload()
+  }
   // 预填我已有的收款码
   http.get(`/team/status/paycode/${myId}`).then(res => {
     if (ok(res) && res.data) myQrInput.value = res.data

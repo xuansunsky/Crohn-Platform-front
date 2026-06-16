@@ -103,6 +103,24 @@
                 </div>
 
                 <div>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">地点</label>
+                  <button
+                    type="button"
+                    @click="openLocationSheet"
+                    class="w-full flex items-center justify-between px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-100 text-left active:bg-white transition-all"
+                  >
+                    <span class="flex items-center gap-2 min-w-0">
+                      <i class="ri-map-pin-2-line text-stone-400 shrink-0"></i>
+                      <span :class="newPost.location ? 'text-[14px] font-bold text-stone-800 truncate' : 'text-[14px] text-stone-400'">
+                        {{ newPost.location || '添加地点（医院 / 餐厅 / 商场）' }}
+                      </span>
+                    </span>
+                    <i v-if="newPost.location" @click.stop="clearPostLocation" class="ri-close-circle-fill text-stone-300 text-lg shrink-0"></i>
+                    <i v-else class="ri-arrow-right-s-line text-stone-300 shrink-0"></i>
+                  </button>
+                </div>
+
+                <div>
                   <label class="block text-[11px] font-bold text-stone-400 mb-2">正文图集 / 视频（最多 9 条 · 第 1 张作封面）</label>
                   <div class="grid grid-cols-3 gap-2.5">
                     <div v-for="(m, i) in newMedia" :key="i" class="relative aspect-square rounded-2xl overflow-hidden bg-stone-100 shadow-[0_2px_8px_-3px_rgba(15,23,42,0.12)]">
@@ -125,13 +143,54 @@
                 </div>
 
                 <div>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">内容类型</label>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="t in primaryTagOptions"
+                      :key="t"
+                      type="button"
+                      @click="selectPrimaryTag(t)"
+                      :class="[
+                        'px-3.5 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 border',
+                        primaryTag === t
+                          ? 'bg-stone-900 text-white border-stone-900'
+                          : 'bg-white text-stone-600 border-stone-200'
+                      ]"
+                    >
+                      {{ t }}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">话题标签 <span class="font-medium text-stone-300">可多选 · 最多 4 个</span></label>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="t in topicTagOptions"
+                      :key="t"
+                      type="button"
+                      @click="toggleTopicTag(t)"
+                      :class="[
+                        'px-3 py-1.5 rounded-full text-[11.5px] font-bold transition-all active:scale-95',
+                        topicTags.includes(t)
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                          : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                      ]"
+                    >
+                      # {{ t }}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
                   <label class="block text-[11px] font-bold text-stone-400 mb-2.5">心情图标</label>
                   <div class="flex flex-wrap gap-2">
                     <button
-                        v-for="emoji in emojiOptions"
-                        :key="emoji"
-                        @click="newPost.icon = emoji"
-                        :class="[
+                      v-for="emoji in emojiOptions"
+                      :key="emoji"
+                      type="button"
+                      @click="newPost.icon = emoji"
+                      :class="[
                         'w-11 h-11 rounded-2xl flex items-center justify-center text-xl transition-all active:scale-90',
                         newPost.icon === emoji
                           ? 'bg-slate-900 text-white scale-110 shadow-md'
@@ -147,40 +206,22 @@
                   <label class="block text-[11px] font-bold text-stone-400 mb-2.5">卡片底色</label>
                   <div class="grid grid-cols-4 gap-2.5">
                     <button
-                        v-for="theme in availableThemes"
-                        :key="theme.value"
-                        @click="newPost.theme = theme.value"
-                        :class="[
+                      v-for="theme in availableThemes"
+                      :key="theme.value"
+                      type="button"
+                      @click="newPost.theme = theme.value"
+                      :class="[
                         'h-16 rounded-2xl border-2 text-[11px] font-black transition-all active:scale-95 relative overflow-hidden',
                         newPost.theme === theme.value
                           ? 'border-slate-900 ring-2 ring-slate-900/10 scale-[1.02] shadow-md'
                           : 'border-transparent hover:border-slate-200'
                       ]"
-                        :style="{ background: theme.bgPreview, color: theme.textColor }"
+                      :style="{ background: theme.bgPreview, color: theme.textColor }"
                     >
                       <span class="relative z-10">{{ theme.name }}</span>
                       <span v-if="newPost.theme === theme.value" class="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center text-slate-900 z-10">
                         <i class="ri-check-line text-[10px] font-black"></i>
                       </span>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-[11px] font-bold text-stone-400 mb-2">标签</label>
-                  <div class="flex flex-wrap gap-1.5">
-                    <button
-                        v-for="t in tagOptions"
-                        :key="t"
-                        @click="toggleTag(t)"
-                        :class="[
-                        'px-3 py-1.5 rounded-full text-[11.5px] font-bold transition-all active:scale-95',
-                        newPost.tags.includes(t)
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
-                      ]"
-                    >
-                      # {{ t }}
                     </button>
                   </div>
                 </div>
@@ -218,44 +259,52 @@
 
     <!-- ============ 文章详情 · 小红书风 ============ -->
     <transition name="modal-fade">
-      <div v-if="showDetail" class="fixed inset-0 z-[110] bg-[#FFFCF8] flex flex-col">
+      <div v-if="showDetail" class="fixed inset-0 z-[110] flex flex-col transition-colors duration-300" :class="detailThemeStyle.page">
 
         <!-- 顶栏：返回 + 作者 + 收藏 -->
-        <header class="detail-topbar shrink-0 bg-[#FFFCF8]/95 backdrop-blur-xl border-b border-stone-100/80">
+        <header class="detail-topbar shrink-0 backdrop-blur-xl border-b" :class="detailThemeStyle.topbar">
           <div class="h-[54px] px-3 flex items-center gap-2">
-            <button @click="closeDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-stone-100 transition-all shrink-0">
-              <i class="ri-arrow-left-line text-[22px] text-stone-900"></i>
+            <button @click="closeDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-black/10 transition-all shrink-0" :class="detailThemeStyle.strong">
+              <i class="ri-arrow-left-line text-[22px]"></i>
             </button>
             <div v-if="detail && !detailLoading" class="flex-1 flex items-center gap-2.5 min-w-0">
-              <img :src="avatarOf(detail.authorAvatar || defaultAvatar, detail.authorName || detail.userId || detail.id)" class="w-9 h-9 rounded-full object-cover bg-stone-100 ring-1 ring-stone-100 shrink-0" />
-              <div class="min-w-0">
-                <p class="text-[14px] font-black text-stone-950 truncate">{{ detail.authorName || '匿名病友' }}</p>
-                <p class="text-[10px] text-stone-400 font-medium">{{ fmtDate(detail.createdAt) }}</p>
-              </div>
+              <img :src="avatarOf(detail.authorAvatar || defaultAvatar, detail.authorName || detail.userId || detail.id)" class="w-9 h-9 rounded-full object-cover bg-stone-100 ring-1 ring-white/20 shrink-0" />
+              <p class="text-[14px] font-black truncate" :class="detailThemeStyle.title">{{ detail.authorName || '匿名病友' }}</p>
             </div>
             <div v-else class="flex-1"></div>
+            <button
+              v-if="detail && isImmersiveTheme"
+              @click="toggleRender"
+              class="h-8 px-2.5 rounded-full text-[11px] font-bold flex items-center gap-1 border active:scale-95 transition-all shrink-0"
+              :class="detailThemeStyle.card + ' ' + detailThemeStyle.strong"
+              :title="renderEnabled ? '关闭风格渲染，简洁阅读' : '开启发帖人风格'"
+            >
+              <i :class="renderEnabled ? 'ri-contrast-drop-2-fill' : 'ri-contrast-drop-2-line'" class="text-[14px]"></i>
+              {{ renderEnabled ? '简洁' : '风格' }}
+            </button>
             <button
               v-if="detail && !checkPermission(detail.userId)"
               @click="toggleFavorite"
               :disabled="favoriteBusy"
-              class="h-8 px-3 rounded-full bg-stone-950 text-white text-[12px] font-black active:scale-95 disabled:opacity-60 transition-all shrink-0"
+              class="h-8 px-3 rounded-full text-[12px] font-black active:scale-95 disabled:opacity-60 transition-all shrink-0"
+              :class="detailThemeStyle.favBtn"
             >
               {{ detail.favorited ? '已收藏' : '收藏' }}
             </button>
-            <button v-if="detail && checkPermission(detail.userId)" @click="deleteFromDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-rose-50 text-rose-500 shrink-0">
+            <button v-if="detail && checkPermission(detail.userId)" @click="deleteFromDetail" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-rose-500/20 text-rose-500 shrink-0">
               <i class="ri-delete-bin-line text-lg"></i>
             </button>
           </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto custom-scroll bg-[#FFFCF8]">
-          <div v-if="detailLoading" class="flex items-center justify-center py-24 text-slate-400">
+        <div class="flex-1 overflow-y-auto custom-scroll" :class="detailThemeStyle.page">
+          <div v-if="detailLoading" class="flex items-center justify-center py-24" :class="detailThemeStyle.muted">
             <i class="ri-loader-4-line text-2xl animate-spin"></i>
           </div>
 
           <article v-else-if="detail">
             <!-- 横滑大图（横图/竖图自适应，不裁切） -->
-            <div v-if="detailMedia.length" class="relative bg-stone-50">
+            <div v-if="detailMedia.length" class="relative" :class="detailThemeStyle.imgBg">
               <div
                 ref="galleryEl"
                 @scroll="onGalleryScroll"
@@ -264,7 +313,8 @@
                 <div
                   v-for="(m, i) in detailMedia"
                   :key="i"
-                  class="shrink-0 w-full snap-center flex items-center justify-center bg-stone-50 min-h-[180px]"
+                  class="shrink-0 w-full snap-center flex items-center justify-center min-h-[180px]"
+                  :class="detailThemeStyle.imgBg"
                 >
                   <video
                     v-if="isVideo(m)"
@@ -294,69 +344,82 @@
               ></span>
             </div>
 
-            <!-- 标题 + 标签 + 正文 -->
-            <div class="px-5 pb-6" :class="detailMedia.length <= 1 ? 'pt-5' : ''">
-              <h1 class="text-[22px] leading-[1.35] font-black tracking-tight text-stone-950 mb-3">{{ detail.title }}</h1>
+            <!-- 标题 + 正文 + 标签 + 属地 -->
+            <div class="relative overflow-hidden px-4 pb-6" :class="detailMedia.length <= 1 ? 'pt-5' : 'pt-3'">
 
-              <p v-if="detail.summary" class="text-[15px] leading-[1.85] text-stone-700 whitespace-pre-line mb-4">{{ detail.summary }}</p>
+              <h1 class="relative text-[21px] leading-[1.4] font-bold tracking-tight mb-3" :class="detailThemeStyle.title"><span v-if="detail.icon" class="mr-1.5">{{ detail.icon }}</span>{{ detail.title }}</h1>
 
-              <!-- 话题标签 -->
-              <div v-if="detailTags.length" class="flex flex-wrap gap-2 mb-3">
-                <span v-for="t in detailTags" :key="t" class="text-[13px] font-black text-[#315C9A]">#{{ t }}</span>
+              <p v-if="detail.summary" class="relative text-[15px] leading-[1.85] whitespace-pre-line mb-3" :class="detailThemeStyle.body">{{ detail.summary }}</p>
+
+              <div v-if="detailTags.length" class="relative flex flex-wrap gap-x-2 gap-y-1 mb-4">
+                <span v-for="t in detailTags" :key="t" class="text-[14px] font-medium" :class="detailThemeStyle.tag">#{{ t }}</span>
               </div>
+
+              <p v-if="detail.location" class="relative mb-1.5 inline-flex items-center gap-1 text-[12.5px] font-bold" :class="detailThemeStyle.locText">
+                <i class="ri-map-pin-2-fill text-[14px] text-rose-400"></i>
+                {{ detail.location }}
+              </p>
+
+              <p class="relative text-[12px] font-medium" :class="detailThemeStyle.muted">
+                {{ fmtDateTime(detail.createdAt) }}
+                <span class="mx-1">·</span>
+                IP属地 {{ normalizeCityLabel(detail.authorCity) || '未知' }}
+              </p>
 
               <button
                 v-if="detailSearchHint"
                 @click="jumpToRelated"
-                class="w-full mt-5 px-4 py-3 rounded-2xl bg-white border border-stone-100 shadow-[0_10px_26px_-22px_rgba(28,25,23,0.5)] flex items-center gap-3 active:scale-[0.99] transition-all text-left"
+                class="relative w-full mt-5 px-4 py-3 rounded-2xl border shadow-[0_10px_26px_-22px_rgba(28,25,23,0.5)] flex items-center gap-3 active:scale-[0.99] transition-all text-left"
+                :class="detailThemeStyle.card"
               >
-                <span class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" :class="detailThemeStyle.chip">
                   <i class="ri-search-2-line text-base"></i>
                 </span>
                 <span class="min-w-0 flex-1">
-                  <span class="block text-[11px] font-bold text-stone-400 mb-0.5">猜你想搜</span>
-                  <span class="block text-[14px] font-black text-stone-900 truncate">{{ detailSearchHint }}</span>
+                  <span class="block text-[11px] font-bold mb-0.5" :class="detailThemeStyle.muted">猜你想搜</span>
+                  <span class="block text-[14px] font-black truncate" :class="detailThemeStyle.cardTitle">{{ detailSearchHint }}</span>
                 </span>
-                <i class="ri-arrow-right-s-line text-xl text-stone-300"></i>
+                <i class="ri-arrow-right-s-line text-xl" :class="detailThemeStyle.muted"></i>
               </button>
             </div>
 
             <!-- 评论区 -->
-            <section class="mx-4 mb-28 rounded-[28px] bg-white border border-stone-100 shadow-[0_16px_50px_-36px_rgba(28,25,23,0.45)] overflow-hidden">
+            <section class="mx-4 mb-28 rounded-[28px] border shadow-[0_16px_50px_-36px_rgba(28,25,23,0.45)] overflow-hidden" :class="detailThemeStyle.card">
               <div class="px-4 pt-4 pb-3 flex items-center justify-between">
-                <h2 class="text-[15px] font-black text-stone-950">评论 {{ detail.commentCount || comments.length || 0 }}</h2>
-                <span class="text-[11px] font-bold text-stone-400">温柔一点说</span>
+                <h2 class="text-[15px] font-black" :class="detailThemeStyle.title">评论 {{ detail.commentCount || comments.length || 0 }}</h2>
+                <span class="text-[11px] font-bold" :class="detailThemeStyle.muted">温柔一点说</span>
               </div>
 
-              <div v-if="commentsLoading" class="py-10 flex items-center justify-center text-stone-300">
+              <div v-if="commentsLoading" class="py-10 flex items-center justify-center" :class="detailThemeStyle.muted">
                 <i class="ri-loader-4-line text-xl animate-spin"></i>
               </div>
 
               <div v-else-if="comments.length === 0" class="px-5 py-10 text-center">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-stone-50 flex items-center justify-center text-stone-300">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" :class="[detailThemeStyle.chip]">
                   <i class="ri-chat-smile-2-line text-2xl"></i>
                 </div>
-                <p class="text-[13px] font-bold text-stone-400">还没有评论，来坐第一排</p>
+                <p class="text-[13px] font-bold" :class="detailThemeStyle.muted">还没有评论，来坐第一排</p>
               </div>
 
-              <div v-else class="divide-y divide-stone-100">
+              <div v-else class="divide-y" :class="detailThemeStyle.divider">
                 <div v-for="comment in comments" :key="comment.id" class="px-4 py-4 flex gap-3">
                   <img
                     :src="avatarOf(comment.userAvatar, comment.userName || comment.userId || comment.id)"
-                    class="w-9 h-9 rounded-full object-cover bg-stone-100 ring-1 ring-stone-100 shrink-0"
+                    class="w-9 h-9 rounded-full object-cover bg-stone-100 ring-1 ring-white/20 shrink-0"
                     alt=""
                   />
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 mb-1">
-                      <span class="text-[13px] font-black text-stone-800 truncate">{{ comment.userName || '匿名病友' }}</span>
-                      <span class="text-[10px] text-stone-300 shrink-0">{{ fmtDate(comment.createdAt) }}</span>
+                      <span class="text-[13px] font-black truncate" :class="detailThemeStyle.strong">{{ comment.userName || '匿名病友' }}</span>
+                      <span class="text-[10px] shrink-0" :class="detailThemeStyle.muted">{{ fmtDateTime(comment.createdAt) }}</span>
                     </div>
-                    <p class="text-[14px] leading-relaxed text-stone-700 break-words">{{ comment.content }}</p>
+                    <p class="text-[14px] leading-relaxed break-words" :class="detailThemeStyle.body">{{ comment.content }}</p>
                   </div>
                   <button
                     v-if="checkPermission(comment.userId)"
                     @click="deleteComment(comment)"
-                    class="w-8 h-8 rounded-full text-stone-300 active:bg-rose-50 active:text-rose-500 flex items-center justify-center shrink-0"
+                    class="w-8 h-8 rounded-full active:bg-rose-500/15 active:text-rose-500 flex items-center justify-center shrink-0"
+                    :class="detailThemeStyle.muted"
                   >
                     <i class="ri-delete-bin-6-line text-[15px]"></i>
                   </button>
@@ -367,39 +430,86 @@
         </div>
 
         <!-- 底栏互动 -->
-        <footer v-if="detail && !detailLoading" class="shrink-0 flex items-center gap-2 px-3 py-3 border-t border-stone-100/90 bg-white/95 backdrop-blur-xl safe-area-bottom">
-          <form @submit.prevent="submitComment" class="flex-1 min-w-0 h-10 rounded-full bg-stone-100 flex items-center px-3 gap-2">
-            <i class="ri-edit-line text-stone-400 shrink-0"></i>
+        <footer v-if="detail && !detailLoading" class="shrink-0 flex items-center gap-2 px-3 py-3 border-t backdrop-blur-xl safe-area-bottom" :class="detailThemeStyle.topbar">
+          <form @submit.prevent="submitComment" class="flex-1 min-w-0 h-10 rounded-full flex items-center px-3 gap-2" :class="detailThemeStyle.inputBg">
+            <i class="ri-edit-line shrink-0" :class="detailThemeStyle.muted"></i>
             <input
               ref="commentInputEl"
               v-model="commentDraft"
               type="text"
               maxlength="300"
               placeholder="说点什么…"
-              class="flex-1 min-w-0 bg-transparent outline-none text-[13px] font-medium text-stone-800 placeholder-stone-400"
+              class="flex-1 min-w-0 bg-transparent outline-none text-[13px] font-medium"
+              :class="detailThemeStyle.inputText"
             />
             <button
               v-if="commentDraft.trim()"
               type="submit"
               :disabled="commentSending"
-              class="px-2.5 py-1 rounded-full bg-stone-950 text-white text-[11px] font-black disabled:opacity-50 active:scale-95"
+              class="px-2.5 py-1 rounded-full text-[11px] font-black disabled:opacity-50 active:scale-95"
+              :class="detailThemeStyle.favBtn"
             >
               发送
             </button>
           </form>
-          <button @click="toggleLike" :disabled="likeBusy" class="flex flex-col items-center gap-0.5 active:scale-95 px-1.5 disabled:opacity-60" :class="detail.liked ? 'text-rose-500' : 'text-stone-600'">
+          <button @click="toggleLike" :disabled="likeBusy" class="flex flex-col items-center gap-0.5 active:scale-95 px-1.5 disabled:opacity-60" :class="detail.liked ? 'text-rose-500' : detailThemeStyle.iconBtn">
             <i :class="detail.liked ? 'ri-heart-3-fill' : 'ri-heart-3-line'" class="text-[22px]"></i>
             <span class="text-[10px] font-black tabular-nums">{{ detail.likeCount || 0 }}</span>
           </button>
-          <button @click="toggleFavorite" :disabled="favoriteBusy" class="flex flex-col items-center gap-0.5 active:scale-95 px-1.5 disabled:opacity-60" :class="detail.favorited ? 'text-amber-500' : 'text-stone-600'">
+          <button @click="toggleFavorite" :disabled="favoriteBusy" class="flex flex-col items-center gap-0.5 active:scale-95 px-1.5 disabled:opacity-60" :class="detail.favorited ? 'text-amber-500' : detailThemeStyle.iconBtn">
             <i :class="detail.favorited ? 'ri-star-fill' : 'ri-star-line'" class="text-[22px]"></i>
             <span class="text-[10px] font-black tabular-nums">{{ detail.favoriteCount || 0 }}</span>
           </button>
-          <button @click="focusComment" class="flex flex-col items-center gap-0.5 text-stone-600 active:scale-95 px-1.5">
+          <button @click="focusComment" class="flex flex-col items-center gap-0.5 active:scale-95 px-1.5" :class="detailThemeStyle.iconBtn">
             <i class="ri-chat-3-line text-[22px]"></i>
             <span class="text-[10px] font-black tabular-nums">{{ detail.commentCount || comments.length || 0 }}</span>
           </button>
         </footer>
+      </div>
+    </transition>
+
+    <!-- 地点选择 · 小红书风 -->
+    <transition name="modal-fade">
+      <div v-if="showLocationSheet" class="fixed inset-0 z-[120] flex items-end justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showLocationSheet = false"></div>
+        <div class="relative w-full max-w-lg bg-white rounded-t-[24px] max-h-[72vh] flex flex-col animate-slide-up">
+          <div class="px-5 pt-5 pb-3 border-b border-stone-100 flex items-center justify-between">
+            <h4 class="text-[16px] font-bold text-stone-900">添加地点</h4>
+            <button @click="showLocationSheet = false" class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+              <i class="ri-close-line"></i>
+            </button>
+          </div>
+          <div class="px-4 py-3 border-b border-stone-50">
+            <div class="flex items-center gap-2 rounded-xl bg-stone-100 px-3 py-2.5">
+              <i class="ri-search-line text-stone-400"></i>
+              <input
+                v-model="locationKeyword"
+                @keydown.enter="searchNearbyPoi"
+                type="text"
+                placeholder="搜索地点（医院 / 商场 / 餐厅）"
+                class="flex-1 bg-transparent text-[14px] outline-none placeholder-stone-400"
+              />
+              <button @click="searchNearbyPoi" class="text-[12px] font-bold text-stone-700 px-2">搜索</button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-y-auto custom-scroll">
+            <div v-if="locationLoading" class="py-12 flex items-center justify-center text-stone-400 gap-2">
+              <i class="ri-loader-4-line animate-spin"></i>
+              <span class="text-[13px]">正在定位附近…</span>
+            </div>
+            <div v-else-if="!poiResults.length" class="py-12 text-center text-[13px] text-stone-400">暂无结果，换个关键词试试</div>
+            <button
+              v-for="poi in poiResults"
+              :key="poi.id"
+              type="button"
+              @click="pickPoi(poi)"
+              class="w-full px-4 py-3.5 border-b border-stone-50 text-left active:bg-stone-50 transition-colors"
+            >
+              <p class="text-[14px] font-bold text-stone-900">{{ poi.title }}</p>
+              <p class="text-[11px] text-stone-400 mt-0.5 truncate">{{ poi.address }}</p>
+            </button>
+          </div>
+        </div>
       </div>
     </transition>
 
@@ -416,34 +526,77 @@ import { avatarOf } from '@/utils/avatarPool'
 
 const { currentUserId, checkPermission } = useAuth()
 
-// 类目
+// 类目筛选
 const categories = [
   { id: 'all', label: '全部' },
-  { id: 'pain', label: '血泪史' },
-  { id: 'heal', label: '治愈' },
-  { id: 'food', label: '吃货实录' },
-  { id: 'life', label: '人生感悟' }
+  { id: 'help', label: '求助' },
+  { id: 'share', label: '经验分享' },
+  { id: 'knowledge', label: '知识分享' },
+  { id: 'social', label: '交友' },
+  { id: 'med', label: '用药' },
+  { id: 'food', label: '饮食' }
 ]
 const activeCategory = ref('all')
 
-// 数据源（真实数据，从后端拉取）
-const libraryItems = ref([])
+const PRIMARY_TAGS = ['求助', '经验分享', '知识分享', '交友']
+const TOPIC_TAGS = ['用药', '饮食', '医保', '医院', '复查', '心理', '日常']
+const LEGACY_TAG_MAP = {
+  血泪史: '经验分享',
+  治愈: '经验分享',
+  人生感悟: '经验分享',
+  共鸣: '经验分享',
+  克制: '日常',
+  清单: '日常',
+  吃货实录: '饮食',
+  出院: '复查',
+  新故事: '经验分享'
+}
 
-// tags → category 映射（用于分类筛选）
+const normalizeTags = (tags) => {
+  const list = (tags || []).map(t => LEGACY_TAG_MAP[t] || t).filter(Boolean)
+  return [...new Set(list)]
+}
+
 const categoryOf = (tags) => {
-  const t = tags || []
-  if (t.includes('血泪史') || t.includes('克制') || t.includes('共鸣')) return 'pain'
-  if (t.includes('治愈') || t.includes('用药') || t.includes('出院')) return 'heal'
-  if (t.includes('吃货实录') || t.includes('清单')) return 'food'
-  if (t.includes('人生感悟') || t.includes('日常') || t.includes('身材')) return 'life'
+  const t = normalizeTags(tags)
+  if (t.includes('求助')) return 'help'
+  if (t.includes('经验分享')) return 'share'
+  if (t.includes('知识分享')) return 'knowledge'
+  if (t.includes('交友')) return 'social'
+  if (t.includes('用药') || t.includes('医保') || t.includes('医院') || t.includes('复查')) return 'med'
+  if (t.includes('饮食')) return 'food'
   return 'all'
 }
 
-const fmtDate = (iso) => {
+const fmtDateTime = (iso) => {
   if (!iso) return ''
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+  const now = new Date()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hour = String(d.getHours()).padStart(2, '0')
+  const minute = String(d.getMinutes()).padStart(2, '0')
+  if (d.getFullYear() === now.getFullYear()) return `${month}.${day} ${hour}:${minute}`
+  return `${d.getFullYear()}.${month}.${day} ${hour}:${minute}`
+}
+
+const normalizeCityLabel = (city) => {
+  if (!city) return ''
+  return String(city)
+    .replace(/(省|市|自治区|壮族|回族|维吾尔|特别行政区)$/g, '')
+    .trim()
+}
+
+const fmtXhsMeta = (iso, city) => {
+  if (!iso) return normalizeCityLabel(city) || ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return normalizeCityLabel(city) || ''
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const datePart = `${month}-${day}`
+  const cityPart = normalizeCityLabel(city)
+  return cityPart ? `${datePart} · ${cityPart}` : datePart
 }
 
 const mapExperiencePost = (p) => {
@@ -451,7 +604,7 @@ const mapExperiencePost = (p) => {
   if (p.media) {
     try { mediaList = JSON.parse(p.media) } catch (e) { mediaList = [] }
   }
-  const tags = p.tags ? p.tags.split(',').filter(Boolean) : []
+  const tags = normalizeTags(p.tags ? p.tags.split(',').filter(Boolean) : [])
   const cover = p.coverImage || mediaList.find(m => !/\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(m)) || mediaList[0] || ''
   return {
     id: p.id,
@@ -461,6 +614,8 @@ const mapExperiencePost = (p) => {
     summary: p.summary,
     icon: p.icon || '✍️',
     tags,
+    location: p.location || '',
+    authorCity: p.authorCity || '',
     coverImage: cover,
     media: mediaList,
     authorName: p.authorName,
@@ -471,9 +626,12 @@ const mapExperiencePost = (p) => {
     liked: !!p.liked,
     favorited: !!p.favorited,
     category: categoryOf(tags),
-    date: fmtDate(p.createdAt)
+    date: fmtDateTime(p.createdAt)
   }
 }
+
+// 数据源（真实数据，从后端拉取）
+const libraryItems = ref([])
 
 const syncPostCard = (post) => {
   if (!post?.id) return
@@ -538,13 +696,85 @@ const commentSending = ref(false)
 const likeBusy = ref(false)
 const favoriteBusy = ref(false)
 const commentInputEl = ref(null)
-const detailTags = computed(() => detail.value && detail.value.tags ? detail.value.tags.split(',').filter(Boolean) : [])
+const detailTags = computed(() => {
+  if (!detail.value?.tags) return []
+  return normalizeTags(detail.value.tags.split(',').filter(Boolean))
+})
+
+// 详情页全局主题（完全沉浸：覆盖背景/顶栏/正文/评论/底栏）
+const DETAIL_THEMES = {
+  editorial: {
+    page: 'bg-[#FFFCF8]', topbar: 'bg-[#FFFCF8]/95 border-stone-100/80',
+    title: 'text-stone-950', body: 'text-stone-700', muted: 'text-stone-400', strong: 'text-stone-900',
+    tag: 'text-[#13386B]', locText: 'text-stone-600',
+    card: 'bg-white border-stone-100', cardTitle: 'text-stone-900', chip: 'bg-amber-50 text-amber-600',
+    divider: 'divide-stone-100', commentBorder: 'border-stone-100',
+    inputBg: 'bg-stone-100', inputText: 'text-stone-800 placeholder-stone-400',
+    iconBtn: 'text-stone-600', favBtn: 'bg-stone-950 text-white', imgBg: 'bg-stone-50', watermark: 'text-stone-900'
+  },
+  midnight: {
+    page: 'bg-[#0b1326]', topbar: 'bg-[#0b1326]/95 border-white/10',
+    title: 'text-white', body: 'text-slate-200', muted: 'text-slate-400', strong: 'text-white',
+    tag: 'text-sky-300', locText: 'text-slate-200',
+    card: 'bg-white/5 border-white/10', cardTitle: 'text-white', chip: 'bg-sky-400/15 text-sky-300',
+    divider: 'divide-white/10', commentBorder: 'border-white/10',
+    inputBg: 'bg-white/10', inputText: 'text-white placeholder-slate-400',
+    iconBtn: 'text-slate-200', favBtn: 'bg-white text-slate-900', imgBg: 'bg-black/40', watermark: 'text-white'
+  },
+  sunrise: {
+    page: 'bg-gradient-to-b from-amber-50 to-rose-50', topbar: 'bg-amber-50/95 border-orange-200/40',
+    title: 'text-orange-950', body: 'text-orange-950/80', muted: 'text-orange-900/45', strong: 'text-orange-900',
+    tag: 'text-orange-600', locText: 'text-orange-800',
+    card: 'bg-white/70 border-orange-200/50', cardTitle: 'text-orange-900', chip: 'bg-white/70 text-orange-600',
+    divider: 'divide-orange-200/40', commentBorder: 'border-orange-200/40',
+    inputBg: 'bg-white/80', inputText: 'text-orange-900 placeholder-orange-300',
+    iconBtn: 'text-orange-800', favBtn: 'bg-orange-900 text-white', imgBg: 'bg-orange-100', watermark: 'text-orange-400'
+  },
+  aurora: {
+    page: 'bg-gradient-to-b from-emerald-50 to-violet-50', topbar: 'bg-emerald-50/90 border-violet-200/40',
+    title: 'text-indigo-950', body: 'text-slate-700', muted: 'text-slate-400', strong: 'text-indigo-900',
+    tag: 'text-violet-600', locText: 'text-slate-600',
+    card: 'bg-white/70 border-violet-200/50', cardTitle: 'text-indigo-900', chip: 'bg-white/70 text-violet-600',
+    divider: 'divide-violet-200/40', commentBorder: 'border-violet-200/40',
+    inputBg: 'bg-white/80', inputText: 'text-indigo-900 placeholder-slate-400',
+    iconBtn: 'text-slate-600', favBtn: 'bg-indigo-900 text-white', imgBg: 'bg-emerald-50', watermark: 'text-violet-400'
+  },
+  ink: {
+    page: 'bg-[#1a1206]', topbar: 'bg-[#1a1206]/95 border-amber-500/15',
+    title: 'text-amber-50', body: 'text-amber-100/80', muted: 'text-amber-200/50', strong: 'text-amber-100',
+    tag: 'text-amber-400', locText: 'text-amber-100/80',
+    card: 'bg-amber-400/5 border-amber-500/15', cardTitle: 'text-amber-100', chip: 'bg-amber-400/15 text-amber-300',
+    divider: 'divide-amber-500/10', commentBorder: 'border-amber-500/15',
+    inputBg: 'bg-amber-400/10', inputText: 'text-amber-50 placeholder-amber-200/40',
+    iconBtn: 'text-amber-100/80', favBtn: 'bg-amber-400 text-stone-900', imgBg: 'bg-black/40', watermark: 'text-amber-300'
+  },
+  bloom: {
+    page: 'bg-gradient-to-b from-rose-50 to-fuchsia-50', topbar: 'bg-rose-50/90 border-rose-200/40',
+    title: 'text-rose-950', body: 'text-rose-950/80', muted: 'text-rose-400/70', strong: 'text-rose-900',
+    tag: 'text-fuchsia-600', locText: 'text-rose-700',
+    card: 'bg-white/70 border-rose-200/50', cardTitle: 'text-rose-900', chip: 'bg-white/70 text-fuchsia-600',
+    divider: 'divide-rose-200/40', commentBorder: 'border-rose-200/40',
+    inputBg: 'bg-white/80', inputText: 'text-rose-900 placeholder-rose-300',
+    iconBtn: 'text-rose-700', favBtn: 'bg-rose-900 text-white', imgBg: 'bg-rose-100', watermark: 'text-rose-400'
+  }
+}
+// 阅读端渲染开关（尊重发帖人主题，但阅读者可一键关掉 + 记忆偏好）
+const renderEnabled = ref(localStorage.getItem('vaultDetailRender') !== 'off')
+const toggleRender = () => {
+  renderEnabled.value = !renderEnabled.value
+  localStorage.setItem('vaultDetailRender', renderEnabled.value ? 'on' : 'off')
+}
+const isImmersiveTheme = computed(() => !!detail.value?.theme && detail.value.theme !== 'editorial')
+const detailThemeStyle = computed(() => {
+  if (!renderEnabled.value) return DETAIL_THEMES.editorial
+  return DETAIL_THEMES[detail.value?.theme] || DETAIL_THEMES.editorial
+})
 const detailSearchHint = computed(() => {
   if (!detail.value) return ''
-  const tag = detailTags.value.find(t => t && t !== '新故事')
-  if (tag) return `${tag}经验`
+  const tag = detailTags.value.find(t => PRIMARY_TAGS.includes(t)) || detailTags.value[0]
+  if (tag) return `${tag}相关`
   const title = (detail.value.title || '').replace(/[，。！？、\s]/g, '').slice(0, 14)
-  return title || '克罗恩经验'
+  return title || '克罗恩相关'
 })
 const detailMedia = computed(() => {
   if (!detail.value) return []
@@ -682,6 +912,68 @@ const jumpToRelated = () => {
   closeDetail()
 }
 
+// ============ 地点选择 ============
+const showLocationSheet = ref(false)
+const locationLoading = ref(false)
+const locationKeyword = ref('')
+const poiResults = ref([])
+const TENCENT_MAP_KEY = 'PBBBZ-R7ZKM-W5X6A-6PYR4-Z3XB6-PFFGM'
+
+const openLocationSheet = () => {
+  showLocationSheet.value = true
+  poiResults.value = []
+  searchNearbyPoi()
+}
+
+const searchNearbyPoi = () => {
+  if (!navigator.geolocation) {
+    alert('当前设备不支持定位，请手动输入地点名称')
+    return
+  }
+  locationLoading.value = true
+  poiResults.value = []
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+      const callbackName = 'jsonp_vault_poi_' + Date.now()
+      window[callbackName] = (res) => {
+        if (res.status === 0) {
+          poiResults.value = res.data || []
+        } else {
+          alert('拉取附近地点失败：' + res.message)
+        }
+        locationLoading.value = false
+        delete window[callbackName]
+      }
+      const keyword = locationKeyword.value ? encodeURIComponent(locationKeyword.value) : encodeURIComponent('附近')
+      const script = document.createElement('script')
+      script.src = `https://apis.map.qq.com/ws/place/v1/search?keyword=${keyword}&boundary=nearby(${lat},${lng},3000)&key=${TENCENT_MAP_KEY}&output=jsonp&callback=${callbackName}`
+      document.body.appendChild(script)
+      script.onload = () => document.body.removeChild(script)
+      script.onerror = () => {
+        alert('网络请求失败，请检查网络')
+        locationLoading.value = false
+        document.body.removeChild(script)
+      }
+    },
+    () => {
+      alert('定位失败，请在浏览器设置中允许获取位置')
+      locationLoading.value = false
+    },
+    { enableHighAccuracy: true, timeout: 8000 }
+  )
+}
+
+const pickPoi = (poi) => {
+  newPost.location = poi.title || ''
+  showLocationSheet.value = false
+}
+
+const clearPostLocation = () => {
+  newPost.location = ''
+}
+
 const deleteFromDetail = async () => {
   if (!detail.value) return
   if (!confirm('兄弟，确定要把这条经验从金库里移除吗？')) return
@@ -740,20 +1032,20 @@ const newPost = reactive({
   theme: 'editorial',
   title: '',
   summary: '',
+  location: '',
   icon: '✍️',
-  tags: ['新故事'],
   likes: 0,
   comments: 0,
   date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')
 })
 
-// 实时预览：封面自动取图集第一张
-const previewPost = computed(() => ({
-  ...newPost,
-  coverImage: newMedia.value.find(m => !isVideo(m)) || newMedia.value[0] || '',
-  authorName: '我',
-  authorAvatar: defaultAvatar
-}))
+const primaryTag = ref('经验分享')
+const topicTags = ref([])
+const primaryTagOptions = PRIMARY_TAGS
+const topicTagOptions = TOPIC_TAGS
+const MAX_TOPIC_TAGS = 4
+
+const emojiOptions = ['😈', '🧊', '🍦', '🧠', '👾', '✍️', '📸', '🌥️', '🐳', '💊', '🌙', '🔥', '🌿', '🚑', '🥰', '🫶', '🌈', '☀️']
 
 const availableThemes = [
   { name: '素白', value: 'editorial', bgPreview: '#ffffff', textColor: '#0f172a' },
@@ -764,24 +1056,42 @@ const availableThemes = [
   { name: '浅绯', value: 'bloom', bgPreview: 'linear-gradient(135deg, #fff1f2, #fae8ff)', textColor: '#9d174d' }
 ]
 
-const emojiOptions = ['😈', '🧊', '🍦', '🧠', '👾', '✍️', '📸', '🌥️', '🐳', '💊', '🌙', '🔥', '🌿', '🚑']
-const tagOptions = ['血泪史', '治愈', '吃货实录', '克制', '共鸣', '日常', '用药', '清单', '人生感悟']
+const buildPublishTags = () => {
+  return [primaryTag.value, ...topicTags.value.filter(t => t !== primaryTag.value)]
+}
 
-const toggleTag = (t) => {
-  const idx = newPost.tags.indexOf(t)
-  if (idx > -1) newPost.tags.splice(idx, 1)
+const selectPrimaryTag = (tag) => {
+  primaryTag.value = tag
+  topicTags.value = topicTags.value.filter(t => t !== tag)
+}
+
+const toggleTopicTag = (tag) => {
+  if (tag === primaryTag.value) return
+  const idx = topicTags.value.indexOf(tag)
+  if (idx > -1) topicTags.value.splice(idx, 1)
   else {
-    if (newPost.tags.length >= 3) newPost.tags.shift()
-    newPost.tags.push(t)
+    if (topicTags.value.length >= MAX_TOPIC_TAGS) topicTags.value.shift()
+    topicTags.value.push(tag)
   }
 }
+
+// 实时预览：封面自动取图集第一张
+const previewPost = computed(() => ({
+  ...newPost,
+  tags: buildPublishTags(),
+  coverImage: newMedia.value.find(m => !isVideo(m)) || newMedia.value[0] || '',
+  authorName: '我',
+  authorAvatar: defaultAvatar
+}))
 
 const openModal = () => {
   newPost.title = ''
   newPost.summary = ''
+  newPost.location = ''
   newPost.theme = 'editorial'
   newPost.icon = '✍️'
-  newPost.tags = ['新故事']
+  primaryTag.value = '经验分享'
+  topicTags.value = []
   newMedia.value = []
   showModal.value = true
 }
@@ -803,9 +1113,10 @@ const publishPost = async () => {
     const res = await http.post('/experience/publish', {
       title: newPost.title,
       summary: newPost.summary,
+      location: newPost.location.trim(),
       icon: newPost.icon,
       theme: newPost.theme,
-      tags: newPost.tags.join(','),
+      tags: buildPublishTags().join(','),
       coverImage: firstImage,
       media: newMedia.value.length ? JSON.stringify(newMedia.value) : null
     })

@@ -66,17 +66,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-
-import LibraryTab from '@/components/tabs/LibraryTab.vue'
-import CheckinTab from '@/components/tabs/CheckinTab.vue'
-import PolicyMapTab from '@/components/tabs/PolicyMapTab.vue'
-import AdminConsoleTab from '@/components/tabs/AdminConsoleTab.vue'
-import ProfileTab from '@/components/tabs/ProfileTab.vue'
-import SocialTab from '@/components/tabs/SocialTab.vue'
-import DrugMapTab from '@/components/tabs/DrugMapTab.vue'
-import HospitalTab from '@/components/tabs/HospitalTab.vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import http from '@/api/http.js'
+
+const SocialTab = defineAsyncComponent(() => import('@/components/tabs/SocialTab.vue'))
+const CheckinTab = defineAsyncComponent(() => import('@/components/tabs/CheckinTab.vue'))
+const PolicyMapTab = defineAsyncComponent(() => import('@/components/tabs/PolicyMapTab.vue'))
+const LibraryTab = defineAsyncComponent(() => import('@/components/tabs/LibraryTab.vue'))
+const ProfileTab = defineAsyncComponent(() => import('@/components/tabs/ProfileTab.vue'))
+const AdminConsoleTab = defineAsyncComponent(() => import('@/components/tabs/AdminConsoleTab.vue'))
+const DrugMapTab = defineAsyncComponent(() => import('@/components/tabs/DrugMapTab.vue'))
+const HospitalTab = defineAsyncComponent(() => import('@/components/tabs/HospitalTab.vue'))
 
 const tabItems = [
   { name: 'circle', label: '小队', icon: 'ri-team-line', badge: 3 },

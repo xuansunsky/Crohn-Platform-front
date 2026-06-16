@@ -218,6 +218,15 @@
         <span class="menu-text">病例上传与权限解锁</span>
       </div>
     </div>
+
+    <button class="logout-card" type="button" @click="handleLogout">
+      <span class="logout-icon"><i class="ri-logout-box-r-line"></i></span>
+      <span class="logout-main">
+        <span class="logout-title">退出登录</span>
+        <span class="logout-subtitle">下次回来，乐园还在这里</span>
+      </span>
+      <i class="ri-arrow-right-s-line logout-arrow"></i>
+    </button>
   </div>
 
   <!-- 城市选择弹窗 -->
@@ -381,13 +390,16 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import { areaList } from '@vant/area-data'
 import { closeToast, showToast } from 'vant'
 import http from '@/api/http.js'
 import { DEFAULT_AVATARS, avatarOf } from '@/utils/avatarPool'
+import { clearAuthSession } from '@/utils/authToken'
 
 const emit = defineEmits(['change-tab'])
+const router = useRouter()
 
 // 应急操作
 const triggerRecovery = () => {
@@ -395,7 +407,16 @@ const triggerRecovery = () => {
 }
 
 const uploadMedicalRecord = () => {
-  alert('安全加密通道已开启，准备上传病历...')
+  localStorage.setItem('openVerifyUpload', '1')
+  emit('change-tab', 'circle')
+}
+
+const handleLogout = async () => {
+  if (!confirm('确定要退出当前账号吗？')) return
+  clearAuthSession()
+  localStorage.removeItem('lastActiveTab')
+  showToast({ message: '已退出登录', icon: 'success' })
+  await router.replace('/login2')
 }
 
 // 当前状态展示
@@ -751,6 +772,62 @@ const onSelectCity = async (city) => {
 .bg-shape { position: absolute; border-radius: 50%; filter: blur(70px); z-index: 0; opacity: 0.3; }
 .shape-1 { width: 160px; height: 160px; background: #b39ddb; top: -30px; right: -30px; }
 .shape-2 { width: 200px; height: 200px; background: #ff8e8b; bottom: 60px; left: -70px; }
+
+.logout-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 14px 0 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(244, 63, 94, 0.10);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 26px -18px rgba(127, 29, 29, 0.28);
+  color: #7f1d1d;
+  text-align: left;
+  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.logout-card:active {
+  transform: scale(0.985);
+  background: #fff5f5;
+  box-shadow: 0 8px 20px -18px rgba(127, 29, 29, 0.34);
+}
+.logout-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 63, 94, 0.09);
+  color: #e11d48;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.logout-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.logout-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #9f1239;
+}
+.logout-subtitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c08497;
+}
+.logout-arrow {
+  font-size: 20px;
+  color: #fecdd3;
+}
 
 /* 身份卡 */
 .premium-glass-card {

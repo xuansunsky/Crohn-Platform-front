@@ -1,11 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView2 from '../views/LoginView2.vue'
-import RegisterView from '../views/RegisterView.vue'
-import DashboardView from '../components/tabs/DashboardView.vue'
-import ExperienceCard from '@/components/ExperienceCard.vue'
-import InsuranceMap from '@/components/tabs/PolicyMapTab.vue'
-import SocialTab from '@/components/tabs/SocialTab.vue'
-import LiuShi666 from '@/components/ui/LiuShi666.vue'
 import { getValidToken } from '@/utils/authToken'
 
 const router = createRouter({
@@ -13,13 +6,13 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/login2' },
     { path: '/login', redirect: '/login2' },
-    { path: '/login2', name: 'LoginView2', component: LoginView2 },
-    { path: '/register', name: 'register', component: RegisterView },
-    { path: '/dashboard', name: 'dashboard', component: DashboardView },
-    { path: '/insuranceMap', name: 'insuranceMap', component: InsuranceMap },
-    { path: '/ExperienceCard', name: 'ExperienceCard', component: ExperienceCard },
-    { path: '/Liushi666', name: 'Liu666', component: LiuShi666 },
-    { path: '/SocialTab', name: 'SocialTab', component: SocialTab },
+    { path: '/login2', name: 'LoginView2', component: () => import('../views/LoginView2.vue') },
+    { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
+    { path: '/dashboard', name: 'dashboard', component: () => import('../components/tabs/DashboardView.vue') },
+    { path: '/insuranceMap', name: 'insuranceMap', component: () => import('@/components/tabs/PolicyMapTab.vue') },
+    { path: '/ExperienceCard', name: 'ExperienceCard', component: () => import('@/components/ExperienceCard.vue') },
+    { path: '/Liushi666', name: 'Liu666', component: () => import('@/components/ui/LiuShi666.vue') },
+    { path: '/SocialTab', name: 'SocialTab', component: () => import('@/components/tabs/SocialTab.vue') },
     {
       path: '/AdminConsole',
       name: 'AdminConsole',

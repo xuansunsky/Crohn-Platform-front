@@ -341,7 +341,7 @@
             <div class="flex items-center justify-between mb-3">
               <div>
                 <p class="text-[14px] font-black text-slate-900 tracking-tight">我的评分</p>
-                <p class="text-[10px] text-slate-400 font-bold mt-0.5">每个单品一人一票，可重新修改</p>
+                <p class="text-[10px] text-slate-400 font-bold mt-0.5">先选身体反馈，再写一条真实实评</p>
               </div>
               <span class="text-[10px] font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
                 {{ quickFeedback.votedLevel ? '已评分' : '未评分' }}
@@ -349,38 +349,105 @@
             </div>
 
             <div class="space-y-2 mb-3">
-              <div
-                v-for="level in levels"
-                :key="level.val"
-                @click="quickFeedback.level = level.val"
-                :class="[
-                  'flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer select-none active:scale-[0.99]',
-                  quickFeedback.level === level.val ? level.activeClass + ' shadow-md' : 'border-transparent bg-slate-50 hover:bg-slate-100'
-                ]"
-              >
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm shrink-0" :class="level.iconBg">{{ level.icon }}</div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-2 mb-0.5">
-                    <span class="text-[13.5px] font-black tracking-tight truncate">{{ level.name }}</span>
-                    <span class="text-[9.5px] font-black px-2 py-0.5 rounded-full bg-white/60 shrink-0 tracking-wider">{{ level.impact }}</span>
+              <template v-for="level in levels" :key="level.val">
+                <div
+                  @click="pickQuickFeedbackLevel(level.val)"
+                  :class="[
+                    'flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer select-none active:scale-[0.99]',
+                    quickFeedback.level === level.val ? level.activeClass + ' shadow-md' : 'border-transparent bg-slate-50 hover:bg-slate-100'
+                  ]"
+                >
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm shrink-0" :class="level.iconBg">{{ level.icon }}</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2 mb-0.5">
+                      <span class="text-[13.5px] font-black tracking-tight truncate">{{ level.name }}</span>
+                      <span class="text-[9.5px] font-black px-2 py-0.5 rounded-full bg-white/60 shrink-0 tracking-wider">{{ level.impact }}</span>
+                    </div>
+                    <p class="text-[11px] font-medium opacity-70">{{ level.desc }}</p>
                   </div>
-                  <p class="text-[11px] font-medium opacity-70">{{ level.desc }}</p>
+                  <i v-if="quickFeedback.level === level.val" class="ri-checkbox-circle-fill text-xl shrink-0"></i>
                 </div>
-                <i v-if="quickFeedback.level === level.val" class="ri-checkbox-circle-fill text-xl shrink-0"></i>
-              </div>
+
+                <transition name="feedback-expand">
+                  <div
+                      v-if="quickFeedback.level === level.val && quickFeedback.showEditor"
+                      data-feedback-editor="true"
+                      class="mx-1 -mt-1 mb-2 rounded-[24px] border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.45)]"
+                      @click.stop
+                  >
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                      <div>
+                        <p class="text-[13px] font-black text-slate-900">写下这次实评</p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-0.5">这是你的身体反馈，不是底部评论</p>
+                      </div>
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-black shrink-0" :class="getLevelStyle(level.val)">
+                        {{ level.name }}
+                      </span>
+                    </div>
+
+                    <textarea
+                        v-model="quickFeedback.content"
+                        rows="4"
+                        maxlength="220"
+                        placeholder="比如：吃完两小时开始胀气，晚上肚子有点闹，但还能接受。"
+                        class="w-full bg-white border border-slate-100 rounded-2xl px-3.5 py-3 text-[13px] text-slate-700 font-medium leading-relaxed outline-none focus:border-slate-900 resize-none"
+                    ></textarea>
+
+                    <div class="flex items-center justify-between gap-3 mt-3">
+                      <span class="text-[10px] font-bold text-slate-400">{{ quickFeedback.content.length }}/220</span>
+                      <button
+                          @click.stop="submitFoodFeedback"
+                          :disabled="quickFeedback.submitting || !quickFeedback.content.trim()"
+                          class="px-5 py-3 rounded-2xl bg-slate-900 text-white text-[12px] font-black disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 transition-all"
+                      >
+                        {{ quickFeedback.submitting ? '发布中' : (quickFeedback.votedLevel ? '更新实评' : '发布实评') }}
+                      </button>
+                    </div>
+                  </div>
+                </transition>
+              </template>
+            </div>
+          </div>
+
+          <!-- 实测感受 -->
+          <div>
+            <h4 class="flex items-center justify-between mb-3 px-1 gap-3">
+              <span class="text-[14px] font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+                <i class="ri-file-list-3-fill text-amber-500"></i>
+                大家的实测
+              </span>
+              <span class="text-[10px] font-bold text-slate-400 tracking-wider">{{ currentFoodReports.length }} 条</span>
+            </h4>
+
+            <div v-if="currentFoodReports.length" class="space-y-2.5">
+              <article
+                  v-for="report in currentFoodReports"
+                  :key="report.id"
+                  class="bg-white p-4 rounded-[20px] border border-slate-100 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)]"
+              >
+                <div class="flex items-start gap-2.5 mb-2">
+                  <img :src="report.avatar" class="w-9 h-9 rounded-full object-cover bg-slate-50 shrink-0 border border-white shadow-sm">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-[12px] font-black text-slate-800 truncate">{{ report.userName }}</span>
+                      <span class="text-[10px] font-bold text-slate-400 shrink-0">{{ formatReportTime(report.time) }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span class="px-2 py-0.5 rounded-lg text-[10px] font-black" :class="getLevelStyle(report.levelId)">
+                        {{ getLevelInfo(report.levelId).name }}
+                      </span>
+                      <span v-if="report.location" class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-lg">
+                        <i class="ri-map-pin-2-fill"></i> {{ report.location }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-[13px] text-slate-600 leading-relaxed pl-[46px] whitespace-pre-wrap">{{ report.content }}</p>
+              </article>
             </div>
 
-            <div class="flex items-center justify-between gap-3">
-              <p class="text-[11px] text-slate-400 font-bold">
-                {{ quickFeedback.votedLevel ? '改选后点确定，系统会更新你的票。' : '选一个最接近的体感，再点确定。' }}
-              </p>
-              <button
-                  @click="submitFoodVote"
-                  :disabled="quickFeedback.submitting"
-                  class="px-5 py-3 rounded-2xl bg-slate-900 text-white text-[12px] font-black disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 transition-all shrink-0"
-              >
-                {{ quickFeedback.submitting ? '提交中' : '确定' }}
-              </button>
+            <div v-else class="text-center py-8 bg-white/60 rounded-[20px] border border-dashed border-slate-200">
+              <p class="text-slate-400 text-[12px] font-bold">还没有实测感受。</p>
             </div>
           </div>
 
@@ -457,7 +524,7 @@
           <input
               v-model="foodCommentInput"
               type="text"
-              placeholder="灵魂只要有趣，文字亦会发光…"
+              placeholder="写一句评论，聊聊这条情报…"
               class="flex-1 bg-slate-100 border border-slate-100 rounded-2xl px-4 py-3 text-[12.5px] outline-none focus:bg-white focus:border-blue-200"
               @keyup.enter="submitFoodComment"
           >
@@ -766,7 +833,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http.js'
 import { avatarOf } from '@/utils/avatarPool'
@@ -1029,6 +1096,8 @@ const formData = ref({
 const quickFeedback = ref({
   level: 1,
   votedLevel: null,
+  content: '',
+  showEditor: false,
   submitting: false
 })
 const foodComments = ref([])
@@ -1036,6 +1105,7 @@ const foodCommentInput = ref('')
 const foodCommentsLoading = ref(false)
 const foodCommentSubmitting = ref(false)
 const foodCommentSort = ref('latest')
+const autoQuickFeedback = ref('')
 const foodCommentSortOptions = [
   { id: 'latest', label: '最新' },
   { id: 'earliest', label: '最早' }
@@ -1203,6 +1273,7 @@ const fetchReports = async (foodId) => {
     if (mine) {
       quickFeedback.value.level = mine.levelId || 1
       quickFeedback.value.votedLevel = mine.levelId || 1
+      quickFeedback.value.content = mine.rawContent || ''
     } else {
       quickFeedback.value.votedLevel = null
     }
@@ -1214,11 +1285,44 @@ const fetchReports = async (foodId) => {
 const openDetail = (item) => {
   currentFood.value = item
   showDetailModal.value = true
-  quickFeedback.value = { level: 1, votedLevel: null, submitting: false }
+  quickFeedback.value = { level: 1, votedLevel: null, content: '', showEditor: false, submitting: false }
   foodComments.value = []
   foodCommentInput.value = ''
+  autoQuickFeedback.value = ''
   fetchReports(item.id)
   fetchFoodComments(item.id)
+}
+
+const buildFoodCommentTemplate = (levelVal, food = currentFood.value) => {
+  const level = getLevelInfo(levelVal)
+  const brand = food?.brand || '这家'
+  const product = food?.product || '这个单品'
+  const levelName = level.name.split('·')[0]
+  const templates = {
+    1: `${brand}的${product}我这次吃着挺稳，整体属于${levelName}，可以作为参考。`,
+    2: `${brand}的${product}我吃完有一点反应，算${levelName}，建议先少量试。`,
+    3: `${brand}的${product}对我有明显警告感，吃完不太舒服，大家谨慎点。`,
+    4: `${brand}的${product}我这次代价有点大，反应比较重，不建议状态差的时候碰。`,
+    5: `${brand}的${product}对我很危险，身体反馈很糟糕，大家一定谨慎。`,
+    6: `${brand}的${product}我这次踩雷很重，接近黑区，真的不建议轻易尝试。`
+  }
+  return templates[levelVal] || `${brand}的${product}我这次评为${levelName}，给大家做个参考。`
+}
+
+const pickQuickFeedbackLevel = (levelVal) => {
+  quickFeedback.value.level = levelVal
+  quickFeedback.value.showEditor = true
+  const nextTemplate = buildFoodCommentTemplate(levelVal)
+  const current = quickFeedback.value.content.trim()
+  if (!current || current === autoQuickFeedback.value) {
+    quickFeedback.value.content = nextTemplate
+    autoQuickFeedback.value = nextTemplate
+  }
+  nextTick(() => {
+    const editor = document.querySelector('[data-feedback-editor="true"]')
+    editor?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    editor?.querySelector('textarea')?.focus()
+  })
 }
 
 const openBrandModal = (brand) => {
@@ -1255,17 +1359,27 @@ const openBrandPublish = (brand = selectedBrand.value) => {
   showUploadModal.value = true
 }
 
-const submitFoodVote = async () => {
+const submitFoodFeedback = async () => {
   if (!currentFood.value?.id || quickFeedback.value.submitting) return
+  const content = quickFeedback.value.content.trim()
+  if (!content) return
 
   quickFeedback.value.submitting = true
   try {
-    const res = await http.post(`/diet/foods/${currentFood.value.id}/vote`, { level: quickFeedback.value.level })
+    const res = await http.post(`/diet/foods/${currentFood.value.id}/feedback`, {
+      level: quickFeedback.value.level,
+      reactionLevel: quickFeedback.value.level,
+      content,
+      location: ''
+    })
     if (res.status && res.status !== 200) {
       alert(res.message || '发送失败')
       return
     }
     quickFeedback.value.votedLevel = quickFeedback.value.level
+    quickFeedback.value.content = content
+    quickFeedback.value.showEditor = false
+    autoQuickFeedback.value = ''
     await fetchFoodList()
     const updatedFood = foodList.value.find(item => item.id === currentFood.value.id)
     if (updatedFood) currentFood.value = updatedFood
@@ -1488,6 +1602,26 @@ const getLevelStyle = (val) => {
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+.feedback-expand-enter-active,
+.feedback-expand-leave-active {
+  transition: all 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.feedback-expand-enter-from,
+.feedback-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  max-height: 0;
+}
+
+.feedback-expand-enter-to,
+.feedback-expand-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  max-height: 280px;
+}
 </style>
 
 <style>
