@@ -1,6 +1,12 @@
 <template>
   <div class="w-full pb-8 bg-[#FBF9F5]">
 
+    <transition name="van-fade">
+      <div v-if="toastMsg" class="fixed top-[20%] left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 bg-slate-900/90 backdrop-blur-md text-white text-[13px] font-bold rounded-2xl shadow-xl max-w-[80%] text-center">
+        {{ toastMsg }}
+      </div>
+    </transition>
+
     <TabPageHeader
       title="社区情报"
       accent="blue"
@@ -15,7 +21,8 @@
             placeholder="搜品牌或单品"
             class="w-full bg-white/90 backdrop-blur-xl text-slate-900 text-[13px] font-medium rounded-2xl py-3 pl-10 pr-20 outline-none border border-white shadow-[0_4px_16px_-8px_rgba(15,23,42,0.08)] focus:bg-white focus:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.12)] focus:border-blue-200 transition-all placeholder-slate-400"
         >
-        <button class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-[11px] font-black rounded-xl shadow-sm hover:bg-slate-800 active:scale-95 transition-all">
+        <button @click="runRadarSearch" class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-[11px] font-black rounded-xl shadow-sm hover:bg-slate-800 active:scale-95 transition-all flex items-center gap-1">
+          <i class="ri-radar-line text-[12px]"></i>
           雷达
         </button>
       </div>
@@ -142,7 +149,7 @@
       </section>
 
       <!-- 列表标题 -->
-      <div class="flex items-end justify-between pt-2">
+      <div ref="listAnchor" class="flex items-end justify-between pt-2">
         <div>
           <h3 class="text-[18px] font-black tracking-tight text-slate-900">单品评分榜</h3>
           <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ filteredList.length }} 个单品 · 病友共评</p>
@@ -843,8 +850,44 @@ const emit = defineEmits(['change-tab'])
 const DEFAULT_FOOD_COVER = '/img/food-placeholder.svg'
 const currentUserId = Number(localStorage.getItem('userId') || 0)
 
+const listAnchor = ref(null)
+const toastMsg = ref('')
+let toastTimer = null
+const showToast = (msg) => {
+  toastMsg.value = msg
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toastMsg.value = '' }, 2200)
+}
+
+// 雷达：真扫描——收起键盘、定位结果、没扫到就引导去实测
+const runRadarSearch = async () => {
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur()
+  }
+  await nextTick()
+  const count = filteredList.value.length
+  const kw = keyword.value.trim()
+
+  if (count > 0) {
+    listAnchor.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    showToast(kw ? `雷达锁定 ${count} 个相关单品` : `雷达共收录 ${count} 个单品`)
+    return
+  }
+
+  if (kw) {
+    showToast(`雷达没扫到「${kw}」，来当第一个实测的人吧`)
+    setTimeout(() => openUploadModal(), 600)
+  } else {
+    showToast('先输入品牌或单品再扫描')
+  }
+}
+
 onMounted(() => {
   fetchFoodList()
+  if (localStorage.getItem('openMyDietReports') === '1') {
+    localStorage.removeItem('openMyDietReports')
+    nextTick(() => openMyReports())
+  }
 })
 
 // 周边餐厅雷达
@@ -855,7 +898,7 @@ const fetchNearby = () => {
   poiList.value = []
 
   if (!navigator.geolocation) {
-    alert("老哥，你的浏览器不支持定位！")
+    alert('当前设备不支持定位，请手动填写地点')
     isLocating.value = false
     return
   }
@@ -864,17 +907,15 @@ const fetchNearby = () => {
       (position) => {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
-        console.log(`拿到你的坐标了：纬度 ${lat}, 经度 ${lng}`)
 
         const tencentKey = 'PBBBZ-R7ZKM-W5X6A-6PYR4-Z3XB6-PFFGM'
         const callbackName = 'jsonp_callback_' + Date.now()
 
         window[callbackName] = (res) => {
           if (res.status === 0) {
-            console.log("🔥 腾讯云返回的周边美食：", res.data)
             poiList.value = res.data
           } else {
-            alert("拉取周边数据失败：" + res.message)
+            alert('附近地点暂时没拉出来，请手动填写')
           }
           isLocating.value = false
           delete window[callbackName]
@@ -889,14 +930,13 @@ const fetchNearby = () => {
 
         script.onload = () => document.body.removeChild(script)
         script.onerror = () => {
-          alert("网络请求被拦截，请确认当前页面和后端服务都已连通")
+          alert('附近地点暂时没拉出来，请手动填写')
           isLocating.value = false
           document.body.removeChild(script)
         }
       },
       (error) => {
-        console.warn(error)
-        alert("定位失败！请确保你给浏览器开了【获取位置】的权限！")
+        alert('定位失败，请检查定位权限或手动填写地点')
         isLocating.value = false
       },
       {enableHighAccuracy: true, timeout: 5000}

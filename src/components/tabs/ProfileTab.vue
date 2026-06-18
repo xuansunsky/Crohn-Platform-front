@@ -133,8 +133,8 @@
     <!-- 🔥 全新简洁版：我的当前状态（超工整、无乱字） -->
     <div class="clean-panel">
       <div class="panel-header">
-        <h3 class="panel-title">我的状态参数</h3>
-        <span class="edit-hint">点击可切换 ✏️</span>
+        <h3 class="panel-title">我的状态</h3>
+        <span class="edit-hint">点击更新 ✏️</span>
       </div>
 
       <div class="status-list">
@@ -179,38 +179,40 @@
     <div class="recovery-section">
       <button class="btn-recovery" @click="triggerRecovery">
         <span class="btn-icon">❤️💊</span>
-        <span class="btn-text">启动战后修复协议</span>
+        <span class="btn-text">打开今日照护提醒</span>
       </button>
    
     </div>
 
     <div class="glass-card menu-list animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div class="menu-item" @click="showCityPicker = true">
+      <div class="menu-item menu-item-static">
         <span class="menu-icon">📍</span>
-        <span class="menu-text">我的城市</span>
-        <span class="menu-badge" style="background: rgba(59,130,246,0.1); color: rgb(59,130,246);">{{ userInfo.city || '未设置' }}</span>
+        <span class="menu-text">同城城市</span>
+        <span class="menu-badge" style="background: rgba(59,130,246,0.1); color: rgb(59,130,246);">{{ userInfo.city || '去小队定位' }}</span>
       </div>
+      <p class="city-lock-note">同城城市由定位自动同步，不能手动切换。</p>
       <div class="divider"></div>
       <div class="menu-item" @click="emit('change-tab', 'circle')">
         <span class="menu-icon">💬</span>
-        <span class="menu-text">密友圈</span>
-        <span class="menu-badge">2条新战报</span>
+        <span class="menu-text">我的小队</span>
+        <span class="menu-badge">去看看</span>
       </div>
       <div class="divider"></div>
-      <div class="menu-item">
+      <div class="menu-item" @click="openMyDietList">
         <span class="menu-icon">📝</span>
-        <span class="menu-text">我的温和饮食清单</span>
+        <span class="menu-text">我的饮食清单</span>
+        <span class="menu-badge" style="background: rgba(59,130,246,0.1); color: rgb(59,130,246);">实测</span>
       </div>
       <div class="divider"></div>
       <div class="menu-item" @click="emit('change-tab', 'drugmap')">
         <span class="menu-icon">💊</span>
-        <span class="menu-text">常用药物图谱 & 闹钟守护</span>
-        <span class="menu-badge" style="background: rgba(16, 185, 129, 0.12); color: rgb(16, 185, 129);">安全配药</span>
+        <span class="menu-text">常用药物与提醒</span>
+        <span class="menu-badge" style="background: rgba(16, 185, 129, 0.12); color: rgb(16, 185, 129);">记录</span>
       </div>
       <div class="divider"></div>
       <div class="menu-item" @click="emit('change-tab', 'hospital')">
         <span class="menu-icon">🏥</span>
-        <span class="menu-text">顶级推荐专科与就诊绿道</span>
+        <span class="menu-text">医院与就诊信息</span>
       </div>
       <div class="divider"></div>
       <div class="menu-item" @click="uploadMedicalRecord">
@@ -228,39 +230,6 @@
       <i class="ri-arrow-right-s-line logout-arrow"></i>
     </button>
   </div>
-
-  <!-- 城市选择弹窗 -->
-  <van-popup v-model:show="showCityPicker" position="bottom" round teleport="body">
-    <div class="city-picker">
-      <div class="city-picker-header">
-        <span class="city-picker-title">选择你的城市</span>
-        <button @click="showCityPicker = false" class="city-picker-close">
-          <i class="ri-close-line"></i>
-        </button>
-      </div>
-
-      <div class="city-search-wrap">
-        <i class="ri-search-line city-search-icon"></i>
-        <input
-          v-model="citySearch"
-          type="text"
-          class="city-search-input"
-          placeholder="搜索城市，如 北京、上海、杭州"
-        />
-        <i v-if="citySearch" class="ri-close-circle-fill city-search-clear" @click="citySearch = ''"></i>
-      </div>
-
-      <div class="city-grid">
-        <button
-          v-for="c in filteredCityList" :key="c"
-          @click="onSelectCity(c)"
-          class="city-chip"
-          :class="{ 'city-chip-active': userInfo.city === c }"
-        >{{ c }}</button>
-        <p v-if="filteredCityList.length === 0" class="city-empty">没找到「{{ citySearch }}」，换个关键词试试</p>
-      </div>
-    </div>
-  </van-popup>
 
   <transition name="van-slide-up">
   <div v-if="showBadgeSelector" class="fixed inset-0 z-[150] flex flex-col justify-end">
@@ -287,7 +256,7 @@
 
       <div class="flex-1 overflow-y-auto custom-scroll p-6 space-y-8 pb-32">
 
-        <div v-for="category in ['官方身份', '饮食流派', '战神荣誉']" :key="category">
+        <div v-for="category in ['基础身份', '饮食偏好', '经历标签']" :key="category">
           <h3 class="text-[13px] font-black text-slate-400 mb-4 tracking-widest flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> {{ category }}
           </h3>
@@ -392,7 +361,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
-import { areaList } from '@vant/area-data'
 import { closeToast, showToast } from 'vant'
 import http from '@/api/http.js'
 import { DEFAULT_AVATARS, avatarOf } from '@/utils/avatarPool'
@@ -403,12 +371,17 @@ const router = useRouter()
 
 // 应急操作
 const triggerRecovery = () => {
-  alert('【系统级降级预案已启动】\n小轩，立刻切换全流质模式！小轩为你护航！')
+  showToast({ message: '今天慢一点，先照顾好自己', icon: 'like-o' })
 }
 
 const uploadMedicalRecord = () => {
   localStorage.setItem('openVerifyUpload', '1')
   emit('change-tab', 'circle')
+}
+
+const openMyDietList = () => {
+  localStorage.setItem('openMyDietReports', '1')
+  emit('change-tab', 'checkin')
 }
 
 const handleLogout = async () => {
@@ -427,18 +400,18 @@ const currentGut = ref({ name: '运行平稳', icon: '🟢', color: '#16a34a', b
 const showBadgeSelector = ref(false)
 const MAX_BADGES = 3
 
-// 荣誉徽章数据
+// 个人标签数据
 const badgeLibrary = ref([
-  { id: 1, category: '官方身份', icon: '🛡️', name: '克罗恩 V1 认证', desc: '系统初代守护者', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', selected: true },
-  { id: 2, category: '官方身份', icon: '⚙️', name: '全栈架构师', desc: '代码改变命运', color: 'text-slate-700', bg: 'bg-slate-100', border: 'border-slate-300', selected: true },
+  { id: 1, category: '基础身份', icon: '🛡️', name: '已认证', desc: '资料更可信', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', selected: true },
+  { id: 2, category: '基础身份', icon: '🌱', name: '新成员', desc: '刚来到乐园', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', selected: true },
 
-  { id: 3, category: '饮食流派', icon: '🌿', name: '无麸质探路者', desc: '坚守纯净饮食', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', selected: true },
-  { id: 4, category: '饮食流派', icon: '🥩', name: '食肉狂战士', desc: '高蛋白纯肉摄入', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200', selected: false },
-  { id: 5, category: '饮食流派', icon: '🥥', name: '低FODMAP大师', desc: '精准避开产气雷区', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', selected: false },
+  { id: 3, category: '饮食偏好', icon: '🌿', name: '清淡饮食', desc: '偏向温和选择', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', selected: true },
+  { id: 4, category: '饮食偏好', icon: '🍚', name: '少量多餐', desc: '慢慢试探', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', selected: false },
+  { id: 5, category: '饮食偏好', icon: '🥥', name: '低FODMAP', desc: '减少刺激', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', selected: false },
 
-  { id: 6, category: '战神荣誉', icon: '⚔️', name: '钢铁肠道', desc: '已挺过最难的阶段', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', selected: false },
-  { id: 7, category: '战神荣誉', icon: '🧘‍♂️', name: '禅定修心者', desc: '情绪稳定，百毒不侵', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200', selected: false },
-  { id: 8, category: '战神荣誉', icon: '🩸', name: '生物制剂老兵', desc: '抗体在血液中燃烧', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', selected: false },
+  { id: 6, category: '经历标签', icon: '🌤️', name: '稳定期', desc: '最近比较平稳', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', selected: false },
+  { id: 7, category: '经历标签', icon: '🧘‍♂️', name: '情绪练习中', desc: '慢慢调节', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200', selected: false },
+  { id: 8, category: '经历标签', icon: '💉', name: '长期用药', desc: '按时治疗', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', selected: false },
 ])
 
 const selectedCount = computed(() => badgeLibrary.value.filter(b => b.selected).length)
@@ -448,7 +421,7 @@ const toggleBadge = (badge) => {
     badge.selected = false
   } else {
     if (selectedCount.value >= MAX_BADGES) {
-      console.log('最多只能装备 3 枚徽章！')
+      showToast({ message: '最多选择 3 个标签' })
       return
     }
     badge.selected = true
@@ -483,7 +456,7 @@ const saveBadges = async () => {
 const currentEditType = ref('')
 
 const userInfo = ref({
-  nickname: '全栈架构师_小轩',
+  nickname: localStorage.getItem('nickname') || '未命名用户',
   avatar: avatarOf('', 'me'),
   userId: null,
   city: ''
@@ -570,29 +543,29 @@ const activeSheetType = ref('')
 
 // 动态弹窗的标题字典
 const sheetTitles = {
-  phase: '诊断雷达：更新当前阶段',
-  diet:  '能量补给：切换饮食协议',
-  gut:   '生物反馈：记录肠道状态'
+  phase: '更新当前阶段',
+  diet:  '切换饮食方式',
+  gut:   '记录肠道反馈'
 }
 
 // 状态选项库
 const statusLibrary = ref({
   phase: [
-    { id: 'p1', icon: '✨', name: '临床缓解期', desc: '指标正常，岁月静好', color: 'text-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-200' },
-    { id: 'p2', icon: '🔥', name: '急性发作期', desc: '炎症风暴，需要支援', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' },
-    { id: 'p3', icon: '🛡️', name: '隐匿活动期', desc: '表面平静，暗流涌动', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
-    { id: 'p4', icon: '🩹', name: '术后恢复期', desc: '重塑防线，稳步回血', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' }
+    { id: 'p1', icon: '✨', name: '临床缓解期', desc: '最近比较稳定', color: 'text-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+    { id: 'p2', icon: '🔥', name: '急性发作期', desc: '需要多照顾自己', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' },
+    { id: 'p3', icon: '🛡️', name: '隐匿活动期', desc: '表面平稳，仍需观察', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { id: 'p4', icon: '🩹', name: '术后恢复期', desc: '慢慢恢复中', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' }
   ],
   diet: [
-    { id: 'd1', icon: '🌿', name: '低FODMAP', desc: '精准避开产气雷区', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
-    { id: 'd2', icon: '💧', name: '全流食协议', desc: '肠道最高级别休眠', color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
-    { id: 'd3', icon: '🌾', name: '无麸质饮食', desc: '切断潜在致敏源头', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-    { id: 'd4', icon: '🍱', name: '常规探路', desc: '小心试探，逐步扩容', color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' }
+    { id: 'd1', icon: '🌿', name: '低FODMAP', desc: '减少刺激', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
+    { id: 'd2', icon: '💧', name: '流食为主', desc: '让肠道休息一下', color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
+    { id: 'd3', icon: '🌾', name: '无麸质饮食', desc: '避开部分刺激源', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { id: 'd4', icon: '🍱', name: '常规尝试', desc: '少量、慢慢试', color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' }
   ],
   gut: [
-    { id: 'g1', icon: '🟢', name: '运行平稳', desc: '毫无波澜，完美吸收', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-    { id: 'g2', icon: '🟡', name: '轻度波动', desc: '咕噜作响，偶有不适', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
-    { id: 'g3', icon: '🔴', name: '警报拉响', desc: '拉肚子/腹痛加剧', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' }
+    { id: 'g1', icon: '🟢', name: '运行平稳', desc: '今天比较舒服', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    { id: 'g2', icon: '🟡', name: '轻度波动', desc: '有一点不适', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { id: 'g3', icon: '🔴', name: '明显不适', desc: '腹痛或腹泻加重', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' }
   ]
 })
 
@@ -629,12 +602,8 @@ const selectStatus = (item) => {
     activeSheetType.value = ''
   }, 300)
 
-  // 后台同步状态，不阻塞当前交互
   http.post('/center/update-status', payload).then(res => {
-    // 可以静默成功，什么都不提示，或者在控制台打印一下
-    console.log(`[系统日志] ${item.name} 状态已同步至云端`)
   }).catch(err => {
-    // 只有失败的时候才弹出来提醒用户
     showToast({ type: 'fail', message: '状态同步失败，正在重试' })
   })
 }
@@ -643,13 +612,11 @@ const loadData = async () => {
   try {
     const res = await http.get('/center/info');
 
-    // ⚠️ 注意：根据你的 ApiResponse 结构，如果数据包了一层，这里可能是 res.data.data
-    // 假设你的 axios 拦截器已经去掉了最外层，这里用 res.data
     const profile = res.data?.data || res.data;
 
     if (profile) {
       // 1. 同步基础信息
-      userInfo.value.nickname = profile.nickname || '未命名特工';
+      userInfo.value.nickname = profile.nickname || localStorage.getItem('nickname') || '未命名用户';
       userInfo.value.avatar = avatarOf(profile.avatar, profile.userId || profile.nickname || 'me');
       userInfo.value.userId = profile.userId;
       userInfo.value.city = profile.city || '';
@@ -683,8 +650,6 @@ const loadData = async () => {
         }
       }
 
-      // 5. 扫描并装备【荣誉徽章】
-      // 后端传过来的是 badgeCodes: ["克罗恩 V1 认证", "全栈架构师"]
       if (profile.badgeCodes && Array.isArray(profile.badgeCodes)) {
         badgeLibrary.value.forEach(badge => {
           // 如果徽章的名字在后端的数组里，就设为 true (点亮)，否则为 false
@@ -719,42 +684,6 @@ const onConfirmName = async () => {
   showToast({ message: '标识已重构', icon: 'success' });
 };
 
-// === 城市选择 ===
-const showCityPicker = ref(false)
-const citySearch = ref('')
-
-// areaList 是一个对象（province_list/city_list/county_list），不能直接 v-for。
-// 这里把直辖市/特别行政区（在 province_list 中）与地级市（在 city_list 中）
-// 合并成一个中文城市名数组，去重后供选择。
-const cityList = (() => {
-  const names = new Set()
-  const directCities = ['北京市', '天津市', '上海市', '重庆市', '香港特别行政区', '澳门特别行政区']
-  Object.values(areaList.province_list || {}).forEach(p => {
-    if (directCities.includes(p)) names.add(p.replace(/(市|特别行政区)$/, ''))
-  })
-  Object.values(areaList.city_list || {}).forEach(c => {
-    names.add(c.replace(/(市|地区|自治州|盟)$/, ''))
-  })
-  return Array.from(names).filter(Boolean)
-})()
-
-const filteredCityList = computed(() => {
-  const kw = citySearch.value.trim()
-  if (!kw) return cityList
-  return cityList.filter(c => c.includes(kw))
-})
-
-const onSelectCity = async (city) => {
-  try {
-    await http.post('/center/update-basic', { city })
-    userInfo.value.city = city
-    showCityPicker.value = false
-    citySearch.value = ''
-    showToast({ message: '城市已更新', icon: 'success' })
-  } catch (e) {
-    showToast('更新失败')
-  }
-}
 </script>
 
 <style scoped>
@@ -1048,85 +977,16 @@ const onSelectCity = async (city) => {
   transition: all 0.3s ease;
 }
 
-/* 城市选择弹窗 */
-.city-picker { padding: 4px 0 calc(env(safe-area-inset-bottom) + 16px); }
-.city-picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px 14px;
-}
-.city-picker-title { font-size: 16px; font-weight: 800; color: #1e293b; }
-.city-picker-close {
-  width: 30px; height: 30px;
-  display: flex; align-items: center; justify-content: center;
-  border: none; border-radius: 50%;
-  background: #f1f5f9; color: #94a3b8; font-size: 18px;
-  cursor: pointer; transition: all 0.2s;
-}
-.city-picker-close:active { transform: scale(0.9); background: #e2e8f0; }
-
-.city-search-wrap {
-  position: relative;
-  margin: 0 20px 14px;
-}
-.city-search-icon {
-  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-  color: #cbd5e1; font-size: 16px; pointer-events: none;
-}
-.city-search-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 11px 36px 11px 38px;
-  border: 1.5px solid #eef2f7;
-  border-radius: 14px;
-  background: #f8fafc;
-  font-size: 14px;
-  color: #334155;
-  outline: none;
-  transition: all 0.2s;
-}
-.city-search-input:focus { border-color: #3b82f6; background: #fff; }
-.city-search-clear {
-  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  color: #cbd5e1; font-size: 17px; cursor: pointer;
+.menu-item-static {
+  cursor: default;
 }
 
-.city-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding: 0 20px;
-  max-height: 46vh;
-  overflow-y: auto;
-}
-.city-chip {
-  padding: 11px 6px;
-  border: 1.5px solid #eef2f7;
-  border-radius: 13px;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.18s;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.city-chip:active { transform: scale(0.95); }
-.city-chip-active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-color: #2563eb;
-  color: #fff;
-  box-shadow: 0 6px 14px rgba(37,99,235,0.25);
-}
-.city-empty {
-  grid-column: 1 / -1;
-  text-align: center;
+.city-lock-note {
+  margin: -4px 18px 10px 54px;
   color: #94a3b8;
-  font-size: 13px;
-  padding: 24px 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .app-edit-popup {

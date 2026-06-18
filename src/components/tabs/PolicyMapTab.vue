@@ -889,19 +889,15 @@ const handleFileChange = async (event) => {
         'Content-Type': 'multipart/form-data'
       }
     })
-    console.log(res)
-
     if (res.status === 200) {
       const serverUrl = res.data
 
-      console.log('上传成功，后端返回地址:', serverUrl)
       editForm.evidenceList.push(serverUrl)
     } else {
       alert('上传失败: ' + res.data.msg)
     }
   } catch (error) {
-    console.error('上传炸了:', error)
-    alert('网络或者权限出了问题，看看控制台报错')
+    alert('上传失败，请稍后再试')
   } finally {
     event.target.value = ''
   }
@@ -932,12 +928,10 @@ const submitEdit = async () => {
     cityName: selectedArea.name,
     policyType: activeType.value,
     updateTime: new Date().toISOString().split('T')[0],
-    nickname: '热心战友_' + Math.floor(Math.random() * 1000),
+    nickname: localStorage.getItem('nickname') || '热心病友',
     userId: 0, // 游客 ID
     ...editForm
   }
-
-  console.log('🚀 准备发射数据:', payload)
 
   try {
     const res = await http.post('/policy/save', payload)
@@ -950,7 +944,6 @@ const submitEdit = async () => {
       alert('提交失败: ' + res.msg)
     }
   } catch (error) {
-    console.error('提交炸了:', error)
     alert('网络连接失败，请稍后再试')
   }
 }
@@ -973,8 +966,8 @@ const ackDisclaimer = () => {
   disclaimerForceAck.value = false
 }
 
-// 高敏感城市清单（参保资格审核较严格、易引发"跨省套利"误读的城市）
-// 命中后在城市详情顶部显示一行红色中性提醒；不影响数据呈现本身
+// 高敏感城市清单（参保资格审核较严格、易引发跨省套利误读的城市）
+// 城市详情顶部显示中性提醒；不影响数据呈现本身
 const SENSITIVE_CITIES = ['重庆', '重庆市']
 
 // 政策亮点 chips：从 currentPolicy 派生
@@ -1060,15 +1053,10 @@ const cleanData = (backendData) => {
 }
 
 const loadPolicyData = async (areaName) => {
-  console.log(`正在请求 ${areaName} 的数据...`)
-
-  // 1. 告诉全场，现在选的是哪里 (地图高亮需要这个)
   selectedArea.name = areaName
 
   const type = activeType.value
 
-  // 2. 先清空当前白板，防止显示上一条数据
-  // (也可以不清，看你想不想让用户看到闪烁)
   currentPolicy.value = { hasData: false }
 
   try {
@@ -1080,16 +1068,8 @@ const loadPolicyData = async (areaName) => {
       const realData = res.data
       realData.hasData = true
 
-      // ✅ 【关键改动】直接更新 UI！(这就是你想要的直观逻辑)
-      // 使用 {...} 也是为了保险，强迫 Vue 刷新
       currentPolicy.value = { ...realData }
-
-      // 同时也存一份到缓存里 (selectedArea)，以备不时之需
-
-
-      console.log('数据加载成功，界面已更新')
     } else {
-      // 没数据，保持白板为空
       currentPolicy.value = { hasData: false }
     }
 
@@ -1099,8 +1079,8 @@ const loadPolicyData = async (areaName) => {
   }
 }
 
-// --- 地图逻辑 (你的核心资产) ---
-// 省份代码映射 (保留)
+// --- 地图逻辑 ---
+// 省份代码映射
 const provinceCodeMap = {
   '北京': '110000', '天津': '120000', '河北': '130000', '山西': '140000', '内蒙古': '150000',
   '辽宁': '210000', '吉林': '220000', '黑龙江': '230000', '上海': '310000', '江苏': '320000',
@@ -1125,68 +1105,40 @@ const initMap = () => {
   echarts.registerMap('china', chinaJson)
   renderMap('china')
 
-  // 监听点击事件
   myChart.on('click', async (params) => {
-    console.log('📍 点击捕捉:', params.name) // 调试第一步：看点到了啥
-
-    // --- 1. 直辖市判断 (这些地方不让钻) ---
     const directCities = ['北京', '天津', '上海', '重庆', '香港', '澳门', '台湾']
     const isDirectCity = directCities.some(city => params.name.includes(city))
 
-    // ==========================================
-    // 场景 A: 当前在【全国地图】 (准备下钻)
-    // ==========================================
     if (currentMap.value === 'china') {
-
-      // 1.1 如果是直辖市 -> 直接弹窗
       if (isDirectCity) {
-        console.log('👉 直辖市，直接看详情')
         await loadPolicyData(params.name)
         showDetailPanel.value = true
         return
       }
 
-      // 1.2 获取省份身份证 (adcode)
       const adcode = getAdcodeByName(params.name)
-      console.log('🔍 身份证号:', adcode)
 
       if (adcode && adcode !== '999999') {
         try {
-          // 1.3 请求地图数据
           const url = `/map/citys/${adcode}.json`
-          console.log('🚀 正在请求地图:', url)
 
           const response = await fetch(url)
           if (!response.ok) throw new Error(`地图文件缺失 (${response.status})`)
 
           const provinceJson = await response.json()
 
-          // 1.4 注册并切换 (关键步骤！)
           echarts.registerMap('citys', provinceJson)
-          currentMap.value = 'citys'         // 状态切换：进入省份
-          renderMap('citys', params.name)    // 渲染地图 (把省份名字传过去做标题)
-
-          console.log('✅ 下钻成功！')
+          currentMap.value = 'citys'
+          renderMap('citys', params.name)
 
         } catch (e) {
-          // 地图文件缺失时，回退到政策详情
-          console.error('❌ 下钻失败:', e)
           alert(`正在建设【${params.name}】的地图数据，暂为您展示政策列表。`)
-
-          // 兜底：确实没地图，那就看详情吧
           await loadPolicyData(params.name)
           showDetailPanel.value = true
         }
-      } else {
-        console.warn('⚠️ 未找到该区域的 adcode')
       }
     }
-
-        // ==========================================
-        // 场景 B: 当前已经在【省份地图】 (点击城市)
-    // ==========================================
     else {
-      console.log('👉 点击了城市/区县，查看详情')
       await loadPolicyData(params.name)
       showDetailPanel.value = true
     }
@@ -1273,27 +1225,12 @@ const resetMap = () => {
   })
 }
 onMounted(() => {
-  console.log('🚀 自动进入开发调试模式...')
-
-  // 1. 假装你点击了内江
-  selectedArea.name = '内江市' // 这里换成你正在调试的城市
-
-  // 2. 自动去拉数据
-  loadPolicyData('内江市')
-
-  // 3. 强制打开详情面板
-  showDetailPanel.value = true
-
-  // 4. 首次进入：未 ack 时强制弹出《使用须知》且禁用关闭键
   let acked = false
   try { acked = localStorage.getItem(DISCLAIMER_ACK_KEY) === '1' } catch (e) {}
   if (!acked) {
     disclaimerForceAck.value = true
     showGuideSheet.value = true
   }
-
-  // 5. (可选) 如果你正在调编辑框，把下面这行注释解开，它会自动弹出编辑框
-  // showEditDrawer.value = true
 })
 const showHistoryDrawer = ref(false)
 const historyList = ref([])
@@ -1316,39 +1253,26 @@ const handleLike = async () => {
     await http.post('/policy/like', null, {
       params: { id: currentPolicy.value.id }
     });
-    console.log('❤️ 后端点赞成功');
   } catch (e) {
-    console.error('点赞失败', e);
-    // 如果失败了，要把刚才视觉上加的 1 减回来，防止欺骗用户
     currentPolicy.value.likes--;
     currentPolicy.value.isLiked = false;
   }
 }
 
-// ✅ 2. 打开历史列表逻辑
 const openHistoryDrawer = async () => {
-  console.log('正在加载历史版本...');
-
   try {
-    // 拿到当前城市和类型
     const city = currentPolicy.value.cityName || currentPolicy.value.city; // 兼容不同字段名
     const type = currentPolicy.value.policyType;
 
-    // 发请求给后端：兄弟，把内江的所有版本给我！
     const res = await http.get('/policy/history', {
       params: { city: city, type: type }
     });
 
     if (res.code === 200) {
-      // 成功拿到真数据！
       historyList.value = res.data;
-      // 打开抽屉
       showHistoryDrawer.value = true;
-    } else {
-      console.warn('获取历史失败:', res.msg);
     }
   } catch (e) {
-    console.error('网络请求炸了:', e);
   }
 }
 // 简单的看图 (暂时用新窗口打开，省事)
@@ -1357,31 +1281,16 @@ const previewImage = (url) => {
 }
 // 切换历史版本
 const switchVersion = async (item) => {
-  console.log('正在切换到版本 ID:', item.id); // 打印一下，看看是不是那个 ID
-
   try {
-    // 1. 拿着身份证 (ID) 去后端找那一条特定数据
-    // 注意：这里的接口 /detail/version 是我们刚才在 Controller 里新写的
     const res = await http.get('policy/detail/version', {
       params: { id: item.id }
     });
 
     if (res.code === 200 && res.data) {
-      // 用历史版本数据替换当前详情
       currentPolicy.value = res.data
-      console.log(currentPolicy)
-      // 3. 关掉抽屉 (完事拂衣去)
       showHistoryDrawer.value = false;
-      console.log(res)
-      // 4. (可选) 给个提示
-      // alert(`已切换到 ${item.nickname} 的版本`);
-      console.log('🎉 切换成功，现在看的是:', item.nickname);
-
-    } else {
-      console.warn('切换失败，后端没给数据');
     }
   } catch (e) {
-    console.error('切换版本接口炸了:', e);
   }
 }
 const zoomMap = (ratio) => {

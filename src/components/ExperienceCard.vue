@@ -71,8 +71,13 @@
       </p>
 
       <!-- 标签 + 地点 -->
-      <div v-if="displayTag || location" class="mb-2 flex items-center gap-1.5 min-w-0">
-        <span v-if="displayTag" class="text-[11px] font-bold shrink-0" :class="themeStyle.tagClass">#{{ displayTag }}</span>
+      <div v-if="displayTags.length || location" class="mb-2 flex flex-wrap items-center gap-1.5 min-w-0">
+        <span
+          v-for="tag in displayTags"
+          :key="tag"
+          class="text-[11px] font-bold shrink-0"
+          :class="themeStyle.tagClass"
+        >#{{ tag }}</span>
         <span v-if="location" class="inline-flex items-center gap-0.5 text-[10px] min-w-0" :class="themeStyle.metaClass">
           <i class="ri-map-pin-2-line text-[11px]"></i>
           <span class="truncate">{{ location }}</span>
@@ -137,14 +142,14 @@ const isVideoCover = computed(() =>
   /\.(mp4|mov|webm|m4v|ogg|3gp)(\?|$)/i.test(props.coverImage || '')
 )
 
-const PRIMARY_CARD_TAGS = ['求助', '经验分享', '知识分享', '交友']
+const PRIMARY_CARD_TAGS = ['求助', '经验分享', '知识分享', '交友', '日常分享', '随便说说']
+const LEGACY_CARD_TAGS = ['新故事', '血泪史', '治愈', '人生感悟', '共鸣', '克制', '清单', '吃货实录', '出院']
 
-const displayTag = computed(() => {
-  const tags = (props.tags || []).filter(Boolean)
+const displayTags = computed(() => {
+  const tags = [...new Set((props.tags || []).filter(Boolean))]
   const primary = tags.find(t => PRIMARY_CARD_TAGS.includes(t))
-  if (primary) return primary
-  const topic = tags.find(t => !['新故事', '血泪史', '治愈', '人生感悟', '共鸣', '克制', '清单', '吃货实录', '出院'].includes(t))
-  return topic || tags[0] || ''
+  const topics = tags.filter(t => t !== primary && !LEGACY_CARD_TAGS.includes(t))
+  return [primary, ...topics].filter(Boolean).slice(0, 3)
 })
 
 // 六款主题 · 每款独立风格

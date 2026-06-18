@@ -33,7 +33,7 @@
               </template>
               <template v-else>
                 <h2 class="text-white text-[18px] font-black tracking-tight leading-tight">还没设置状态</h2>
-                <p class="text-white/80 text-[12px] font-medium mt-0.5 leading-snug">点下面，让战友看见此刻的你</p>
+                <p class="text-white/80 text-[12px] font-medium mt-0.5 leading-snug">点下面，记录此刻的你</p>
               </template>
             </div>
           </div>
@@ -75,24 +75,24 @@
             <i class="ri-shield-check-fill text-blue-400 text-[20px]"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-white text-[13.5px] font-black">上传病例，点亮「战友」</p>
-            <p class="text-white/60 text-[11px] font-medium mt-0.5 leading-snug">确诊单/肠镜/药单都行，可涂黑姓名医院。解锁后能看战友资料与你们的往来。</p>
+            <p class="text-white text-[13.5px] font-black">上传证明，点亮认证</p>
+            <p class="text-white/60 text-[11px] font-medium mt-0.5 leading-snug">确诊单/肠镜/药单都行，可涂黑姓名医院。认证后交流会更安心。</p>
           </div>
           <i class="ri-arrow-right-s-line text-white/50 text-xl shrink-0"></i>
         </div>
       </button>
     </div>
 
-    <!-- 战友状态墙（对所有人可见） -->
+    <!-- 状态墙（对所有人可见） -->
     <div class="px-5 pt-5">
       <h3 class="text-[13px] font-black text-slate-500 tracking-wide mb-3 flex items-center gap-1.5">
-        <i class="ri-radar-line text-blue-500"></i> 战友状态墙 · {{ members.length }} 人
+        <i class="ri-radar-line text-blue-500"></i> 状态墙 · {{ members.length }} 人
       </h3>
 
-      <p v-if="loading" class="text-center text-[13px] text-slate-400 font-bold py-10">加载战友状态中…</p>
+      <p v-if="loading" class="text-center text-[13px] text-slate-400 font-bold py-10">正在加载状态…</p>
       <div v-else-if="members.length === 0" class="text-center py-12">
         <div class="text-[40px] mb-2">🛰️</div>
-        <p class="text-[13px] font-black text-slate-600">还没有战友挂状态</p>
+        <p class="text-[13px] font-black text-slate-600">还没有人挂状态</p>
         <p class="text-[11px] text-slate-400 font-medium mt-1">去联络人加好友，状态墙就热闹了</p>
       </div>
 
@@ -106,7 +106,7 @@
             <div class="flex items-center gap-1.5">
               <span class="text-[14px] font-black text-slate-800 truncate">{{ m.nickname }}</span>
               <span v-if="m.verified" class="shrink-0 inline-flex items-center gap-0.5 text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
-                <i class="ri-verified-badge-fill"></i> 战友
+                <i class="ri-verified-badge-fill"></i> 已认证
               </span>
               <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="accent(m.accent).dot"></span>
             </div>
@@ -190,7 +190,7 @@
       </transition>
     </Teleport>
 
-    <!-- 战友资料卡 -->
+    <!-- 用户资料卡 -->
     <Teleport to="body">
       <transition name="sheet">
         <div v-if="showProfile" class="fixed inset-0 z-[1910] flex flex-col justify-end">
@@ -206,14 +206,14 @@
                   <div class="flex items-center gap-1.5">
                     <h2 class="text-[19px] font-black text-slate-900 truncate">{{ profileTarget.nickname }}</h2>
                     <span v-if="profileTarget.verified" class="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
-                      <i class="ri-verified-badge-fill"></i> 战友
+                      <i class="ri-verified-badge-fill"></i> 已认证
                     </span>
                     <span v-else class="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
                       <i class="ri-user-line"></i> 未上传病例
                     </span>
                   </div>
                   <p class="text-[11px] text-slate-400 font-medium mt-1">
-                    {{ profileTarget.verified ? '已上传病例 · 认证战友' : 'TA 还没上传病例' }}
+                    {{ profileTarget.verified ? '已上传证明 · 资料更可信' : 'TA 还没上传证明' }}
                   </p>
                 </div>
               </div>
@@ -251,7 +251,7 @@
                 <div class="absolute -top-6 -right-4 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl"></div>
                 <div class="relative">
                   <p class="text-[13.5px] font-black flex items-center gap-1.5"><i class="ri-lock-2-fill text-blue-400"></i> 想看你们的往来与更多资料？</p>
-                  <p class="text-white/65 text-[11px] font-medium mt-1.5 leading-relaxed">上传你自己的病例（可涂黑姓名、医院），就能解锁战友资料、看到你们之间的关心往来。也让大家交流得更没距离。</p>
+                  <p class="text-white/65 text-[11px] font-medium mt-1.5 leading-relaxed">上传你自己的证明（可涂黑姓名、医院），认证后能看到更多互动信息。也让大家交流得更安心。</p>
                   <button @click="showProfile = false; openVerifyUpload()" class="mt-3 w-full py-2.5 rounded-2xl bg-white text-slate-900 text-[13px] font-black active:scale-95 transition-all">
                     <i class="ri-upload-cloud-2-line"></i> 上传病例，立即解锁
                   </button>
@@ -306,7 +306,7 @@
                 >
                   <img :src="avatarOf(item, item.senderId)" class="w-11 h-11 rounded-2xl object-cover bg-white border border-white shadow-sm shrink-0">
                   <div class="min-w-0 flex-1">
-                    <p class="text-[13.5px] font-black text-slate-800 truncate">{{ item.nickname || '神秘战友' }}</p>
+                    <p class="text-[13.5px] font-black text-slate-800 truncate">{{ item.nickname || '神秘朋友' }}</p>
                     <p class="text-[11px] text-slate-400 font-bold mt-0.5">
                       {{ reactionLabel(item.type) }} · {{ relTime(item.createdAt) }}
                     </p>
@@ -362,7 +362,7 @@
             <div class="flex flex-col items-center text-center" v-if="reactTarget">
               <img :src="avatarOf(reactTarget)" class="w-14 h-14 rounded-2xl object-cover bg-slate-100 shadow-sm mb-2">
               <p class="text-[16px] font-black text-slate-900">转款给 {{ reactTarget.nickname }}</p>
-              <p class="text-[11px] text-slate-400 font-medium mt-0.5 mb-4">用微信扫下面的码，直接打给 TA</p>
+              <p class="text-[11px] text-slate-400 font-medium mt-0.5 mb-4">用微信扫下面的码，直接送到 TA 手里</p>
 
               <div v-if="payQrLoading" class="w-56 h-56 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 text-[13px] font-bold">读取收款码中…</div>
               <div v-else-if="payQrUrl" class="w-56 h-56 rounded-2xl bg-white border border-slate-100 shadow-inner p-2 flex items-center justify-center">
@@ -391,7 +391,7 @@
           <div class="relative w-full max-w-[330px] bg-white rounded-[28px] p-6 shadow-2xl pop-in">
             <button @click="showPayQrSetup = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90"><i class="ri-close-line text-lg"></i></button>
             <p class="text-[16px] font-black text-slate-900 text-center">我的微信收款码</p>
-            <p class="text-[11px] text-slate-400 font-medium text-center mt-1 mb-4">战友扛不住时，可以直接扫码打钱给你</p>
+            <p class="text-[11px] text-slate-400 font-medium text-center mt-1 mb-4">如果有人想支持你，可以直接扫码送到你手里</p>
 
             <label class="block w-44 h-44 mx-auto rounded-2xl bg-slate-50 border border-dashed border-slate-200 p-2 flex items-center justify-center mb-4 cursor-pointer active:scale-95 transition-all overflow-hidden">
               <img v-if="myQrInput.trim()" :src="myQrInput" class="w-full h-full object-contain rounded-xl">
@@ -418,7 +418,7 @@
             <button @click="showVerify = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90"><i class="ri-close-line text-lg"></i></button>
             <div class="flex items-center justify-center gap-1.5 mb-1">
               <i class="ri-shield-check-fill text-blue-500 text-[20px]"></i>
-              <p class="text-[16px] font-black text-slate-900 text-center">战友身份认证</p>
+              <p class="text-[16px] font-black text-slate-900 text-center">病友身份认证</p>
             </div>
             <p class="text-[11px] text-slate-400 font-medium text-center leading-snug mb-4">
               上传确诊单 / 肠镜报告 / 药单照片，<br>可把姓名、医院等信息<span class="text-rose-500 font-bold">涂黑遮盖</span>再传
@@ -447,7 +447,7 @@
             </div>
 
             <p class="text-[10px] text-slate-400 font-medium leading-snug mb-3 text-center">
-              <i class="ri-lock-line text-blue-500"></i> 仅用于解锁战友权限，上传后立即点亮「战友」标识。
+              <i class="ri-lock-line text-blue-500"></i> 仅用于认证展示，上传后点亮「已认证」标识。
             </p>
             <button @click="submitVerify" :disabled="!proofUrls.length || proofUploading || verifySubmitting" class="w-full bg-blue-600 text-white font-black text-[14px] py-3 rounded-2xl active:scale-95 transition-all disabled:bg-slate-200">
               {{ verifySubmitting ? '上传中…' : '上传，立即解锁' }}
@@ -522,7 +522,7 @@ const STATUS_LIBRARY = [
   { zone: 'red', items: [
     { key: 'broke',    emoji: '💥', text: '防线破产',  desc: '没管住嘴，肉体要亮红灯了', accent: 'rose' },
     { key: 'pain',     emoji: '🔥', text: '肚子造反',  desc: '腹痛绞痛，正蜷成一团', accent: 'red' },
-    { key: 'toilet',   emoji: '🚽', text: '厕所战神',  desc: '一天 N 趟，马桶常驻民', accent: 'amber' },
+    { key: 'toilet',   emoji: '🚽', text: '频繁跑厕所',  desc: '今天肠道不太安稳', accent: 'amber' },
     { key: 'hospital', emoji: '🏥', text: '住院打卡',  desc: '在医院呢，挂着水', accent: 'cyan' },
     { key: 'alarm',    emoji: '🌡️', text: '指标报警',  desc: '复查数值不好看', accent: 'rose' },
   ]},
@@ -566,7 +566,7 @@ const openVerifyUpload = () => {
   showVerify.value = true
 }
 
-// 战友资料卡
+// 用户资料卡
 const showProfile = ref(false)
 const profileTarget = ref(null)
 const profileData = ref(null)
@@ -674,7 +674,7 @@ const openProfile = async (m) => {
       }
     }
   } catch (e) {
-    console.error('读取战友资料失败', e)
+    console.error('读取用户资料失败', e)
   } finally {
     profileLoading.value = false
   }
@@ -829,7 +829,7 @@ const submitVerify = async () => {
     })
     if (ok(res)) {
       myVerifyStatus.value = 'APPROVED'
-      flash('上传成功，战友权限已解锁 🛡️')
+      flash('上传成功，认证已点亮 🛡️')
       showVerify.value = false
       loadFeed()
     } else flash(res.message || '提交失败')

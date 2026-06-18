@@ -16,6 +16,27 @@
       </template>
     </TabPageHeader>
 
+    <!-- 搜索 -->
+    <div class="px-4 pt-1 pb-2 bg-[#FBF9F5]">
+      <div class="relative">
+        <i class="ri-search-line absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[16px]"></i>
+        <input
+          v-model="searchKeyword"
+          type="text"
+          placeholder="搜标题、内容、标签"
+          class="w-full h-11 rounded-2xl bg-white border border-stone-100 pl-10 pr-10 text-[13px] font-bold text-stone-800 placeholder-stone-300 outline-none focus:border-stone-900 focus:shadow-[0_8px_24px_-18px_rgba(15,23,42,0.28)] transition-all"
+        />
+        <button
+          v-if="searchKeyword"
+          type="button"
+          @click="searchKeyword = ''"
+          class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center active:scale-90 transition-all"
+        >
+          <i class="ri-close-line text-[15px]"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- 分类（吸顶） -->
     <div class="sticky top-0 z-20 bg-[#FBF9F5]/95 backdrop-blur-md border-b border-stone-100">
       <div class="flex gap-2 overflow-x-auto no-scrollbar px-4 py-2.5">
@@ -52,7 +73,7 @@
       <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center">
         <i class="ri-book-mark-line text-2xl text-slate-300"></i>
       </div>
-      <p class="text-[13px] text-slate-400 font-medium">该分类还没有故事，去当第一人</p>
+      <p class="text-[13px] text-slate-400 font-medium">{{ searchKeyword ? '没搜到相关故事，换个词试试' : '该分类还没有故事，去当第一人' }}</p>
     </div>
 
     <!-- Modal: 写下你的故事 -->
@@ -93,11 +114,11 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-bold text-stone-400 mb-2">摘要</label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">内容</label>
                   <textarea
                       v-model="newPost.summary"
-                      rows="5"
-                      placeholder="写点什么..."
+                      rows="6"
+                      placeholder="可以写经验、求助、复查记录，也可以只是随便说说今天发生了什么。"
                       class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:border-slate-900 focus:bg-white transition-all text-[14px] text-slate-700 placeholder-slate-300 resize-none leading-relaxed"
                   ></textarea>
                 </div>
@@ -163,7 +184,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-bold text-stone-400 mb-2">话题标签 <span class="font-medium text-stone-300">可多选 · 最多 4 个</span></label>
+                  <label class="block text-[11px] font-bold text-stone-400 mb-2">话题标签 <span class="font-medium text-stone-300">可多选 · 最多 4 个 · 可自定义</span></label>
                   <div class="flex flex-wrap gap-1.5">
                     <button
                       v-for="t in topicTagOptions"
@@ -179,6 +200,48 @@
                     >
                       # {{ t }}
                     </button>
+                  </div>
+                  <div class="mt-2.5 flex items-center gap-2">
+                    <div class="flex-1 flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-100 focus-within:bg-white focus-within:border-stone-900 transition-all">
+                      <span class="text-stone-300 text-[13px] font-black">#</span>
+                      <input
+                        v-model="customTopicInput"
+                        type="text"
+                        maxlength="10"
+                        placeholder="自定义标签"
+                        class="min-w-0 flex-1 bg-transparent outline-none text-[13px] font-bold text-stone-700 placeholder-stone-300"
+                        @keydown.enter.prevent="addCustomTopicTag"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      @click="addCustomTopicTag"
+                      :disabled="!customTopicInput.trim()"
+                      class="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-[12px] font-black disabled:bg-stone-200 disabled:text-stone-400 active:scale-95 transition-all"
+                    >
+                      添加
+                    </button>
+                  </div>
+                  <div v-if="publishTagPreview.length" class="mt-3 rounded-2xl bg-amber-50/60 border border-amber-100 px-3 py-3">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                      <span class="text-[11px] font-black text-amber-700">已选标签</span>
+                      <span class="text-[10px] font-bold text-amber-500">{{ publishTagPreview.length }} / {{ MAX_TOPIC_TAGS + 1 }}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-stone-900 text-white text-[11px] font-black">
+                        # {{ primaryTag }}
+                      </span>
+                      <button
+                        v-for="tag in topicTags"
+                        :key="tag"
+                        type="button"
+                        @click="toggleTopicTag(tag)"
+                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white text-amber-800 border border-amber-200 text-[11px] font-black active:scale-95 transition-all"
+                      >
+                        # {{ tag }}
+                        <i class="ri-close-line text-[12px]"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -387,7 +450,7 @@
             <section class="mx-4 mb-28 rounded-[28px] border shadow-[0_16px_50px_-36px_rgba(28,25,23,0.45)] overflow-hidden" :class="detailThemeStyle.card">
               <div class="px-4 pt-4 pb-3 flex items-center justify-between">
                 <h2 class="text-[15px] font-black" :class="detailThemeStyle.title">评论 {{ detail.commentCount || comments.length || 0 }}</h2>
-                <span class="text-[11px] font-bold" :class="detailThemeStyle.muted">温柔一点说</span>
+
               </div>
 
               <div v-if="commentsLoading" class="py-10 flex items-center justify-center" :class="detailThemeStyle.muted">
@@ -533,27 +596,34 @@ const categories = [
   { id: 'share', label: '经验分享' },
   { id: 'knowledge', label: '知识分享' },
   { id: 'social', label: '交友' },
+  { id: 'daily', label: '日常' },
+  { id: 'free', label: '随便说说' },
   { id: 'med', label: '用药' },
   { id: 'food', label: '饮食' }
 ]
 const activeCategory = ref('all')
+const searchKeyword = ref('')
 
-const PRIMARY_TAGS = ['求助', '经验分享', '知识分享', '交友']
-const TOPIC_TAGS = ['用药', '饮食', '医保', '医院', '复查', '心理', '日常']
+const PRIMARY_TAGS = ['求助', '经验分享', '知识分享', '交友', '日常分享', '随便说说']
+const TOPIC_TAGS = ['用药', '饮食', '医保', '医院', '复查', '心理', '日常', '睡眠', '运动', '检查', '情绪', '记录']
 const LEGACY_TAG_MAP = {
   血泪史: '经验分享',
   治愈: '经验分享',
   人生感悟: '经验分享',
   共鸣: '经验分享',
-  克制: '日常',
+  克制: '日常分享',
   清单: '日常',
   吃货实录: '饮食',
   出院: '复查',
-  新故事: '经验分享'
+  新故事: '经验分享',
+  日常: '日常分享'
 }
 
 const normalizeTags = (tags) => {
-  const list = (tags || []).map(t => LEGACY_TAG_MAP[t] || t).filter(Boolean)
+  const list = (tags || [])
+    .map(t => String(t || '').replace(/^#/, '').trim())
+    .map(t => LEGACY_TAG_MAP[t] || t)
+    .filter(Boolean)
   return [...new Set(list)]
 }
 
@@ -563,6 +633,8 @@ const categoryOf = (tags) => {
   if (t.includes('经验分享')) return 'share'
   if (t.includes('知识分享')) return 'knowledge'
   if (t.includes('交友')) return 'social'
+  if (t.includes('日常分享')) return 'daily'
+  if (t.includes('随便说说')) return 'free'
   if (t.includes('用药') || t.includes('医保') || t.includes('医院') || t.includes('复查')) return 'med'
   if (t.includes('饮食')) return 'food'
   return 'all'
@@ -661,8 +733,20 @@ const loadPosts = async () => {
 onMounted(loadPosts)
 
 const filteredItems = computed(() => {
-  if (activeCategory.value === 'all') return libraryItems.value
-  return libraryItems.value.filter(item => item.category === activeCategory.value)
+  const keyword = searchKeyword.value.trim().toLowerCase()
+  return libraryItems.value.filter(item => {
+    const categoryMatched = activeCategory.value === 'all' || item.category === activeCategory.value
+    if (!categoryMatched) return false
+    if (!keyword) return true
+    const text = [
+      item.title,
+      item.summary,
+      item.location,
+      item.authorName,
+      ...(item.tags || [])
+    ].filter(Boolean).join(' ').toLowerCase()
+    return text.includes(keyword)
+  })
 })
 
 const deleteCard = async (id) => {
@@ -1044,6 +1128,7 @@ const topicTags = ref([])
 const primaryTagOptions = PRIMARY_TAGS
 const topicTagOptions = TOPIC_TAGS
 const MAX_TOPIC_TAGS = 4
+const customTopicInput = ref('')
 
 const emojiOptions = ['😈', '🧊', '🍦', '🧠', '👾', '✍️', '📸', '🌥️', '🐳', '💊', '🌙', '🔥', '🌿', '🚑', '🥰', '🫶', '🌈', '☀️']
 
@@ -1057,8 +1142,9 @@ const availableThemes = [
 ]
 
 const buildPublishTags = () => {
-  return [primaryTag.value, ...topicTags.value.filter(t => t !== primaryTag.value)]
+  return normalizeTags([primaryTag.value, ...topicTags.value.filter(t => t !== primaryTag.value)])
 }
+const publishTagPreview = computed(buildPublishTags)
 
 const selectPrimaryTag = (tag) => {
   primaryTag.value = tag
@@ -1073,6 +1159,16 @@ const toggleTopicTag = (tag) => {
     if (topicTags.value.length >= MAX_TOPIC_TAGS) topicTags.value.shift()
     topicTags.value.push(tag)
   }
+}
+
+const addCustomTopicTag = () => {
+  const tag = customTopicInput.value.replace(/^#/, '').trim()
+  if (!tag || tag === primaryTag.value) {
+    customTopicInput.value = ''
+    return
+  }
+  toggleTopicTag(tag.slice(0, 10))
+  customTopicInput.value = ''
 }
 
 // 实时预览：封面自动取图集第一张
@@ -1092,6 +1188,7 @@ const openModal = () => {
   newPost.icon = '✍️'
   primaryTag.value = '经验分享'
   topicTags.value = []
+  customTopicInput.value = ''
   newMedia.value = []
   showModal.value = true
 }
@@ -1102,7 +1199,11 @@ const closeModal = () => {
 
 const publishPost = async () => {
   if (!newPost.title) {
-    alert('兄弟，写个标题呗！')
+    alert('先写个标题吧')
+    return
+  }
+  if (!newPost.summary.trim()) {
+    alert('内容也写一点吧，哪怕只是随便说说')
     return
   }
   if (publishing.value) return
