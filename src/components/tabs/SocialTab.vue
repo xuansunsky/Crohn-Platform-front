@@ -1,7 +1,7 @@
 <template>
   <div class="relative h-full bg-[#FBF9F5] flex flex-col overflow-hidden">
 
-    <div v-show="currentView === 'list'" class="flex-1 overflow-y-auto custom-scroll w-full z-10 relative bg-[#FBF9F5] flex flex-col">
+    <div ref="listScrollRef" v-show="currentView === 'list'" class="flex-1 overflow-y-auto custom-scroll w-full z-10 relative bg-[#FBF9F5] flex flex-col">
 
       <!-- ============ 朋友圈封面 Hero ============ -->
       <div class="shrink-0 relative">
@@ -12,25 +12,13 @@
 
           <!-- 封面右上：创建入口 -->
           <div class="absolute top-[calc(env(safe-area-inset-top,0px)+0.75rem)] right-4 z-10 flex items-center gap-2">
-            <button @click="openPaperBoat" class="w-10 h-10 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="星河漂流">
+            <button type="button" @click="openPaperBoat" class="w-10 h-10 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="星河漂流">
               <i class="ri-ship-line text-base"></i>
             </button>
-            <button @click.stop="showQuickCreateMenu = !showQuickCreateMenu" class="w-10 h-10 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="创建">
+            <button type="button" @click.stop.prevent="toggleQuickCreateMenu" class="w-10 h-10 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-all" title="创建">
               <i class="ri-add-line text-[22px] transition-transform" :class="{ 'rotate-45': showQuickCreateMenu }"></i>
             </button>
 
-            <transition name="fade-up">
-              <div v-if="showQuickCreateMenu" class="fixed top-[calc(env(safe-area-inset-top,0px)+3.6rem)] right-4 z-[220] w-40 rounded-2xl bg-white/95 backdrop-blur-xl border border-white/80 shadow-[0_18px_42px_-24px_rgba(15,23,42,0.45)] overflow-hidden p-1.5">
-                <button @click="openAddFriendShortcut" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-black text-slate-700 active:bg-slate-100 transition-all">
-                  <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center"><i class="ri-user-add-line"></i></span>
-                  添加好友
-                </button>
-                <button @click="openComposerFromQuickMenu" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-black text-slate-700 active:bg-slate-100 transition-all">
-                  <span class="w-8 h-8 rounded-xl bg-slate-950 text-white flex items-center justify-center"><i class="ri-quill-pen-line"></i></span>
-                  发动态
-                </button>
-              </div>
-            </transition>
           </div>
 
           <!-- 右下：用户信息 -->
@@ -101,7 +89,7 @@
                     </div>
 
                     <h3 class="text-[15px] font-black text-slate-800 tracking-tight mb-1">肚子抽痛或感到孤独？</h3>
-                    <p class="text-[12px] text-slate-500 leading-relaxed mb-4">一键向附近的战友发送微光信号，无言守护，默默陪伴。</p>
+                    <p class="text-[12px] text-slate-500 leading-relaxed mb-4">一键向附近朋友发送微光信号，无言守护，默默陪伴。</p>
 
                     <!-- 交互按钮区域 -->
                     <div class="flex gap-2.5">
@@ -154,7 +142,7 @@
                         </h4>
 
                         <div v-if="patrolPatients.length === 0" class="text-center py-2 text-[11px] text-slate-400 font-bold">
-                          目前天空晴朗，没有战友在难受 🌤️
+                          目前天空晴朗，暂时没人求助 🌤️
                         </div>
 
                         <div
@@ -217,13 +205,13 @@
           >
             <!-- Header -->
             <header class="flex items-start gap-3 mb-3">
-              <div class="relative shrink-0">
+              <button @click.stop="openImageViewer([post.user.avatar], 0)" class="relative shrink-0 active:scale-95 transition-all" aria-label="放大头像">
                 <img :src="post.user.avatar" class="w-11 h-11 rounded-2xl border border-white shadow-sm bg-stone-100" />
                 <span v-if="post.user.online" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></span>
-              </div>
+              </button>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[14.5px] font-black text-slate-900 tracking-tight">{{ post.user.name }}</span>
+                  <button @click.stop="openUserProfile(post.userId)" class="text-[14.5px] font-black text-slate-900 tracking-tight active:text-blue-600 transition-colors text-left">{{ post.user.name }}</button>
                   <span v-if="post.user.stage" class="text-[9.5px] font-black px-1.5 py-0.5 rounded-md tracking-wider" :class="stageStyle(post.user.stage)">{{ post.user.stage }}</span>
                 </div>
                 <p class="text-[10.5px] text-slate-400 font-medium mt-1 tracking-wide flex items-center gap-1.5">
@@ -455,6 +443,9 @@
                   {{ isLocating ? '确认中' : '定位确认' }}
                 </button>
               </div>
+              <p class="text-[10.5px] font-bold text-white/36 -mt-2">
+                定位只取城市，会同步到我的主页；不能手动切城市。
+              </p>
 
               <p v-if="locationStatus" class="text-[11px] font-bold text-white/45 leading-relaxed">
                 {{ locationStatus }}
@@ -544,8 +535,13 @@
                     <p class="text-[10.5px] text-slate-400 font-medium">编号：{{ u.userId }}<span v-if="u.city"> · {{ u.city }}</span></p>
                   </div>
                 </div>
-                <button @click="sendFriendRequest(u.userId)" class="px-4 py-2 bg-blue-600 text-white text-[12px] font-bold rounded-full shadow-md shadow-blue-500/20 active:scale-95 transition-all shrink-0">
-                  <i class="ri-user-add-line"></i> 加好友
+                <button
+                  @click="sendFriendRequest(u.userId, { user: u })"
+                  :disabled="u.requested || u.isFriend"
+                  class="px-4 py-2 text-white text-[12px] font-bold rounded-full shadow-md active:scale-95 transition-all shrink-0 disabled:bg-slate-300 disabled:shadow-none"
+                  :class="(u.requested || u.isFriend) ? 'bg-slate-300' : 'bg-blue-600 shadow-blue-500/20'"
+                >
+                  <i :class="(u.requested || u.isFriend) ? 'ri-check-line' : 'ri-user-add-line'"></i> {{ u.isFriend ? '已是好友' : (u.requested ? '已发送' : '加好友') }}
                 </button>
               </div>
             </div>
@@ -555,14 +551,14 @@
           <div v-if="pendingRequests.length > 0">
             <h3 class="text-[12px] font-black text-slate-400 tracking-widest uppercase mb-3 px-2">新请求接入</h3>
             <div v-for="req in pendingRequests" :key="req.id" class="bg-white/50 backdrop-blur-lg rounded-[28px] p-4 flex items-center justify-between border border-white/60 shadow-sm mb-3 gap-3">
-              <button @click="openUserProfile(req.friendId)" class="flex items-center gap-3 min-w-0 text-left active:scale-[0.99] transition-all">
+              <button @click="openUserProfile(req.friendId || req.userId || req.requesterId)" class="flex items-center gap-3 min-w-0 text-left active:scale-[0.99] transition-all">
                 <img :src="avatarOf(req, req.id)" class="w-[46px] h-[46px] rounded-[18px] object-cover border-2 border-white shadow-sm">
                 <div class="min-w-0">
                   <h4 class="text-[15px] font-bold text-slate-800">{{ req.nickname || '神秘特工' }}</h4>
                   <p class="text-[11px] text-slate-500 font-medium">想和你成为朋友 · 点头像看主页</p>
                 </div>
               </button>
-              <button @click.stop="acceptRequest(req.friendshipId)" class="px-5 py-2 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white text-[13px] font-bold rounded-full shadow-md shadow-emerald-500/30 hover:shadow-lg active:scale-95 transition-all shrink-0">
+              <button @click.stop="acceptRequest(req.friendshipId || req.id)" class="px-5 py-2 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white text-[13px] font-bold rounded-full shadow-md shadow-emerald-500/30 hover:shadow-lg active:scale-95 transition-all shrink-0">
                 授权
               </button>
             </div>
@@ -572,6 +568,13 @@
 
       </div>
     </div>
+
+    <SocialQuickCreateMenu
+      :show="showQuickCreateMenu"
+      @close="showQuickCreateMenu = false"
+      @add-friend="openAddFriendShortcut"
+      @compose="openComposerFromQuickMenu"
+    />
 
     <transition name="slide-right">
       <div v-if="currentView === 'chat'" class="fixed inset-0 flex flex-col bg-[#FAFAFA] z-[100] overflow-hidden">
@@ -698,12 +701,9 @@
             <p class="text-[10px] font-black tracking-[0.22em] text-slate-400 leading-none">每日少量</p>
             <h2 class="text-[15px] font-black tracking-tight text-slate-900 mt-1">{{ discoveryTitle }}</h2>
           </div>
-          <button v-if="discoveryMode === 'city'" @click="openDiscovery('city')" :disabled="isLocating" class="h-9 px-3 rounded-full bg-slate-950 text-white text-[12px] font-black flex items-center gap-1 active:scale-95 transition-all shadow-[0_12px_26px_-18px_rgba(15,23,42,0.8)] disabled:bg-slate-400">
-            <i class="ri-crosshair-2-line" :class="{ 'animate-pulse': isLocating }"></i> 定位
+          <button @click="showSeenPicksPanel = true" class="h-9 px-3 rounded-full bg-white/72 backdrop-blur-xl border border-white/70 text-slate-600 text-[12px] font-black flex items-center gap-1 active:scale-95 transition-all shadow-sm">
+            <i class="ri-history-line"></i> 已看 {{ seenDiscoveryPicks.length }}
           </button>
-          <div v-else class="h-9 px-3 rounded-full bg-white/72 backdrop-blur-xl border border-white/70 text-slate-500 text-[12px] font-black flex items-center gap-1 shadow-sm">
-            <i class="ri-leaf-line"></i> 有限
-          </div>
         </header>
 
         <main class="relative z-10 flex-1 overflow-y-auto custom-scroll overscroll-none px-5 pt-2 pb-[calc(env(safe-area-inset-bottom,8px)+28px)]">
@@ -839,9 +839,19 @@
 
     </transition>
 
+    <DiscoverySeenPanel
+      :show="showSeenPicksPanel"
+      :title="discoveryTitle"
+      :picks="seenDiscoveryPicks"
+      :greet-remaining="discoveryGreetRemaining"
+      @close="showSeenPicksPanel = false"
+      @open-profile="openSeenDiscoveryProfile"
+      @greet="greetSeenDiscoveryPick"
+    />
+
     <transition name="van-slide-up">
-      <div v-if="showProfileConfig" class="fixed inset-0 z-[130] bg-slate-900/60 backdrop-blur-md flex flex-col justify-end">
-        <div class="bg-white rounded-t-[36px] p-6 h-[85vh] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.1)] relative">
+      <div v-if="showProfileConfig" class="fixed inset-0 z-[130] bg-slate-900/60 backdrop-blur-md flex flex-col justify-end" @click.self="showProfileConfig = false">
+        <div class="bg-white rounded-t-[36px] p-6 h-[85vh] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.1)] relative" @click.stop>
           <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
 
           <div class="flex justify-between items-center mb-6 mt-4 shrink-0">
@@ -960,299 +970,32 @@
       </div>
     </transition>
 
-    <!-- ============ 情绪纸船 Modal ============ -->
-    <transition name="fade-up">
-      <div v-if="showPaperBoatModal" class="fixed inset-0 z-[140] bg-slate-950/85 backdrop-blur-md flex flex-col justify-end">
-        <div class="paper-river-sheet relative h-[88vh] rounded-t-[34px] border border-white/10 shadow-[0_-28px_80px_-34px_rgba(0,0,0,0.75)] flex flex-col overflow-hidden">
-          <div class="paper-stars"></div>
-          <div class="paper-moon"></div>
-          <div class="paper-river"></div>
-          <div class="paper-river-shine"></div>
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full z-10"></div>
-
-          <header class="relative z-10 shrink-0 px-6 pt-8 pb-4">
-            <div class="flex items-start justify-between gap-4">
-              <div class="min-w-0">
-                <p class="text-[11px] font-black tracking-[0.22em] text-cyan-100/70 mb-1">星河漂流</p>
-                <h2 class="text-[25px] font-black tracking-tight text-white leading-none">把心事放进河里</h2>
-                <p class="text-[12px] text-cyan-50/70 font-medium mt-2 leading-relaxed">一天放飞两封，捞起两封。让它慢慢漂，不催它靠岸。</p>
-              </div>
-              <button @click="showPaperBoatModal = false" class="w-9 h-9 rounded-full bg-white/10 text-white/70 border border-white/10 flex items-center justify-center active:scale-90 transition-all shrink-0">
-                <i class="ri-close-line text-lg"></i>
-              </button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2.5 mt-5">
-              <div class="paper-quota-card">
-                <p class="text-[10px] font-black tracking-[0.18em] text-cyan-100/70">今日可放</p>
-                <div class="mt-1 flex items-end gap-1">
-                  <span class="text-[25px] font-black text-white leading-none">{{ paperBoatQuota.releaseRemaining }}</span>
-                  <span class="text-[11px] font-bold text-cyan-100/50 mb-0.5">/ {{ paperBoatQuota.releaseLimit }}</span>
-                </div>
-              </div>
-              <div class="paper-quota-card">
-                <p class="text-[10px] font-black tracking-[0.18em] text-cyan-100/70">今日可捞</p>
-                <div class="mt-1 flex items-end gap-1">
-                  <span class="text-[25px] font-black text-white leading-none">{{ paperBoatQuota.scoopRemaining }}</span>
-                  <span class="text-[11px] font-bold text-cyan-100/50 mb-0.5">/ {{ paperBoatQuota.scoopLimit }}</span>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <div class="relative z-10 shrink-0 px-6">
-            <div class="flex bg-white/10 p-1 rounded-full gap-1 border border-white/10">
-              <button @click="switchPaperBoatTab('write')" :class="paperBoatTab === 'write' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
-                写一封
-              </button>
-              <button @click="switchPaperBoatTab('scoop')" :class="paperBoatTab === 'scoop' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
-                捞一封
-              </button>
-              <button @click="switchPaperBoatTab('history')" :class="paperBoatTab === 'history' ? 'bg-white text-slate-950 shadow-[0_8px_24px_-14px_rgba(255,255,255,0.55)]' : 'text-cyan-50/70'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
-                记录
-              </button>
-            </div>
-          </div>
-
-          <div v-if="paperBoatHint" class="relative z-10 mx-6 mt-3 rounded-2xl bg-amber-200/10 border border-amber-100/20 px-4 py-3 text-[12px] font-bold text-amber-100">
-            {{ paperBoatHint }}
-          </div>
-
-          <div class="relative z-10 flex-1 overflow-y-auto custom-scroll px-6 py-5 pb-6">
-            <div v-if="paperBoatTab === 'write'" class="space-y-4">
-              <div class="relative">
-                <textarea
-                  v-model="paperBoatText"
-                  maxlength="280"
-                  rows="8"
-                  :disabled="isDisintegrating || paperBoatQuota.releaseRemaining <= 0"
-                  placeholder="写下此刻不想说出口的话。它会匿名漂走，不进入公开动态。"
-                  :class="[
-                    'w-full bg-slate-950/40 border rounded-[24px] p-4 text-cyan-50 placeholder:text-cyan-100/40 text-[14px] font-medium outline-none transition-all resize-none leading-relaxed shadow-[0_18px_50px_-34px_rgba(0,0,0,0.8)] backdrop-blur-xl',
-                    isDisintegrating ? 'border-cyan-100/10 text-transparent select-none cursor-default' : 'border-white/12 focus:border-cyan-200/32 focus:bg-slate-950/45',
-                    paperBoatQuota.releaseRemaining <= 0 ? 'opacity-60' : ''
-                  ]"
-                ></textarea>
-
-                <div v-if="isDisintegrating" class="absolute inset-0 p-4 overflow-hidden pointer-events-none flex flex-wrap content-start gap-0.5">
-                  <span
-                    v-for="(word, wIdx) in paperBoatText.split('')"
-                    :key="wIdx"
-                    class="text-[13.5px] text-cyan-100/80 font-bold inline-block animate-disintegrate"
-                    :style="getDisintegrateStyle()"
-                  >
-                    {{ word === '\n' ? '' : word }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between text-[11px] text-cyan-50/45 font-bold">
-                <span>{{ paperBoatText.length }}/280</span>
-                <span>剩余 {{ paperBoatQuota.releaseRemaining }} 封</span>
-              </div>
-
-              <button
-                @click="disintegratePaperBoat"
-                :disabled="!paperBoatText.trim() || isDisintegrating || paperBoatQuota.releaseRemaining <= 0"
-                class="w-full bg-white text-slate-950 hover:bg-cyan-50 disabled:bg-white/10 disabled:text-cyan-100/40 font-black text-[15px] py-4 rounded-[22px] active:scale-[0.98] transition-all flex justify-center items-center gap-2 shadow-[0_16px_40px_-24px_rgba(255,255,255,0.7)]"
-              >
-                {{ paperBoatQuota.releaseRemaining <= 0 ? '今天的河面已经满了' : '放进河里' }}
-              </button>
-            </div>
-
-            <div v-if="paperBoatTab === 'scoop'" class="space-y-4">
-              <div v-if="scoopedBoat" class="paper-floating-boat rounded-[28px] bg-white/10 border border-white/20 p-5 shadow-[0_20px_56px_-34px_rgba(0,0,0,0.85)] backdrop-blur-xl animate-in zoom-in duration-300">
-                <div class="flex items-center justify-between gap-3 mb-4">
-                  <span class="text-[10px] text-cyan-100/70 font-black tracking-[0.2em]">匿名来信</span>
-                  <span class="text-[10px] text-cyan-100/50 font-bold">{{ scoopedBoat.time || '刚刚' }}</span>
-                </div>
-
-                <p class="text-[15px] text-cyan-50/90 leading-relaxed font-medium whitespace-pre-wrap">
-                  {{ scoopedBoat.content }}
-                </p>
-
-                <div class="grid grid-cols-3 gap-2 mt-5 text-center">
-                  <div class="rounded-2xl bg-white/10 px-2 py-2 border border-white/10">
-                    <p class="text-[15px] font-black text-white">{{ scoopedBoat.breezeCount || 0 }}</p>
-                    <p class="text-[10px] font-bold text-cyan-100/40 mt-0.5">微风</p>
-                  </div>
-                  <div class="rounded-2xl bg-white/10 px-2 py-2 border border-white/10">
-                    <p class="text-[15px] font-black text-white">{{ scoopedBoat.replyCount || 0 }}</p>
-                    <p class="text-[10px] font-bold text-cyan-100/40 mt-0.5">回声</p>
-                  </div>
-                  <div class="rounded-2xl bg-white/10 px-2 py-2 border border-white/10">
-                    <p class="text-[15px] font-black text-white">{{ scoopedBoat.giftCount || 0 }}</p>
-                    <p class="text-[10px] font-bold text-cyan-100/40 mt-0.5">礼物</p>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="scoopedBoat" class="rounded-[24px] bg-slate-950/28 border border-white/10 p-4 space-y-3 backdrop-blur-xl">
-                <textarea
-                  v-model="paperBoatReplyText"
-                  rows="3"
-                  maxlength="180"
-                  :disabled="scoopedBoat.replied"
-                  placeholder="写一句只给这只纸船的私密回声。"
-                  class="w-full bg-white/10 border border-white/10 rounded-2xl px-3.5 py-3 text-[13px] text-cyan-50 placeholder:text-cyan-100/40 font-medium outline-none focus:bg-white/10 focus:border-cyan-200/30 transition-all resize-none leading-relaxed disabled:opacity-60"
-                ></textarea>
-
-                <div class="grid grid-cols-2 gap-2">
-                  <button
-                    v-for="gift in paperBoatGifts"
-                    :key="gift.type"
-                    @click="selectedPaperBoatGift = gift.type"
-                    :disabled="scoopedBoat.gifted"
-                    :class="[
-                      'rounded-2xl border px-3 py-2.5 text-left transition-all active:scale-[0.98] disabled:opacity-55',
-                      selectedPaperBoatGift === gift.type ? 'bg-white text-slate-950 border-white' : 'bg-white/10 text-cyan-50/70 border-white/10'
-                    ]"
-                  >
-                    <div class="text-[17px] leading-none">{{ gift.icon }}</div>
-                    <div class="text-[11px] font-black mt-1">{{ gift.label }}</div>
-                  </button>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 pt-1">
-                  <button
-                    @click="respondToScooped('reply')"
-                    :disabled="!paperBoatReplyText.trim() || scoopedBoat.replied || isPaperBoatResponding"
-                    class="py-3 rounded-2xl bg-white text-slate-950 text-[12px] font-black disabled:bg-white/10 disabled:text-cyan-100/40 active:scale-95 transition-all"
-                  >
-                    {{ scoopedBoat.replied ? '已回应' : '回一声' }}
-                  </button>
-                  <button
-                    @click="respondToScooped('gift')"
-                    :disabled="scoopedBoat.gifted || isPaperBoatResponding"
-                    class="py-3 rounded-2xl bg-amber-200/20 text-amber-100 text-[12px] font-black disabled:bg-white/10 disabled:text-cyan-100/40 active:scale-95 transition-all border border-amber-100/20"
-                  >
-                    {{ scoopedBoat.gifted ? '已送礼' : '送礼物' }}
-                  </button>
-                  <button
-                    @click="sendBreezeToScooped"
-                    :disabled="scoopedBoat.breezed"
-                    class="py-3 rounded-2xl bg-cyan-200/20 text-cyan-100 text-[12px] font-black disabled:bg-white/10 disabled:text-cyan-100/40 active:scale-95 transition-all border border-cyan-100/20"
-                  >
-                    {{ scoopedBoat.breezed ? '已吹过' : '微风' }}
-                  </button>
-                </div>
-              </div>
-
-              <div v-if="!scoopedBoat" class="rounded-[28px] bg-white/10 border border-dashed border-cyan-100/20 p-8 text-center backdrop-blur-xl">
-                <div class="w-14 h-14 mx-auto rounded-full bg-white/10 text-cyan-100/70 flex items-center justify-center mb-4 border border-white/10">
-                  <i class="ri-ship-2-line text-2xl"></i>
-                </div>
-                <p class="text-[14px] font-black text-white">河面很安静</p>
-                <p class="text-[12px] text-cyan-50/70 mt-1 leading-relaxed">今天还可以捞 {{ paperBoatQuota.scoopRemaining }} 封匿名心事。</p>
-              </div>
-
-              <button
-                @click="scoopAnother"
-                :disabled="isScoopLoading || paperBoatQuota.scoopRemaining <= 0"
-                class="w-full bg-white text-slate-950 hover:bg-cyan-50 disabled:bg-white/10 disabled:text-cyan-100/40 font-black text-[15px] py-4 rounded-[22px] active:scale-[0.98] transition-all shadow-[0_16px_40px_-24px_rgba(255,255,255,0.7)]"
-              >
-                {{ paperBoatQuota.scoopRemaining <= 0 ? '今天先不打扰河面了' : (scoopedBoat ? '再捞一封' : '捞起一封') }}
-              </button>
-            </div>
-
-            <div v-if="paperBoatTab === 'history'" class="space-y-5">
-              <div class="paper-history-hero rounded-[28px] p-5 border border-white/12 backdrop-blur-xl">
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <p class="text-[10px] text-cyan-100/55 font-black tracking-[0.2em]">河流记得</p>
-                    <h3 class="text-[20px] text-white font-black mt-1 tracking-tight">你的纸船记录</h3>
-                    <p class="text-[12px] text-cyan-50/65 mt-2 leading-relaxed">写过的心事、捞起的来信，都会安静留在这里。</p>
-                  </div>
-                  <button
-                    @click="loadPaperBoatHistory(true)"
-                    :disabled="isPaperBoatHistoryLoading"
-                    class="w-10 h-10 rounded-2xl bg-white/10 text-cyan-50 border border-white/10 flex items-center justify-center active:scale-95 transition-all disabled:opacity-50 shrink-0"
-                  >
-                    <i class="ri-refresh-line" :class="{ 'animate-spin': isPaperBoatHistoryLoading }"></i>
-                  </button>
-                </div>
-              </div>
-
-              <div v-if="isPaperBoatHistoryLoading" class="rounded-[28px] bg-white/10 border border-white/10 p-8 text-center backdrop-blur-xl">
-                <div class="w-12 h-12 mx-auto rounded-full bg-white/10 text-cyan-100 flex items-center justify-center mb-4">
-                  <i class="ri-loader-4-line text-2xl animate-spin"></i>
-                </div>
-                <p class="text-[13px] font-black text-cyan-50">正在翻找河面记忆</p>
-              </div>
-
-              <template v-else>
-                <div class="space-y-3">
-                  <div class="flex items-end justify-between">
-                    <h4 class="text-[15px] font-black text-white">我放飞的</h4>
-                    <span class="text-[11px] font-bold text-cyan-100/45">{{ paperBoatHistory.released.length }} 封</span>
-                  </div>
-
-                  <div v-if="paperBoatHistory.released.length === 0" class="paper-history-empty">
-                    还没有放飞过纸船。
-                  </div>
-
-                  <article v-for="boat in paperBoatHistory.released" :key="'released-' + boat.id" class="paper-history-card">
-                    <div class="flex items-center justify-between gap-3 mb-3">
-                      <span class="text-[10px] font-black tracking-[0.18em] text-cyan-100/50">匿名心事</span>
-                      <span class="text-[10px] font-bold text-cyan-100/60">{{ formatPaperBoatTime(boat.createdAt) }}</span>
-                    </div>
-                    <p class="text-[13.5px] leading-relaxed text-cyan-50/90 whitespace-pre-wrap">{{ boat.content }}</p>
-                    <div class="grid grid-cols-3 gap-2 mt-4">
-                      <div class="paper-history-stat">
-                        <b>{{ boat.breezeCount || 0 }}</b>
-                        <span>微风</span>
-                      </div>
-                      <div class="paper-history-stat">
-                        <b>{{ boat.replyCount || 0 }}</b>
-                        <span>回声</span>
-                      </div>
-                      <div class="paper-history-stat">
-                        <b>{{ boat.giftCount || 0 }}</b>
-                        <span>礼物</span>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-
-                <div class="space-y-3">
-                  <div class="flex items-end justify-between">
-                    <h4 class="text-[15px] font-black text-white">我捞到的</h4>
-                    <span class="text-[11px] font-bold text-cyan-100/45">{{ paperBoatHistory.scooped.length }} 封</span>
-                  </div>
-
-                  <div v-if="paperBoatHistory.scooped.length === 0" class="paper-history-empty">
-                    还没有捞起过纸船。
-                  </div>
-
-                  <article v-for="boat in paperBoatHistory.scooped" :key="'scooped-' + boat.id + '-' + boat.scoopedAt" class="paper-history-card">
-                    <div class="flex items-center justify-between gap-3 mb-3">
-                      <span class="text-[10px] font-black tracking-[0.18em] text-cyan-100/50">捞起的来信</span>
-                    <span class="text-[10px] font-bold text-cyan-100/60">{{ formatPaperBoatTime(boat.scoopedAt || boat.createdAt) }}</span>
-                  </div>
-                    <p class="text-[13.5px] leading-relaxed text-cyan-50/90 whitespace-pre-wrap">{{ boat.content }}</p>
-
-                    <div v-if="boat.replyContent || boat.giftType || boat.breezed" class="mt-4 space-y-2">
-                      <div v-if="boat.replyContent" class="paper-history-note">
-                        <span>我的回声</span>
-                        <p>{{ boat.replyContent }}</p>
-                      </div>
-                      <div v-if="boat.giftType" class="paper-history-note">
-                        <span>送过礼物</span>
-                        <p>{{ paperBoatGiftLabel(boat.giftType) }}</p>
-                      </div>
-                      <div v-if="boat.breezed" class="paper-history-note">
-                        <span>微风</span>
-                        <p>你给它吹过一阵风</p>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
+    <PaperBoatSheet
+      :show="showPaperBoatModal"
+      :tab="paperBoatTab"
+      :quota="paperBoatQuota"
+      :hint="paperBoatHint"
+      v-model:text="paperBoatText"
+      :is-disintegrating="isDisintegrating"
+      :scooped-boat="scoopedBoat"
+      v-model:reply-text="paperBoatReplyText"
+      :gifts="paperBoatGifts"
+      v-model:selected-gift="selectedPaperBoatGift"
+      :is-responding="isPaperBoatResponding"
+      :is-scoop-loading="isScoopLoading"
+      :history="paperBoatHistory"
+      :is-history-loading="isPaperBoatHistoryLoading"
+      :format-time="formatPaperBoatTime"
+      :gift-label="paperBoatGiftLabel"
+      :get-disintegrate-style="getDisintegrateStyle"
+      @close="showPaperBoatModal = false"
+      @switch-tab="switchPaperBoatTab"
+      @release="disintegratePaperBoat"
+      @respond="respondToScooped"
+      @breeze="sendBreezeToScooped"
+      @scoop="scoopAnother"
+      @load-history="loadPaperBoatHistory"
+    />
 
     <!-- ============ 发布动态 Composer · 全屏沉浸（小红书布局）============ -->
     <transition name="page-slide">
@@ -1419,431 +1162,134 @@
       </div>
     </transition>
 
-    <!-- ============ 发起密聊:好友选择器 ============ -->
-    <transition name="fade-up">
-      <div v-if="showFriendPicker" class="fixed inset-0 z-[140] bg-slate-900/60 backdrop-blur-md flex flex-col justify-end">
-        <div class="bg-white rounded-t-[36px] p-6 max-h-[80vh] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.1)] relative">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
-          <div class="flex justify-between items-center mb-5 mt-4 shrink-0">
-            <h2 class="text-slate-900 text-[20px] font-black tracking-tight">发起密聊</h2>
-            <button @click="showFriendPicker = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
-          </div>
-          <div class="flex-1 overflow-y-auto custom-scroll space-y-2">
-            <p v-if="friendChats.length === 0" class="text-center text-[13px] text-slate-400 font-bold py-10">还没有好友,先去联络人搜索添加吧 🔍</p>
-            <div v-for="f in friendChats" :key="f.id" @click="startPrivateChat(f)" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer">
-              <img :src="f.avatar" class="w-11 h-11 rounded-2xl border border-white shadow-sm">
-              <h4 class="text-[15px] font-bold text-slate-800 flex-1 truncate">{{ f.name }}</h4>
-              <i class="ri-arrow-right-s-line text-slate-300 text-xl"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
+    <SocialFriendPicker
+      :show="showFriendPicker"
+      :friends="friendChats"
+      @close="showFriendPicker = false"
+      @select="startPrivateChat"
+    />
 
-    <!-- ============ 创建小队 ============ -->
-    <transition name="fade-up">
-      <div v-if="showCreateGroup" class="fixed inset-0 z-[140] bg-slate-900/60 backdrop-blur-md flex flex-col justify-end">
-        <div class="bg-white rounded-t-[36px] p-6 max-h-[85vh] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.1)] relative">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
-          <div class="flex justify-between items-center mb-5 mt-4 shrink-0">
-            <h2 class="text-slate-900 text-[20px] font-black tracking-tight">创建小队</h2>
-            <button @click="showCreateGroup = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
-          </div>
-          <input v-model="newGroupName" type="text" placeholder="给小队起个名字,如:低渣打卡战队" class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-[14px] font-medium outline-none focus:border-violet-400 focus:bg-white transition-all mb-4">
-          <p class="shrink-0 text-[12px] font-black text-slate-400 mb-2">勾选要拉进来的战友 (已选 {{ selectedMembers.length }})</p>
-          <div class="flex-1 overflow-y-auto custom-scroll space-y-2">
-            <p v-if="friendChats.length === 0" class="text-center text-[13px] text-slate-400 font-bold py-8">还没有好友,可以先建空队稍后再邀请</p>
-            <div v-for="f in friendChats" :key="f.id" @click="toggleSelectMember(f.id)" class="flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer active:scale-[0.98]" :class="selectedMembers.includes(f.id) ? 'bg-violet-50 border-violet-200' : 'bg-white border-stone-100 hover:bg-slate-50'">
-              <img :src="f.avatar" class="w-10 h-10 rounded-2xl border border-white shadow-sm">
-              <h4 class="text-[14px] font-bold text-slate-800 flex-1 truncate">{{ f.name }}</h4>
-              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" :class="selectedMembers.includes(f.id) ? 'bg-violet-500 border-violet-500' : 'border-slate-300'">
-                <i v-if="selectedMembers.includes(f.id)" class="ri-check-line text-white text-xs"></i>
-              </div>
-            </div>
-          </div>
-          <div class="shrink-0 pt-4 mt-2 border-t border-slate-100">
-            <button @click="createGroup" class="w-full bg-violet-600 hover:bg-violet-500 text-white font-black text-[15px] py-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2">
-              <i class="ri-team-fill"></i> 创建小队
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
+    <CreateGroupSheet
+      :show="showCreateGroup"
+      v-model:name="newGroupName"
+      :friends="friendChats"
+      :selected-ids="selectedMembers"
+      @close="showCreateGroup = false"
+      @toggle-member="toggleSelectMember"
+      @create="createGroup"
+    />
 
-    <!-- ============ 群发广播 ============ -->
-    <transition name="fade-up">
-      <div v-if="showBroadcast" class="fixed inset-0 z-[140] bg-slate-900/60 backdrop-blur-md flex flex-col justify-end">
-        <div class="bg-white rounded-t-[36px] p-6 flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.1)] relative">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
-          <div class="flex justify-between items-center mb-2 mt-4 shrink-0">
-            <h2 class="text-slate-900 text-[20px] font-black tracking-tight">群发广播</h2>
-            <button @click="showBroadcast = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
-          </div>
-          <p class="text-[12px] text-slate-400 font-medium mb-4">先选人，再发送。不会默认打扰所有人。</p>
-          <div class="max-h-44 overflow-y-auto custom-scroll space-y-2 mb-4">
-            <button
-              v-for="friend in friendChats"
-              :key="friend.id"
-              @click="toggleBroadcastReceiver(friend.id)"
-              class="w-full flex items-center gap-3 p-2.5 rounded-2xl border text-left active:scale-[0.99] transition-all"
-              :class="broadcastReceiverIds.includes(friend.id) ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-100'"
-            >
-              <img :src="friend.avatar" class="w-9 h-9 rounded-2xl object-cover bg-white shrink-0">
-              <span class="flex-1 min-w-0 text-[13px] font-black text-slate-700 truncate">{{ friend.name }}</span>
-              <i :class="broadcastReceiverIds.includes(friend.id) ? 'ri-checkbox-circle-fill text-rose-500' : 'ri-checkbox-blank-circle-line text-slate-300'" class="text-xl"></i>
-            </button>
-            <p v-if="friendChats.length === 0" class="text-center py-6 text-[12px] text-slate-400 font-bold">还没有好友可以广播</p>
-          </div>
-          <div class="flex gap-2 mb-3">
-            <button @click="broadcastReceiverIds = friendChats.map(f => f.id)" class="flex-1 py-2 rounded-xl bg-slate-100 text-[11px] font-black text-slate-600 active:scale-95">全选</button>
-            <button @click="broadcastReceiverIds = []" class="flex-1 py-2 rounded-xl bg-slate-100 text-[11px] font-black text-slate-600 active:scale-95">清空</button>
-          </div>
-          <textarea v-model="broadcastText" rows="4" placeholder="想对全体战友说点什么?如:今晚八段锦走起!" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-800 text-[14px] font-medium outline-none focus:border-rose-400 focus:bg-white transition-all resize-none mb-4"></textarea>
-          <button @click="sendBroadcast" :disabled="isSendingBroadcast || !broadcastText.trim() || broadcastReceiverIds.length === 0" class="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 text-white font-black text-[15px] py-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2">
-            <i class="ri-broadcast-line" :class="{ 'animate-pulse': isSendingBroadcast }"></i>
-            {{ isSendingBroadcast ? '广播中...' : `发给 ${broadcastReceiverIds.length} 人` }}
-          </button>
-        </div>
-      </div>
-    </transition>
+    <BroadcastSheet
+      :show="showBroadcast"
+      :friends="friendChats"
+      :receiver-ids="broadcastReceiverIds"
+      v-model:text="broadcastText"
+      :sending="isSendingBroadcast"
+      @close="showBroadcast = false"
+      @toggle-receiver="toggleBroadcastReceiver"
+      @select-all="broadcastReceiverIds = friendChats.map(friend => friend.id)"
+      @clear="broadcastReceiverIds = []"
+      @send="sendBroadcast"
+    />
 
-    <!-- ============ 小队资料页 ============ -->
-    <transition name="fade-up">
-      <div v-if="showMemberPanel" class="fixed inset-0 z-[150] bg-slate-900/45 backdrop-blur-md flex flex-col justify-end">
-        <div class="relative h-[88vh] bg-[#FBF9F5] rounded-t-[34px] overflow-hidden flex flex-col shadow-[0_-24px_60px_-26px_rgba(15,23,42,0.45)]">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-200 rounded-full"></div>
+    <GroupProfileSheet
+      :show="showMemberPanel"
+      :active-chat="activeChat"
+      :edit="groupEdit"
+      :mode="groupProfileMode"
+      :members="groupMembers"
+      :loading="loadingMembers"
+      :is-owner="isGroupOwner"
+      :saving="isSavingGroupProfile"
+      :my-id="myId"
+      @close="showMemberPanel = false"
+      @pick-avatar="pickGroupAvatar"
+      @avatar-change="onGroupAvatarChange"
+      @toggle-edit="groupProfileMode = groupProfileMode === 'edit' ? 'view' : 'edit'"
+      @update-edit="groupEdit = $event"
+      @save="saveGroupProfile"
+      @open-invite="openInviteFromPanel"
+      @open-user="openUserProfile"
+      @remove-member="removeGroupMember"
+      @leave="leaveCurrentGroup"
+    />
 
-          <header class="shrink-0 px-5 pt-8 pb-4">
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="relative shrink-0">
-                  <img :src="groupEdit.avatar || activeChat?.avatar" class="w-16 h-16 rounded-[24px] object-cover border-2 border-white shadow-md bg-slate-100">
-                  <button v-if="isGroupOwner" @click="pickGroupAvatar" class="absolute -right-1 -bottom-1 w-8 h-8 rounded-full bg-slate-950 text-white flex items-center justify-center border-2 border-[#FBF9F5] active:scale-90 transition-all">
-                    <i class="ri-camera-line text-sm"></i>
-                  </button>
-                  <input id="group-avatar-input" type="file" accept="image/*" class="hidden" @change="onGroupAvatarChange" />
-                </div>
+    <InviteMembersSheet
+      :show="showInvitePicker"
+      :friends="invitableFriends"
+      :selected-ids="inviteSelected"
+      @close="showInvitePicker = false"
+      @toggle-member="toggleInviteMember"
+      @submit="submitInvite"
+    />
 
-                <div class="min-w-0">
-                  <p class="text-[11px] font-black tracking-[0.16em] text-violet-500 mb-1">小队资料</p>
-                  <h2 class="text-[24px] font-black text-slate-950 tracking-tight truncate">{{ groupEdit.name || activeChat?.name }}</h2>
-                  <p class="text-[12px] text-slate-400 font-bold mt-1">{{ groupMembers.length }} 位成员 · {{ isGroupOwner ? '你是队长' : '队员' }}</p>
-                </div>
-              </div>
+    <UserProfileSheet
+      :show="showUserProfile"
+      :user="profileUser"
+      :profile-data="userProfileData"
+      :loading="userProfileLoading"
+      :moments="profileMoments"
+      :moments-loading="profileMomentsLoading"
+      :display-name="profileDisplayName"
+      :remark="profileRemark"
+      :can-remark="canRemarkProfile"
+      :my-id="myId"
+      :moment-visibility-meta="momentVisibilityMeta"
+      @close="closeUserProfile"
+      @edit-remark="editProfileRemark"
+      @open-moments="openProfileMomentsPanel"
+      @care="careFromUserProfile"
+      @start-chat="startChatFromProfile"
+      @open-image="openImageViewer"
+    />
 
-              <button @click="showMemberPanel = false" class="w-9 h-9 flex items-center justify-center bg-white rounded-full text-slate-500 active:scale-90 transition-all shrink-0 shadow-sm">
-                <i class="ri-close-line text-lg"></i>
-              </button>
-            </div>
-          </header>
+    <ProfileMomentsSheet
+      :show="showProfileMomentsPanel"
+      :user="profileUser"
+      :title="profileMomentsTitle"
+      :moments="profileMoments"
+      :moment-visibility-meta="momentVisibilityMeta"
+      :image-grid-class="imageGridClass"
+      @close="closeProfileMomentsPanel"
+      @edit-moment="editMoment"
+      @delete-moment="deleteMoment"
+      @open-image="openImageViewer"
+      @toggle-like="toggleLike"
+    />
 
-          <div class="flex-1 overflow-y-auto custom-scroll px-5 pb-5 space-y-4">
-            <section class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.35)]">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-[14px] font-black text-slate-900">小队信息</h3>
-                <button v-if="isGroupOwner" @click="groupProfileMode = groupProfileMode === 'edit' ? 'view' : 'edit'" class="text-[12px] font-black text-violet-600 bg-violet-50 px-3 py-1.5 rounded-full active:scale-95 transition-all">
-                  {{ groupProfileMode === 'edit' ? '收起编辑' : '编辑资料' }}
-                </button>
-              </div>
-
-              <div v-if="groupProfileMode !== 'edit'" class="space-y-2">
-                <p class="text-[12px] text-slate-400 font-bold">公告</p>
-                <p class="text-[13px] text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">{{ groupEdit.notice || '队长还没有写公告。' }}</p>
-              </div>
-
-              <div v-else class="space-y-3">
-                <input v-model="groupEdit.name" type="text" placeholder="小队名称" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-[14px] font-bold text-slate-800 outline-none focus:bg-white focus:border-violet-200 transition-all">
-                <textarea v-model="groupEdit.notice" rows="4" placeholder="写一段小队公告：目标、边界、互助规则..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-[13px] font-medium text-slate-700 outline-none focus:bg-white focus:border-violet-200 transition-all resize-none leading-relaxed"></textarea>
-                <button @click="saveGroupProfile" :disabled="isSavingGroupProfile" class="w-full bg-slate-950 text-white py-3.5 rounded-2xl text-[13px] font-black active:scale-95 transition-all disabled:bg-slate-300">
-                  {{ isSavingGroupProfile ? '保存中...' : '保存小队资料' }}
-                </button>
-              </div>
-            </section>
-
-            <section class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.35)]">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-[14px] font-black text-slate-900">成员</h3>
-                <button @click="openInviteFromPanel" class="text-[12px] font-black text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">
-                  邀请
-                </button>
-              </div>
-
-              <p v-if="loadingMembers" class="text-center text-[13px] text-slate-400 font-bold py-10">加载成员中...</p>
-              <div v-else class="space-y-1">
-                <div v-for="m in groupMembers" :key="m.userId" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-all">
-                  <button @click="openUserProfile(m.userId)" class="flex items-center gap-3 flex-1 min-w-0 text-left">
-                    <img :src="avatarOf(m, m.userId)" class="w-11 h-11 rounded-2xl border border-white shadow-sm object-cover bg-slate-100">
-                    <div class="flex-1 min-w-0">
-                      <h4 class="text-[14.5px] font-bold text-slate-800 truncate">{{ m.nickname || '神秘队员' }}</h4>
-                      <span class="text-[11px] text-slate-400 font-medium">{{ m.userId === myId ? '我自己' : '查看资料' }}</span>
-                    </div>
-                  </button>
-                  <span v-if="m.role === 'OWNER'" class="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
-                    <i class="ri-vip-crown-fill"></i> 队长
-                  </span>
-                  <button v-else-if="isGroupOwner" @click="removeGroupMember(m)" class="text-[10px] font-black text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full active:scale-95 transition-all shrink-0">
-                    移出
-                  </button>
-                  <span v-else class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">队员</span>
-                </div>
-              </div>
-            </section>
-
-            <button @click="leaveCurrentGroup" class="w-full py-4 rounded-[22px] bg-white text-rose-500 border border-rose-100 text-[14px] font-black active:scale-95 transition-all">
-              <i class="ri-logout-box-r-line"></i> 退出这个小队
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <!-- ============ 邀请成员 ============ -->
-    <transition name="fade-up">
-      <div v-if="showInvitePicker" class="fixed inset-0 z-[160] bg-slate-900/60 backdrop-blur-md flex flex-col justify-end">
-        <div class="bg-white rounded-t-[36px] p-6 max-h-[80vh] flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.1)] relative">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full"></div>
-          <div class="flex justify-between items-center mb-5 mt-4 shrink-0">
-            <h2 class="text-slate-900 text-[20px] font-black tracking-tight">邀请进队</h2>
-            <button @click="showInvitePicker = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
-          </div>
-          <p class="shrink-0 text-[12px] font-black text-slate-400 mb-2">勾选要拉进来的战友 (已选 {{ inviteSelected.length }})</p>
-          <div class="flex-1 overflow-y-auto custom-scroll space-y-2">
-            <p v-if="invitableFriends.length === 0" class="text-center text-[13px] text-slate-400 font-bold py-8">没有可邀请的好友了,先去联络人添加吧 🔍</p>
-            <div v-for="f in invitableFriends" :key="f.id" @click="toggleInviteMember(f.id)" class="flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer active:scale-[0.98]" :class="inviteSelected.includes(f.id) ? 'bg-violet-50 border-violet-200' : 'bg-white border-stone-100 hover:bg-slate-50'">
-              <img :src="f.avatar" class="w-10 h-10 rounded-2xl border border-white shadow-sm">
-              <h4 class="text-[14px] font-bold text-slate-800 flex-1 truncate">{{ f.name }}</h4>
-              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" :class="inviteSelected.includes(f.id) ? 'bg-violet-500 border-violet-500' : 'border-slate-300'">
-                <i v-if="inviteSelected.includes(f.id)" class="ri-check-line text-white text-xs"></i>
-              </div>
-            </div>
-          </div>
-          <div class="shrink-0 pt-4 mt-2 border-t border-slate-100">
-            <button @click="submitInvite" :disabled="inviteSelected.length === 0" class="w-full bg-violet-600 hover:bg-violet-500 disabled:bg-slate-300 text-white font-black text-[15px] py-4 rounded-[20px] shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2">
-              <i class="ri-user-add-fill"></i> 确认邀请
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <!-- ============ 战友资料卡 ============ -->
-    <transition name="fade-up">
-      <div v-if="showUserProfile" class="fixed inset-0 z-[170] bg-slate-900/55 backdrop-blur-md flex flex-col justify-end">
-        <div class="relative bg-[#FBF9F5] rounded-t-[34px] max-h-[82vh] overflow-hidden flex flex-col shadow-[0_-24px_60px_-26px_rgba(15,23,42,0.45)]">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-200 rounded-full"></div>
-
-          <header class="relative shrink-0 px-6 pt-8 pb-5 overflow-hidden">
-            <div v-if="profileUser?.profileCover" class="absolute inset-0 pointer-events-none">
-              <img :src="profileUser.profileCover" class="w-full h-full object-cover opacity-35 blur-[1px] scale-[1.03]">
-              <div class="absolute inset-0 bg-gradient-to-b from-white/78 via-[#FBF9F5]/88 to-[#FBF9F5]"></div>
-            </div>
-            <div class="relative z-10 flex justify-between items-start gap-3">
-              <div class="flex items-center gap-4 min-w-0">
-                <img :src="avatarOf(profileUser, profileUser?.userId)" class="w-16 h-16 rounded-[24px] object-cover border-2 border-white shadow-md bg-slate-100">
-                <div class="min-w-0">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <h2 class="text-[23px] font-black text-slate-950 tracking-tight truncate">{{ profileDisplayName }}</h2>
-                    <button v-if="canRemarkProfile" @click="editProfileRemark" class="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 text-[10px] font-black text-slate-500 active:scale-95 transition-all">
-                      {{ profileRemark ? '改备注' : '+备注' }}
-                    </button>
-                  </div>
-                  <p v-if="profileRemark" class="text-[11px] text-slate-400 font-bold mt-0.5 truncate">昵称：{{ profileUser?.nickname }}</p>
-                  <p v-if="profileUser?.radarSign" class="text-[12px] text-slate-500 font-bold mt-1 truncate">{{ profileUser.radarSign }}</p>
-                  <div class="flex items-center gap-2 mt-2">
-                    <span v-if="profileUser?.verified" class="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
-                      <i class="ri-shield-check-fill"></i> 已认证
-                    </span>
-                    <span class="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-full border border-slate-100">
-                      编号 {{ profileUser?.userId }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <button @click="showUserProfile = false" class="w-9 h-9 rounded-full bg-white text-slate-500 flex items-center justify-center shadow-sm active:scale-90 transition-all shrink-0">
-                <i class="ri-close-line text-lg"></i>
-              </button>
-            </div>
-          </header>
-
-          <div class="relative z-10 flex-1 overflow-y-auto custom-scroll px-6 pb-6 space-y-3">
-            <p v-if="userProfileLoading" class="text-center py-12 text-[13px] text-slate-400 font-bold">加载资料中...</p>
-
-            <template v-else>
-              <section class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.35)]">
-                <div class="flex items-start gap-3">
-                  <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl shrink-0">
-                    {{ profileUser?.emoji || '🌙' }}
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-[11px] font-black text-slate-400 tracking-[0.14em] mb-1">当前状态</p>
-                    <h3 class="text-[16px] font-black text-slate-900 tracking-tight">{{ profileUser?.text || '暂未设置状态' }}</h3>
-                    <p class="text-[12px] text-slate-500 leading-relaxed mt-1">{{ profileUser?.description || '对方还没有留下更多说明。' }}</p>
-                  </div>
-                </div>
-              </section>
-
-              <section class="grid grid-cols-3 gap-2">
-                <div class="bg-white rounded-2xl border border-white/80 p-3 text-center">
-                  <p class="text-[18px] font-black text-slate-900">{{ profileUser?.reactions || 0 }}</p>
-                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">收到关心</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-white/80 p-3 text-center">
-                  <p class="text-[18px] font-black text-slate-900">{{ userProfileData?.iSent || 0 }}</p>
-                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">我送出</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-white/80 p-3 text-center">
-                  <p class="text-[18px] font-black text-slate-900">{{ userProfileData?.theySent || 0 }}</p>
-                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">对方回应</p>
-                </div>
-              </section>
-
-              <section v-if="profileUser?.reactors?.length" class="bg-white rounded-[24px] border border-white/80 p-4">
-                <p class="text-[12px] font-black text-slate-900 mb-3">最近关心对方的人</p>
-                <div class="flex -space-x-2">
-                  <img v-for="(r, idx) in profileUser.reactors" :key="idx" :src="avatarOf(r, idx)" class="w-8 h-8 rounded-full border-2 border-white bg-slate-100">
-                </div>
-              </section>
-
-              <section @click="openProfileMomentsPanel" class="bg-white rounded-[24px] border border-white/80 p-4 active:scale-[0.99] transition-all cursor-pointer">
-                <div class="flex items-center justify-between mb-3">
-                  <p class="text-[12px] font-black text-slate-900">对方的朋友圈</p>
-                  <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                    {{ profileMoments.length }} 条
-                    <i v-if="profileMoments.length" class="ri-arrow-right-s-line text-sm"></i>
-                  </span>
-                </div>
-                <p v-if="profileMomentsLoading" class="text-center py-6 text-[12px] text-slate-400 font-bold">正在加载动态...</p>
-                <p v-else-if="profileMoments.length === 0" class="text-center py-6 text-[12px] text-slate-400 font-bold">暂时没有可见动态</p>
-                <div v-else class="space-y-3">
-                  <article v-for="post in profileMoments.slice(0, 2)" :key="post.id" class="rounded-2xl bg-stone-50/80 border border-stone-100 p-3">
-                    <div class="flex items-center justify-between gap-3 mb-2">
-                      <span class="text-[11px] font-bold text-slate-400">{{ post.time }}</span>
-                      <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="momentVisibilityMeta(post.visibility).class">
-                        {{ momentVisibilityMeta(post.visibility).label }}
-                      </span>
-                    </div>
-                    <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line">{{ post.content }}</p>
-                    <div v-if="post.images?.length" class="grid grid-cols-3 gap-1.5 mt-2">
-                      <img v-for="(img, idx) in post.images.slice(0, 3)" :key="idx" :src="img" @click.stop="openImageViewer(post.images, idx)" class="w-full aspect-square object-cover rounded-xl bg-slate-100">
-                    </div>
-                  </article>
-                  <p v-if="profileMoments.length > 2" class="text-center text-[11px] font-bold text-slate-400 pt-1">点击查看全部动态</p>
-                </div>
-              </section>
-
-              <section v-if="userProfileData && userProfileData.myUnlocked === false" class="bg-amber-50 border border-amber-100 rounded-[22px] p-4 text-[12px] text-amber-700 font-bold leading-relaxed">
-                上传病例认证后，可以查看更多战友隐私资料。当前只展示基础状态。
-              </section>
-            </template>
-          </div>
-
-          <footer v-if="!userProfileLoading" class="relative z-10 shrink-0 grid grid-cols-2 gap-2 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+16px)] bg-[#FBF9F5]/95 border-t border-stone-100">
-            <button @click="careFromUserProfile" :disabled="profileUser?.reactedToday" class="py-3.5 rounded-2xl text-[13px] font-black active:scale-95 transition-all" :class="profileUser?.reactedToday ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white'">
-              {{ profileUser?.reactedToday ? '今天已关心' : '送上关心' }}
-            </button>
-            <button @click="startChatFromProfile" :disabled="profileUser?.userId === myId" class="py-3.5 rounded-2xl text-[13px] font-black bg-blue-600 text-white disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 transition-all">
-              发起密聊
-            </button>
-          </footer>
-        </div>
-      </div>
-    </transition>
-
-    <!-- ============ 对方的朋友圈详情 ============ -->
-    <transition name="fade-up">
-      <div v-if="showProfileMomentsPanel" class="fixed inset-0 z-[185] bg-slate-900/55 backdrop-blur-md flex flex-col justify-end">
-        <div class="relative bg-[#FBF9F5] rounded-t-[34px] h-[86vh] overflow-hidden flex flex-col shadow-[0_-24px_60px_-26px_rgba(15,23,42,0.45)]">
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-200 rounded-full"></div>
-
-          <header class="shrink-0 px-6 pt-8 pb-4 border-b border-stone-100/80">
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3 min-w-0">
-                <img :src="avatarOf(profileUser, profileUser?.userId)" class="w-11 h-11 rounded-2xl object-cover border-2 border-white shadow-sm bg-slate-100">
-                <div class="min-w-0">
-                  <h2 class="text-[18px] font-black text-slate-950 truncate">{{ profileMomentsTitle }}</h2>
-                  <p class="text-[11px] text-slate-400 font-bold mt-0.5">{{ profileMoments.length }} 条可见动态</p>
-                </div>
-              </div>
-              <button @click="showProfileMomentsPanel = false" class="w-9 h-9 rounded-full bg-white text-slate-500 flex items-center justify-center shadow-sm active:scale-90 transition-all shrink-0">
-                <i class="ri-close-line text-lg"></i>
-              </button>
-            </div>
-          </header>
-
-          <div class="flex-1 overflow-y-auto custom-scroll px-5 py-4 pb-[calc(env(safe-area-inset-bottom,8px)+20px)] space-y-3.5">
-            <p v-if="profileMoments.length === 0" class="text-center py-16 text-[13px] text-slate-400 font-bold">暂时没有可见动态</p>
-            <article v-for="post in profileMoments" :key="post.id" class="bg-white rounded-[26px] border border-white/80 p-4 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.32)]">
-              <div class="flex items-center justify-between gap-3 mb-3">
-                <span class="text-[11px] font-bold text-slate-400">{{ post.time }}</span>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="momentVisibilityMeta(post.visibility).class">
-                    {{ momentVisibilityMeta(post.visibility).label }}
-                  </span>
-                  <button
-                    v-if="post.isMine"
-                    @click.stop="editMoment(post)"
-                    class="w-6 h-6 rounded-full text-slate-300 hover:text-blue-500 hover:bg-blue-50 flex items-center justify-center active:scale-90 transition-all"
-                    aria-label="编辑动态"
-                  >
-                    <i class="ri-edit-2-line text-[13px]"></i>
-                  </button>
-                  <button
-                    v-if="post.isMine"
-                    @click.stop="deleteMoment(post)"
-                    class="w-6 h-6 rounded-full text-slate-300 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center active:scale-90 transition-all"
-                    aria-label="删除动态"
-                  >
-                    <i class="ri-delete-bin-6-line text-[13px]"></i>
-                  </button>
-                </div>
-              </div>
-              <p class="text-[14px] text-slate-700 leading-[1.75] whitespace-pre-line">{{ post.content }}</p>
-              <div v-if="post.images?.length" :class="imageGridClass(post.images.length)" class="grid gap-1.5 mt-3">
-                <img v-for="(img, idx) in post.images" :key="idx" :src="img" @click="openImageViewer(post.images, idx)" class="w-full object-cover rounded-2xl bg-slate-100 cursor-pointer" :class="post.images.length === 1 ? 'aspect-[4/3]' : 'aspect-square'">
-              </div>
-              <div class="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
-                <span class="text-[11px] font-bold text-slate-400">{{ post.likesCount }} 共鸣 · {{ post.comments.length }} 回复</span>
-                <button @click.stop="toggleLike(post)" class="flex items-center gap-1 text-[11.5px] font-black text-rose-500 active:scale-90 transition-all">
-                  <i :class="post.liked ? 'ri-heart-fill' : 'ri-heart-line'" class="text-base"></i>
-                  {{ post.likesCount }}
-                </button>
-              </div>
-            </article>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <!-- ============ 图片预览 ============ -->
-    <transition name="fade">
-      <div v-if="imageViewer.show" class="fixed inset-0 z-[240] bg-black/95 flex flex-col">
-        <header class="shrink-0 flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top,0px)+14px)] pb-3 text-white">
-          <span class="text-[13px] font-bold text-white/70">{{ imageViewer.index + 1 }} / {{ imageViewer.images.length }}</span>
-          <button @click="closeImageViewer" class="w-9 h-9 rounded-full bg-white/10 backdrop-blur text-white flex items-center justify-center active:scale-90 transition-all">
-            <i class="ri-close-line text-xl"></i>
-          </button>
-        </header>
-        <div class="flex-1 min-h-0 flex items-center justify-center px-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)]">
-          <button v-if="imageViewer.images.length > 1" @click.stop="prevImage" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center active:scale-90 transition-all">
-            <i class="ri-arrow-left-s-line text-2xl"></i>
-          </button>
-          <img :src="imageViewer.images[imageViewer.index]" class="max-w-full max-h-full object-contain rounded-lg select-none" @click="nextImage" />
-          <button v-if="imageViewer.images.length > 1" @click.stop="nextImage" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center active:scale-90 transition-all">
-            <i class="ri-arrow-right-s-line text-2xl"></i>
-          </button>
-        </div>
-      </div>
-    </transition>
+    <SocialImageViewer
+      :viewer="imageViewer"
+      @close="closeImageViewer"
+      @prev="prevImage"
+      @next="nextImage"
+    />
   </div>
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref, computed, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, computed, watch } from 'vue'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http'
-import { areaList } from '@vant/area-data'
 import StatusBoard from '@/components/tabs/StatusBoard.vue'
+import DiscoverySeenPanel from '@/components/social/DiscoverySeenPanel.vue'
+import SocialQuickCreateMenu from '@/components/social/SocialQuickCreateMenu.vue'
+import SocialImageViewer from '@/components/social/SocialImageViewer.vue'
+import UserProfileSheet from '@/components/social/UserProfileSheet.vue'
+import ProfileMomentsSheet from '@/components/social/ProfileMomentsSheet.vue'
+import SocialFriendPicker from '@/components/social/SocialFriendPicker.vue'
+import CreateGroupSheet from '@/components/social/CreateGroupSheet.vue'
+import BroadcastSheet from '@/components/social/BroadcastSheet.vue'
+import GroupProfileSheet from '@/components/social/GroupProfileSheet.vue'
+import InviteMembersSheet from '@/components/social/InviteMembersSheet.vue'
+import PaperBoatSheet from '@/components/social/PaperBoatSheet.vue'
 import { avatarOf } from '@/utils/avatarPool'
+import {
+  readDiscoveryGreets as readStoredDiscoveryGreets,
+  recordDiscoveryGreet as recordStoredDiscoveryGreet,
+  readDiscoverySeenIds as readStoredDiscoverySeenIds,
+  readDiscoverySeenRecords,
+  recordDiscoverySeen as recordStoredDiscoverySeen
+} from '@/utils/discoveryHistory'
 
 const emit = defineEmits(['chat-active'])
 
@@ -1877,17 +1323,17 @@ const triggerPainRescue = async () => {
   
   // 模拟陆续收到暖心反馈
   setTimeout(() => {
-    incomingComforts.value.push({ id: 1, text: '❤️ 战友 @Xuan. 给你送来了一个热水袋 🩹' })
+    incomingComforts.value.push({ id: 1, text: '❤️ 有人给你送来了一个热水袋 🩹' })
     loadWarmth()
   }, 3000)
   
   setTimeout(() => {
-    incomingComforts.value.push({ id: 2, text: '🔥 战友 @半夏微凉 帮你轻揉了揉肚子 🫂' })
+    incomingComforts.value.push({ id: 2, text: '🔥 半夏微凉给你送来一个拥抱 🫂' })
     loadWarmth()
   }, 5500)
   
   setTimeout(() => {
-    incomingComforts.value.push({ id: 3, text: '✨ 战友 @Z-Warrior 默默给你念起了八段锦心经 🍀' })
+    incomingComforts.value.push({ id: 3, text: '✨ 有人默默给你点了一盏小灯 🍀' })
     loadWarmth()
   }, 8000)
 
@@ -2232,7 +1678,7 @@ const selectedPurpose = ref('food')
 // 兴趣状态网格，最多选 3 个
 const lifeTags = [
   { id: 't1', icon: '✨', label: '临床缓解' },
-  { id: 't2', icon: '🛡️', label: '造口战神' },
+  { id: 't2', icon: '🛡️', label: '造口经历' },
   { id: 't3', icon: '🥛', label: '全流食' },
   { id: 't4', icon: '🎮', label: '电竞玩家' },
   { id: 't5', icon: '🎵', label: 'Livehouse' },
@@ -2349,7 +1795,10 @@ const toggleTag = (id) => {
 const isCityPicksLoading = ref(false)
 const foundPatients = ref([])
 const discoveryIndex = ref(0)
+const discoverySeenCount = ref(0)
 const discoveryMode = ref('city')
+const showSeenPicksPanel = ref(false)
+const seenDiscoveryPicks = ref([])
 const discoveryGreetLimit = 2
 const discoveryGreetCount = ref(0)
 
@@ -2368,8 +1817,8 @@ const discoveryScopeText = computed(() => discoveryMode.value === 'city'
   : '不按城市手动挑选'
 )
 const discoveryEmptyText = computed(() => discoveryMode.value === 'city'
-  ? '可能是城市还没选，或者同城用户太少。先把城市定下来，再回来看看。'
-  : '今天暂时没遇到合适的人。别急，朋友不是刷出来的。'
+  ? (discoverySeenCount.value > 0 ? '今天这批同城朋友已经看完了，明天再来会更克制。' : '可能是城市还没选，或者同城用户太少。先把城市定下来，再回来看看。')
+  : (discoverySeenCount.value > 0 ? '今天这批远方朋友已经看完了，明天再来慢慢遇见。' : '今天暂时没遇到合适的人。别急，朋友不是刷出来的。')
 )
 const discoveryFooterText = computed(() => discoveryMode.value === 'city'
   ? '同城精选只按城市展示，不显示精确位置。别急着加很多人，慢慢认识就好。'
@@ -2377,27 +1826,28 @@ const discoveryFooterText = computed(() => discoveryMode.value === 'city'
 )
 const currentDiscoveryPick = computed(() => foundPatients.value[discoveryIndex.value] || null)
 const discoveryProgressText = computed(() => {
-  if (!foundPatients.value.length) return '今日 0 / 0'
-  return `今日 ${Math.min(discoveryIndex.value + 1, foundPatients.value.length)} / ${foundPatients.value.length}`
+  const total = discoverySeenCount.value + foundPatients.value.length
+  if (!total) return '今日 0 / 0'
+  return `今日 ${Math.min(discoverySeenCount.value + 1, total)} / ${total}`
 })
 
-const getTodayText = () => {
-  const now = new Date()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${now.getFullYear()}-${month}-${day}`
-}
-
-const getDiscoveryGreetKey = (mode = discoveryMode.value) => {
-  return `discovery_greet_${myId}_${mode}_${getTodayText()}`
-}
-
 const readDiscoveryGreets = (mode = discoveryMode.value) => {
-  try {
-    return JSON.parse(localStorage.getItem(getDiscoveryGreetKey(mode)) || '[]')
-  } catch (e) {
-    return []
-  }
+  return readStoredDiscoveryGreets(myId, mode)
+}
+
+const readDiscoverySeenIds = (mode = discoveryMode.value) => {
+  return readStoredDiscoverySeenIds(myId, mode)
+}
+
+const refreshSeenDiscoveryPicks = (mode = discoveryMode.value) => {
+  seenDiscoveryPicks.value = readDiscoverySeenRecords(myId, mode)
+    .slice()
+    .sort((a, b) => (b.seenAt || 0) - (a.seenAt || 0))
+}
+
+const recordDiscoverySeen = (pick, mode = discoveryMode.value) => {
+  recordStoredDiscoverySeen(myId, mode, pick)
+  refreshSeenDiscoveryPicks(mode)
 }
 
 const refreshDiscoveryGreetCount = (mode = discoveryMode.value) => {
@@ -2405,12 +1855,7 @@ const refreshDiscoveryGreetCount = (mode = discoveryMode.value) => {
 }
 
 const recordDiscoveryGreet = (targetId, mode = discoveryMode.value) => {
-  const greets = readDiscoveryGreets(mode)
-  const idText = String(targetId)
-  if (!greets.includes(idText)) {
-    greets.push(idText)
-    localStorage.setItem(getDiscoveryGreetKey(mode), JSON.stringify(greets))
-  }
+  recordStoredDiscoveryGreet(myId, mode, targetId)
   refreshDiscoveryGreetCount(mode)
 }
 
@@ -2435,12 +1880,14 @@ const mapCityPick = (user, mode = discoveryMode.value) => {
 const openDiscovery = async (mode = 'city') => {
   discoveryMode.value = mode
   refreshDiscoveryGreetCount(mode)
+  refreshSeenDiscoveryPicks(mode)
 
   emit('chat-active', true)
   showRadarModal.value = true
   isCityPicksLoading.value = true
   foundPatients.value = []
   discoveryIndex.value = 0
+  discoverySeenCount.value = 0
 
   if (mode === 'city') {
     const cityReady = myCity.value || await detectAndSaveLocation()
@@ -2456,7 +1903,11 @@ const openDiscovery = async (mode = 'city') => {
   try {
     const res = await http.get(mode === 'city' ? '/users/nearby' : '/users/distant')
     if (res.status === 200 && Array.isArray(res.data)) {
-      foundPatients.value = res.data.slice(0, 5).map(user => mapCityPick(user, mode))
+      const seenIds = new Set(readDiscoverySeenIds(mode))
+      foundPatients.value = res.data
+        .filter(user => !seenIds.has(String(user.userId)))
+        .slice(0, 5)
+        .map(user => mapCityPick(user, mode))
       discoveryIndex.value = 0
     }
   } catch (e) {
@@ -2475,24 +1926,39 @@ const closeCityPicks = () => {
 }
 
 const skipCityPick = (targetId) => {
-  foundPatients.value = foundPatients.value.filter(p => p.id !== targetId)
-  if (discoveryIndex.value >= foundPatients.value.length) {
-    discoveryIndex.value = Math.max(0, foundPatients.value.length - 1)
+  const skippedPick = foundPatients.value.find(p => Number(p.id) === Number(targetId))
+  const before = foundPatients.value.length
+  foundPatients.value = foundPatients.value.filter(p => Number(p.id) !== Number(targetId))
+  if (foundPatients.value.length < before) {
+    recordDiscoverySeen(skippedPick || targetId)
+    discoverySeenCount.value += 1
   }
+  discoveryIndex.value = 0
 }
 
 const skipCurrentDiscoveryPick = () => {
-  if (!currentDiscoveryPick.value) return
-  if (discoveryIndex.value < foundPatients.value.length - 1) {
-    discoveryIndex.value += 1
-  } else {
-    skipCityPick(currentDiscoveryPick.value.id)
-  }
+  const pick = currentDiscoveryPick.value
+  if (!pick) return
+  skipCityPick(pick.id)
 }
 
 const openDiscoveryProfile = async (pick) => {
   if (!pick?.id) return
   await openUserProfile(pick.id)
+}
+
+const openSeenDiscoveryProfile = async (pick) => {
+  showSeenPicksPanel.value = false
+  await openDiscoveryProfile(pick)
+}
+
+const greetSeenDiscoveryPick = async (pick) => {
+  if (!pick || pick.requested) return
+  const sent = await greetCityPick(pick)
+  if (sent) {
+    pick.requested = true
+    recordDiscoverySeen(pick)
+  }
 }
 
 const chatWithDiscoveryPick = (pick) => {
@@ -2517,7 +1983,7 @@ const greetCityPick = async (pick) => {
   if (!pick || pick.requested) return
   if (discoveryGreetRemaining.value <= 0) {
     alert('今天先认识到这里，慢一点更安全。')
-    return
+    return false
   }
   const sent = await sendFriendRequest(pick.id, { successMessage: '已打招呼' })
   if (sent) {
@@ -2529,6 +1995,7 @@ const greetCityPick = async (pick) => {
       }
     }, 520)
   }
+  return sent
 }
 
 const emojis = ['😀', '😂', '🤣', '😊', '😍', '😒', '😘', '😁', '😭', '😎', '😢', '😡', '👍', '🙏', '🎉', '❤️', '🔥', '💩', '👻', '💊']
@@ -2591,6 +2058,13 @@ const mapMoment = (m) => ({
 })
 
 const momentVisibilityMeta = (visibility = 'public') => {
+  if (visibility === 'discoverable') {
+    return {
+      label: '陌生可见',
+      icon: 'ri-planet-fill',
+      class: 'text-violet-600 bg-violet-50'
+    }
+  }
   if (visibility === 'private') {
     return {
       label: '仅自己',
@@ -2653,13 +2127,14 @@ const composerText = ref('')
 const composerTitle = ref('')          // 标题（选填）
 const composerImages = ref([])          // 图片 / 视频 URL 混存，最多 9 条
 const composerLocation = ref('')        // 标记地点（POI 名称）
-const composerVisibility = ref('public') // public / comrade / private
+const composerVisibility = ref('public') // discoverable / public / comrade / private
 const isPublishing = ref(false)
 const mediaUploading = ref(false)
 const MAX_MEDIA = 9
 
-// 可见范围三档
+// 可见范围
 const visibilityOptions = [
+  { value: 'discoverable', label: '陌生人也可见', desc: '同城和远方朋友进主页也能看', icon: 'ri-planet-line' },
   { value: 'public', label: '好友和小队可见', desc: '好友能刷到，同队成员进主页也能看', icon: 'ri-team-line' },
   { value: 'comrade', label: '仅好友可见', desc: '只给好友看，同队陌生人看不到', icon: 'ri-user-heart-line' },
   { value: 'private', label: '仅自己可见', desc: '只有你自己能看到', icon: 'ri-lock-2-line' }
@@ -2922,6 +2397,10 @@ const chatSearchKeyword = ref('')
 const chatHistorySearchResults = ref([])
 const isChatHistorySearching = ref(false)
 let chatSearchTimer = null
+let friendSyncTimer = null
+const knownFriendIds = ref(new Set())
+const knownRequestIds = ref(new Set())
+const friendSyncReady = ref(false)
 const chatList = computed(() => {
   return [...groupChats.value, ...friendChats.value].sort((a, b) => (b.sortAt || 0) - (a.sortAt || 0))
 })
@@ -2948,6 +2427,7 @@ const pendingRequests = ref([])
 const friendSearchKeyword = ref('')
 const addFriendCardRef = ref(null)
 const friendSearchInputRef = ref(null)
+const listScrollRef = ref(null)
 const searchResults = ref([])
 const isSearching = ref(false)
 const searchDone = ref(false)
@@ -2993,7 +2473,7 @@ const hydrateChatSearchResult = (result) => {
     ...(existing || {}),
     type: result.type,
     id,
-    name: result.name || existing?.name || (result.type === 'group' ? '未知小队' : '神秘战友'),
+    name: result.name || existing?.name || (result.type === 'group' ? '未知小队' : '神秘朋友'),
     avatar: avatarOf(result.avatar || existing?.avatar, id),
     lastMsg: result.lastMsg || existing?.lastMsg,
     time: result.lastTime || existing?.time || '',
@@ -3062,12 +2542,27 @@ const copyMyId = async () => {
   }
 }
 
+const toggleQuickCreateMenu = () => {
+  showQuickCreateMenu.value = !showQuickCreateMenu.value
+}
+
 const openAddFriendShortcut = async () => {
   showQuickCreateMenu.value = false
   currentTab.value = 'contacts'
   await nextTick()
-  addFriendCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  setTimeout(() => friendSearchInputRef.value?.focus(), 260)
+  setTimeout(() => {
+    const card = addFriendCardRef.value
+    const scroller = listScrollRef.value
+    if (card && scroller) {
+      scroller.scrollTo({
+        top: Math.max(0, card.offsetTop - 92),
+        behavior: 'smooth'
+      })
+    } else {
+      card?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    friendSearchInputRef.value?.focus()
+  }, 80)
 }
 
 const openComposerFromQuickMenu = () => {
@@ -3084,7 +2579,11 @@ const searchUsers = async () => {
   try {
     const res = await http.get('/users/search', { params: { keyword: kw } })
     if (res.status === 200 || res.code === 200) {
-      searchResults.value = res.data || []
+      const friendIds = new Set(friendChats.value.map(item => Number(item.id)))
+      searchResults.value = (res.data || []).map(user => ({
+        ...user,
+        isFriend: friendIds.has(Number(user.userId))
+      }))
     }
   } catch (e) {
     console.error('搜索用户失败', e)
@@ -3100,6 +2599,7 @@ const loadFriends = async () => {
     const res = await http.get('/friend/list')
     if (res.status === 200 || res.code === 200) {
       const friends = res.data || []
+      const previousIds = knownFriendIds.value
       friendChats.value = friends.map((friend, index, list) => {
         const id = friend.friendId || friend.id
         const rawName = friend.nickname || '神秘特工'
@@ -3116,10 +2616,25 @@ const loadFriends = async () => {
           sortAt: list.length - index
         }
       })
+      const nextIds = new Set(friendChats.value.map(item => Number(item.id)))
+      if (friendSyncReady.value) {
+        const newFriend = friendChats.value.find(item => !previousIds.has(Number(item.id)))
+        if (newFriend) {
+          currentTab.value = 'chat'
+          alert(`你和 ${newFriend.name} 已成为朋友，可以开始聊天了`)
+        }
+      }
+      knownFriendIds.value = nextIds
+      searchResults.value.forEach(user => {
+        user.isFriend = nextIds.has(Number(user.userId))
+        if (user.isFriend) user.requested = false
+      })
+      return friendChats.value
     }
   } catch (error) {
     console.error("拉取好友失败:", error)
   }
+  return friendChats.value
 }
 
 const loadGroups = async () => {
@@ -3361,7 +2876,7 @@ const submitInvite = async () => {
   }
 }
 
-// ============ 战友资料卡 ============
+// ============ 用户资料卡 ============
 const showUserProfile = ref(false)
 const userProfileLoading = ref(false)
 const userProfileData = ref(null)
@@ -3387,13 +2902,21 @@ const profileRemark = computed(() => {
 })
 const profileDisplayName = computed(() => {
   if (Number(profileUser.value?.userId) === myId) return '我'
-  return profileRemark.value || profileUser.value?.nickname || '神秘战友'
+  return profileRemark.value || profileUser.value?.nickname || '神秘朋友'
 })
 const profileMomentsTitle = computed(() => Number(profileUser.value?.userId) === myId ? '我的朋友圈' : `${profileDisplayName.value}的朋友圈`)
 const canRemarkProfile = computed(() => !!profileFriendChat.value && Number(profileUser.value?.userId) !== myId)
 
 const saveFriendRemarks = () => {
   localStorage.setItem('friend_remarks', JSON.stringify(friendRemarks.value))
+}
+
+const closeUserProfile = () => {
+  showUserProfile.value = false
+}
+
+const closeProfileMomentsPanel = () => {
+  showProfileMomentsPanel.value = false
 }
 
 const openUserProfile = async (userId) => {
@@ -3418,7 +2941,7 @@ const openUserProfile = async (userId) => {
       profileMoments.value = (momentsRes.value.data || []).map(mapMoment)
     }
   } catch (e) {
-    console.error('加载战友资料失败', e)
+    console.error('加载用户资料失败', e)
   } finally {
     userProfileLoading.value = false
     profileMomentsLoading.value = false
@@ -3501,7 +3024,7 @@ const startChatFromProfile = () => {
     type: 'single',
     id: profileUser.value.userId,
     name: profileDisplayName.value,
-    rawName: profileUser.value.nickname || '神秘战友',
+    rawName: profileUser.value.nickname || '神秘朋友',
     avatar: avatarOf(profileUser.value, profileUser.value.userId),
     lastMsg: '点击发起密聊...',
     time: '',
@@ -3583,7 +3106,7 @@ const sendBroadcast = async () => {
       showBroadcast.value = false
       broadcastText.value = ''
       broadcastReceiverIds.value = []
-      alert(res.message || '已群发给全体战友 📡')
+      alert(res.message || `已发送给 ${broadcastReceiverIds.value.length} 人`)
     } else {
       alert(res.message || '广播失败')
     }
@@ -3604,11 +3127,24 @@ const loadPendingRequests = async () => {
   try {
     const res = await http.get('/friend/requests')
     if (res.status === 200 || res.code === 200) {
-      pendingRequests.value = res.data
+      const requests = res.data || []
+      const previousIds = knownRequestIds.value
+      pendingRequests.value = requests
+      const nextIds = new Set(requests.map(item => Number(item.friendshipId || item.id)))
+      if (friendSyncReady.value) {
+        const newRequest = requests.find(item => !previousIds.has(Number(item.friendshipId || item.id)))
+        if (newRequest) {
+          currentTab.value = 'contacts'
+          alert(`${newRequest.nickname || '有人'} 想和你成为朋友`)
+        }
+      }
+      knownRequestIds.value = nextIds
+      return pendingRequests.value
     }
   } catch (error) {
     console.error("拉取申请列表失败:", error)
   }
+  return pendingRequests.value
 }
 
 const sendFriendRequest = async (targetId, options = {}) => {
@@ -3616,8 +3152,10 @@ const sendFriendRequest = async (targetId, options = {}) => {
   try {
     // 对应后端: @RequestBody Friendship request -> { addresseeId: xx }
     const res = await http.post('/friend/request', { addresseeId: Number(targetId) })
-    if (res.status === 200) {
+    if (res.status === 200 || res.code === 200) {
+      if (options.user) options.user.requested = true
       alert(options.successMessage || "好友申请已发送")
+      syncFriendState()
       return true
     } else {
       alert(res.message || res.msg || "发送失败")
@@ -3631,27 +3169,99 @@ const sendFriendRequest = async (targetId, options = {}) => {
 
 const acceptRequest = async (id) => {
   try {
-    console.log(id)
     // 对应你的后端: /api/friend/accept/{id}
     const res = await http.post(`/friend/accept/${id}`)
-    if (res.status === 200) {
+    if (res.status === 200 || res.code === 200) {
       alert("已成为伙伴！")
-      loadPendingRequests() // 刷新申请列表
-      loadFriends() // 刷新好友列表
+      await Promise.all([
+        loadPendingRequests(),
+        loadFriends()
+      ])
+    } else {
+      alert(res.message || res.msg || "操作失败")
     }
   } catch (error) {
     alert("操作失败")
   }
 }
 
-onMounted(() => {
+const syncFriendState = async () => {
+  await Promise.all([
+    loadPendingRequests(),
+    loadFriends()
+  ])
+}
+
+const startFriendSync = () => {
+  clearInterval(friendSyncTimer)
+  friendSyncTimer = setInterval(syncFriendState, 4000)
+}
+
+const hasSocialOverlay = () => {
+  return imageViewer.value.show ||
+    showProfileMomentsPanel.value ||
+    showUserProfile.value ||
+    showSeenPicksPanel.value ||
+    showRadarModal.value ||
+    currentView.value === 'chat'
+}
+
+const closeTopSocialLayer = () => {
+  if (imageViewer.value.show) {
+    closeImageViewer()
+    return true
+  }
+  if (showProfileMomentsPanel.value) {
+    closeProfileMomentsPanel()
+    return true
+  }
+  if (showUserProfile.value) {
+    closeUserProfile()
+    return true
+  }
+  if (showSeenPicksPanel.value) {
+    showSeenPicksPanel.value = false
+    return true
+  }
+  if (showRadarModal.value) {
+    closeCityPicks()
+    return true
+  }
+  if (currentView.value === 'chat') {
+    closeChat()
+    return true
+  }
+  return false
+}
+
+const ensureSocialHistoryGuard = () => {
+  if (typeof window === 'undefined') return
+  window.history.pushState({ socialGuard: true }, '')
+}
+
+const handleSocialBack = () => {
+  if (closeTopSocialLayer()) {
+    ensureSocialHistoryGuard()
+  }
+}
+
+onMounted(async () => {
+  ensureSocialHistoryGuard()
+  window.addEventListener('popstate', handleSocialBack)
   initWebSocket()
-  loadFriends()
+  await syncFriendState()
+  friendSyncReady.value = true
+  startFriendSync()
   loadGroups()
-  loadPendingRequests()
   loadMoments()
   loadWarmth()
   loadMyCity()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('popstate', handleSocialBack)
+  clearInterval(friendSyncTimer)
+  clearTimeout(chatSearchTimer)
 })
 
 const plusMenuItems = [
@@ -3667,38 +3277,13 @@ const plusMenuItems = [
 const myCity = ref(localStorage.getItem('myCity') || '')
 const myProvince = ref(localStorage.getItem('myProvince') || '')
 const myDistrict = ref(localStorage.getItem('myDistrict') || '')
-const areaCode = ref(localStorage.getItem('myAreaCode') || '')
-const showAreaPicker = ref(false)
 const isLocating = ref(false)
 const locationStatus = ref('')
 const lastLocation = ref(JSON.parse(localStorage.getItem('lastLocation') || 'null'))
 
-const areaDisplay = computed(() => {
-  return [myProvince.value, myCity.value, myDistrict.value].filter(Boolean).join(' · ')
-})
-
 const cityDisplay = computed(() => {
   return [myProvince.value, myCity.value].filter(Boolean).join(' · ')
 })
-
-// 根据区县编码反查省/市，兼容只存了 city 字段的旧账号
-const lookupAreaByCity = (cityName) => {
-  if (!cityName) return null
-  const cityList = areaList.city_list || {}
-  const provinceList = areaList.province_list || {}
-  for (const code in cityList) {
-    if (cityList[code] === cityName || cityList[code].startsWith(cityName)) {
-      const provinceCode = code.slice(0, 2) + '0000'
-      return {
-        code,
-        province: provinceList[provinceCode] || '',
-        city: cityList[code],
-        district: ''
-      }
-    }
-  }
-  return null
-}
 
 const loadMyCity = async () => {
   try {
@@ -3722,42 +3307,16 @@ const loadMyCity = async () => {
       }
     }
     if (res.status === 200 && res.data?.city) {
-      const matched = lookupAreaByCity(res.data.city)
-      if (matched) {
-        myProvince.value = matched.province
-        myCity.value = matched.city
-        myDistrict.value = ''
-        areaCode.value = matched.code
-        localStorage.setItem('myProvince', myProvince.value)
-        localStorage.setItem('myCity', myCity.value)
-        localStorage.setItem('myDistrict', '')
-        localStorage.setItem('myAreaCode', matched.code)
-      } else {
-        myCity.value = res.data.city
-        localStorage.setItem('myCity', myCity.value)
-      }
+      myProvince.value = res.data.province || ''
+      myCity.value = res.data.city
+      myDistrict.value = res.data.district || ''
+      localStorage.setItem('myProvince', myProvince.value)
+      localStorage.setItem('myCity', myCity.value)
+      localStorage.setItem('myDistrict', myDistrict.value)
     }
   } catch (e) {
     console.error('读取城市失败', e)
   }
-}
-
-const onAreaConfirm = ({ selectedOptions }) => {
-  if (!selectedOptions || selectedOptions.length < 2) return
-  const province = selectedOptions[0]?.text || ''
-  let city = selectedOptions[1]?.text || ''
-  // 北京 / 上海 / 天津 / 重庆 这类直辖市第二级是"市辖区"，把它降级成省名
-  if (city === '市辖区' || city === '县') city = province
-  myProvince.value = province
-  myCity.value = city
-  myDistrict.value = selectedOptions[2]?.text || ''
-  areaCode.value = selectedOptions[selectedOptions.length - 1]?.value || ''
-  localStorage.setItem('myProvince', myProvince.value)
-  localStorage.setItem('myCity', myCity.value)
-  localStorage.setItem('myDistrict', myDistrict.value)
-  localStorage.setItem('myAreaCode', areaCode.value)
-  showAreaPicker.value = false
-  saveMyCity(true)
 }
 
 const saveMyCity = async (showTip = true) => {
@@ -3821,11 +3380,10 @@ const applyLocatedCity = (component) => {
   myProvince.value = province
   myCity.value = city
   myDistrict.value = district
-  areaCode.value = ''
   localStorage.setItem('myProvince', myProvince.value)
   localStorage.setItem('myCity', myCity.value)
   localStorage.setItem('myDistrict', myDistrict.value)
-  localStorage.setItem('myAreaCode', '')
+  localStorage.removeItem('myAreaCode')
   return true
 }
 
@@ -3885,7 +3443,7 @@ const detectAndSaveLocation = () => new Promise((resolve) => {
         console.error('同步定位失败', e)
       }
 
-      locationStatus.value = `已通过定位确认：${cityDisplay.value || myCity.value}。同城精选按城市匹配，不显示区县和精确距离。`
+      locationStatus.value = `已定位到「${cityDisplay.value || myCity.value}」，我的主页城市已同步更新。同城精选只按城市匹配。`
       isLocating.value = false
       resolve(true)
     },
@@ -4220,282 +3778,6 @@ const scrollToBottom = () => {
     transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
   }
-}
-
-@keyframes disintegrate {
-  0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-    opacity: 1;
-    filter: blur(0);
-  }
-  20% {
-    transform: translate(calc(var(--rand-x, 10px) * 0.2), calc(var(--rand-y, -10px) * 0.2)) scale(1.1) rotate(calc(var(--rand-r, 10deg) * 0.2));
-    color: #a5b4fc;
-  }
-  100% {
-    transform: translate(var(--rand-x, 80px), var(--rand-y, -120px)) scale(0) rotate(var(--rand-r, 45deg));
-    opacity: 0;
-    filter: blur(3px);
-  }
-}
-
-.animate-disintegrate {
-  animation: disintegrate 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  --rand-x: 0px;
-  --rand-y: 0px;
-  --rand-r: 0deg;
-}
-
-.paper-river-sheet {
-  background:
-    radial-gradient(circle at 74% 12%, rgba(248, 244, 198, 0.18), transparent 8rem),
-    radial-gradient(circle at 18% 24%, rgba(125, 92, 255, 0.18), transparent 11rem),
-    linear-gradient(180deg, #090d21 0%, #0b132a 46%, #071224 100%);
-}
-
-.paper-stars,
-.paper-stars::before,
-.paper-stars::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  pointer-events: none;
-}
-
-.paper-stars {
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.4px),
-    radial-gradient(circle, rgba(147, 197, 253, 0.48) 0 1px, transparent 1.6px);
-  background-position: 18px 22px, 94px 64px;
-  background-size: 92px 92px, 138px 138px;
-  opacity: 0.42;
-  animation: paper-stars-drift 20s linear infinite;
-}
-
-.paper-stars::before {
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 1px, transparent 1.4px),
-    radial-gradient(circle, rgba(251, 191, 36, 0.56) 0 1px, transparent 1.5px);
-  background-position: 42px 18px, 130px 92px;
-  background-size: 156px 156px, 218px 218px;
-  opacity: 0.35;
-  animation: paper-stars-pulse 5s ease-in-out infinite;
-}
-
-.paper-stars::after {
-  background:
-    linear-gradient(120deg, transparent 0 42%, rgba(255, 255, 255, 0.28) 48%, transparent 54% 100%) 0 12% / 210px 1px no-repeat;
-  opacity: 0.58;
-  animation: paper-shooting-star 5.8s ease-in-out infinite;
-}
-
-.paper-moon {
-  position: absolute;
-  right: 32px;
-  top: 54px;
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 32% 30%, #fff9d8 0%, #f8d88b 42%, rgba(248, 216, 139, 0.05) 72%);
-  box-shadow: 0 0 38px rgba(248, 216, 139, 0.26);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.paper-river {
-  position: absolute;
-  left: -18%;
-  right: -18%;
-  bottom: -9%;
-  height: 42%;
-  pointer-events: none;
-  background:
-    linear-gradient(165deg, transparent 0 18%, rgba(37, 99, 235, 0.14) 30%, rgba(20, 184, 166, 0.24) 52%, rgba(129, 140, 248, 0.14) 72%, transparent 88%),
-    linear-gradient(8deg, rgba(14, 165, 233, 0.18), rgba(49, 46, 129, 0.05));
-  border-radius: 48% 52% 0 0 / 36% 38% 0 0;
-  filter: blur(0.4px);
-  opacity: 0.78;
-  transform: rotate(-4deg);
-  animation: paper-river-breathe 8s ease-in-out infinite;
-}
-
-.paper-river::before,
-.paper-river::after {
-  position: absolute;
-  left: -8%;
-  right: -8%;
-  content: "";
-  border-radius: 999px;
-  pointer-events: none;
-}
-
-.paper-river::before {
-  top: 26%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(186, 230, 253, 0.42), transparent);
-  animation: paper-river-line 5.5s linear infinite;
-}
-
-.paper-river::after {
-  top: 50%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.28), transparent);
-  animation: paper-river-line 7s linear infinite reverse;
-}
-
-.paper-river-shine {
-  position: absolute;
-  left: 9%;
-  right: 9%;
-  bottom: 9%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
-  opacity: 0.32;
-  pointer-events: none;
-}
-
-.paper-quota-card {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.075);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 34px -28px rgba(0, 0, 0, 0.8);
-  padding: 12px 16px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-
-.paper-floating-boat {
-  position: relative;
-  animation: paper-boat-float 4.8s ease-in-out infinite;
-}
-
-.paper-floating-boat::before {
-  position: absolute;
-  right: 18px;
-  top: -13px;
-  content: "⛵";
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 24px;
-  filter: drop-shadow(0 10px 18px rgba(14, 165, 233, 0.22));
-  transform: rotate(-7deg);
-}
-
-.paper-history-hero {
-  background:
-    radial-gradient(circle at 92% 12%, rgba(251, 191, 36, 0.18), transparent 5rem),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(14, 165, 233, 0.07));
-  box-shadow: 0 20px 54px -34px rgba(0, 0, 0, 0.9);
-}
-
-.paper-history-card {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.09);
-  color: rgba(240, 249, 255, 0.92);
-  box-shadow: 0 18px 46px -34px rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: 16px;
-}
-
-.paper-history-card > p {
-  color: rgba(240, 249, 255, 0.92) !important;
-}
-
-.paper-history-empty {
-  border: 1px dashed rgba(186, 230, 253, 0.16);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(224, 242, 254, 0.58);
-  font-size: 12px;
-  font-weight: 800;
-  text-align: center;
-  padding: 18px;
-}
-
-.paper-history-stat {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 8px 6px;
-  text-align: center;
-}
-
-.paper-history-stat b {
-  display: block;
-  color: white;
-  font-size: 14px;
-  line-height: 1;
-}
-
-.paper-history-stat span {
-  display: block;
-  color: rgba(224, 242, 254, 0.44);
-  font-size: 10px;
-  font-weight: 800;
-  margin-top: 4px;
-}
-
-.paper-history-note {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  background: rgba(15, 23, 42, 0.28);
-  padding: 10px 12px;
-}
-
-.paper-history-note span {
-  display: block;
-  color: rgba(186, 230, 253, 0.5);
-  font-size: 10px;
-  font-weight: 900;
-  margin-bottom: 4px;
-}
-
-.paper-history-note p {
-  margin: 0;
-  color: rgba(240, 249, 255, 0.86);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.55;
-}
-
-@keyframes paper-stars-drift {
-  from { background-position: 18px 22px, 94px 64px; }
-  to { background-position: 110px 114px, 232px 202px; }
-}
-
-@keyframes paper-stars-pulse {
-  0%, 100% { opacity: 0.22; }
-  50% { opacity: 0.48; }
-}
-
-@keyframes paper-shooting-star {
-  0%, 54% {
-    transform: translate3d(-45%, 0, 0);
-    opacity: 0;
-  }
-  62% {
-    opacity: 0.6;
-  }
-  76%, 100% {
-    transform: translate3d(120%, 0, 0);
-    opacity: 0;
-  }
-}
-
-@keyframes paper-river-breathe {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(-4deg) scaleY(1); }
-  50% { transform: translate3d(2%, -2%, 0) rotate(-3deg) scaleY(1.06); }
-}
-
-@keyframes paper-river-line {
-  from { transform: translateX(-22%); }
-  to { transform: translateX(22%); }
-}
-
-@keyframes paper-boat-float {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.2deg); }
-  50% { transform: translate3d(0, -4px, 0) rotate(0.4deg); }
 }
 
 .fade-enter-active,
