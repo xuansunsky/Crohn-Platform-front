@@ -1,6 +1,6 @@
 <template>
   <transition name="splash-out">
-    <div v-if="visible" class="splash">
+    <div v-if="visible" class="splash" @click="dismiss" @keydown.enter="dismiss" role="button" tabindex="0">
       <div class="splash-img" :class="{ 'img-ready': imgLoaded }">
         <img
           src="/img/bg-stars-lite.jpg"
@@ -22,18 +22,32 @@
       </div>
 
       <p class="credit content-ready">created by godxuan</p>
+      <p class="skip-hint content-ready">轻触跳过</p>
     </div>
   </transition>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const visible = ref(true)
 const imgLoaded = ref(false)
+let timer = null
+
+const dismiss = () => {
+  visible.value = false
+  if (timer) {
+    clearTimeout(timer)
+    timer = null
+  }
+}
 
 onMounted(() => {
-  setTimeout(() => { visible.value = false }, 3300)
+  timer = setTimeout(dismiss, 3300)
+})
+
+onUnmounted(() => {
+  if (timer) clearTimeout(timer)
 })
 </script>
 
@@ -111,6 +125,20 @@ onMounted(() => {
 }
 .credit.content-ready {
   opacity: 1;
+}
+
+.skip-hint {
+  position: absolute;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  margin: 0;
+  padding: 7px 12px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
 }
 
 .splash-out-leave-active {

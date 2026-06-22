@@ -26,46 +26,46 @@
           placeholder="搜标题、内容、标签"
           class="w-full h-11 rounded-2xl bg-white border border-stone-100 pl-10 pr-10 text-[13px] font-bold text-stone-800 placeholder-stone-300 outline-none focus:border-stone-900 focus:shadow-[0_8px_24px_-18px_rgba(15,23,42,0.28)] transition-all"
         />
-        <button
+          <button
           v-if="searchKeyword"
           type="button"
           @click="searchKeyword = ''"
           class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center active:scale-90 transition-all"
         >
           <i class="ri-close-line text-[15px]"></i>
-        </button>
+          </button>
       </div>
-    </div>
+        </div>
 
     <!-- 分类（吸顶） -->
     <div class="sticky top-0 z-20 bg-[#FBF9F5]/95 backdrop-blur-md border-b border-stone-100">
       <div class="flex gap-2 overflow-x-auto no-scrollbar px-4 py-2.5">
-        <button
-          v-for="cat in categories"
-          :key="cat.id"
-          @click="activeCategory = cat.id"
-          :class="[
+          <button
+              v-for="cat in categories"
+              :key="cat.id"
+              @click="activeCategory = cat.id"
+              :class="[
             'shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all active:scale-95',
-            activeCategory === cat.id
+              activeCategory === cat.id
               ? 'bg-stone-900 text-white'
               : 'bg-white text-stone-500 border border-stone-200'
-          ]"
-        >
+            ]"
+          >
           {{ cat.label }}
-        </button>
+          </button>
+        </div>
       </div>
-    </div>
 
     <!-- 双列瀑布流 · 小红书/闲鱼风 -->
     <div class="px-2 pt-2 columns-2 gap-2">
-      <ExperienceCard
+        <ExperienceCard
         v-for="item in filteredItems"
         :key="item.id"
-        v-bind="item"
-        :can-edit="checkPermission(item.userId)"
-        @delete="deleteCard(item.id)"
+            v-bind="item"
+            :can-edit="checkPermission(item.userId)"
+            @delete="deleteCard(item.id)"
         @open="openDetail(item.id)"
-      />
+        />
     </div>
 
     <!-- 空状态 -->
@@ -249,11 +249,11 @@
                   <label class="block text-[11px] font-bold text-stone-400 mb-2.5">心情图标</label>
                   <div class="flex flex-wrap gap-2">
                     <button
-                      v-for="emoji in emojiOptions"
-                      :key="emoji"
+                        v-for="emoji in emojiOptions"
+                        :key="emoji"
                       type="button"
-                      @click="newPost.icon = emoji"
-                      :class="[
+                        @click="newPost.icon = emoji"
+                        :class="[
                         'w-11 h-11 rounded-2xl flex items-center justify-center text-xl transition-all active:scale-90',
                         newPost.icon === emoji
                           ? 'bg-slate-900 text-white scale-110 shadow-md'
@@ -269,17 +269,17 @@
                   <label class="block text-[11px] font-bold text-stone-400 mb-2.5">卡片底色</label>
                   <div class="grid grid-cols-4 gap-2.5">
                     <button
-                      v-for="theme in availableThemes"
-                      :key="theme.value"
+                        v-for="theme in availableThemes"
+                        :key="theme.value"
                       type="button"
-                      @click="newPost.theme = theme.value"
-                      :class="[
+                        @click="newPost.theme = theme.value"
+                        :class="[
                         'h-16 rounded-2xl border-2 text-[11px] font-black transition-all active:scale-95 relative overflow-hidden',
                         newPost.theme === theme.value
                           ? 'border-slate-900 ring-2 ring-slate-900/10 scale-[1.02] shadow-md'
                           : 'border-transparent hover:border-slate-200'
                       ]"
-                      :style="{ background: theme.bgPreview, color: theme.textColor }"
+                        :style="{ background: theme.bgPreview, color: theme.textColor }"
                     >
                       <span class="relative z-10">{{ theme.name }}</span>
                       <span v-if="newPost.theme === theme.value" class="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center text-slate-900 z-10">
@@ -1065,7 +1065,7 @@ const deleteFromDetail = async () => {
   try {
     const res = await http.delete(`/experience/delete/${id}`)
     if (res.status === 200 || res.code === 200) {
-      libraryItems.value = libraryItems.value.filter(item => item.id !== id)
+  libraryItems.value = libraryItems.value.filter(item => item.id !== id)
       showDetail.value = false
     } else {
       alert(res.message || '删除失败')
@@ -1212,17 +1212,17 @@ const publishPost = async () => {
   const firstImage = newMedia.value.find(m => !isVideo(m)) || newMedia.value[0] || ''
   try {
     const res = await http.post('/experience/publish', {
-      title: newPost.title,
-      summary: newPost.summary,
+    title: newPost.title,
+    summary: newPost.summary,
       location: newPost.location.trim(),
-      icon: newPost.icon,
+    icon: newPost.icon,
       theme: newPost.theme,
       tags: buildPublishTags().join(','),
       coverImage: firstImage,
       media: newMedia.value.length ? JSON.stringify(newMedia.value) : null
     })
     if (res.status === 200 || res.code === 200) {
-      closeModal()
+  closeModal()
       await loadPosts()
     } else {
       alert(res.message || '发布失败')

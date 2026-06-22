@@ -1,541 +1,848 @@
 <template>
-  <div class="relative w-full pb-8 bg-[#FBF9F5] text-slate-900 font-sans overflow-x-hidden">
+  <div class="relative w-full min-h-full pb-8 bg-[#F8F6F1] text-slate-950 overflow-x-hidden">
+    <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-200/40 rounded-full blur-[90px] pointer-events-none"></div>
+    <div class="absolute top-80 -left-28 w-80 h-80 bg-cyan-100/60 rounded-full blur-[110px] pointer-events-none"></div>
 
-    <!-- 柔和奶白底色上的色斑 -->
-    <div class="absolute top-[-100px] left-[-100px] w-96 h-96 bg-emerald-200/30 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="absolute top-[20%] right-[-100px] w-80 h-80 bg-blue-200/30 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="absolute top-[60%] left-[10%] w-72 h-72 bg-amber-100/40 rounded-full blur-[120px] pointer-events-none"></div>
-
-    <!-- Header -->
-    <header class="sticky top-0 z-30 bg-[#FBF9F5]/90 backdrop-blur-xl border-b border-stone-200/60 px-4 py-3.5 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <button
-            @click="emit('change-tab', 'checkin')"
-            class="w-10 h-10 rounded-full bg-white border border-stone-200 flex items-center justify-center active:scale-95 transition-all text-slate-700 shadow-sm hover:shadow-md"
-        >
+    <header class="sticky top-0 z-30 bg-[#F8F6F1]/88 backdrop-blur-xl border-b border-stone-200/60 px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3 min-w-0">
+        <button @click="emit('change-tab', 'checkin')" class="w-10 h-10 rounded-2xl bg-white border border-stone-200 text-slate-700 flex items-center justify-center active:scale-95 transition-all shadow-sm">
           <i class="ri-arrow-left-s-line text-xl"></i>
         </button>
-        <div>
-          <div class="flex items-center gap-1.5 mb-0.5">
-            <span class="text-[10px] font-black tracking-[0.18em] text-emerald-600">药物前沿情报</span>
-          </div>
-          <h1 class="text-[19px] font-black tracking-tight text-slate-900 leading-none flex items-center gap-2">
-            前沿药物图谱
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          </h1>
+        <div class="min-w-0">
+          <p class="text-[10px] font-black tracking-[0.18em] text-emerald-600">病友真实记录</p>
+          <h1 class="text-[20px] font-black tracking-tight leading-tight truncate">用药记录库</h1>
         </div>
       </div>
-      <button
-          @click="showCabinet = true"
-          class="relative w-11 h-11 rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-emerald-600 active:scale-95 transition-all shadow-sm hover:shadow-md"
-      >
-        <i class="ri-briefcase-4-line text-lg"></i>
-        <div v-if="cabinetList.length > 0" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md ring-2 ring-[#FBF9F5]">
-          {{ cabinetList.length }}
-        </div>
-      </button>
     </header>
 
-    <main class="p-5 space-y-5 relative z-10">
+    <main class="relative z-10 p-5 space-y-4">
+      <section class="relative overflow-hidden rounded-[30px] bg-slate-950 text-white p-5 shadow-[0_22px_50px_-32px_rgba(15,23,42,0.9)]">
+        <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-emerald-300/20 blur-2xl"></div>
+        <div class="relative">
+          <p class="text-[11px] font-black tracking-[0.18em] text-emerald-200/80 mb-2">不是医学结论，是病友经验</p>
+          <h2 class="text-[24px] font-black tracking-tight leading-tight">记录药物怎么被真实身体接住。</h2>
+          <p class="text-[12px] text-white/58 leading-relaxed mt-3">药名、剂量、用了多久、是否舒服、哪里不舒服。我们先把真实样本积起来。</p>
+        </div>
+      </section>
 
-      <!-- 搜索栏 -->
+      <section class="grid grid-cols-3 gap-2.5">
+        <div class="rounded-2xl bg-white border border-stone-100 p-3 shadow-sm">
+          <p class="text-[10px] font-black text-slate-400">药品</p>
+          <p class="text-[19px] font-black mt-1">{{ drugDatabase.length }}</p>
+        </div>
+        <div class="rounded-2xl bg-white border border-stone-100 p-3 shadow-sm">
+          <p class="text-[10px] font-black text-slate-400">记录</p>
+          <p class="text-[19px] font-black mt-1">{{ totalDrugReviewCount }}</p>
+        </div>
+        <button @click="resetNewDrug(); showCreateDrug = true" class="rounded-2xl bg-emerald-500 text-white p-3 shadow-sm active:scale-95 transition-all text-left">
+          <i class="ri-add-line text-lg"></i>
+          <p class="text-[12px] font-black mt-1">补充药品</p>
+        </button>
+      </section>
+
       <div class="relative">
-        <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-        <input
-            v-model="keyword"
-            type="text"
-            placeholder="搜索前沿药物 · 如 乌帕替尼 / 喜达诺"
-            class="w-full bg-white text-slate-900 text-[13.5px] font-medium rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-stone-200 focus:border-emerald-500/40 focus:shadow-[0_8px_24px_-12px_rgba(16,185,129,0.25)] transition-all placeholder-slate-400 shadow-[0_2px_12px_-4px_rgba(15,23,42,0.06)]"
-        >
+        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg">💊</span>
+        <input v-model="keyword" type="text" placeholder="搜索药名、商品名、用药类型" class="w-full bg-white border border-stone-200 rounded-2xl py-3.5 pl-11 pr-4 text-[13.5px] font-bold outline-none focus:border-emerald-200 shadow-sm placeholder-slate-400">
       </div>
 
-      <!-- 分类标签 -->
-      <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 -mx-5 px-5">
-        <button
-            v-for="cat in categories"
-            :key="cat.key"
-            @click="activeCategory = cat.key"
-            :class="[
-              'px-4 py-2 rounded-full text-[12px] font-black whitespace-nowrap transition-all border shrink-0 active:scale-95',
-              activeCategory === cat.key
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-500 shadow-[0_8px_20px_-8px_rgba(16,185,129,0.5)]'
-                : 'bg-white text-slate-500 border-stone-200 hover:border-stone-300 hover:text-slate-700'
-            ]"
-        >
-          <i :class="cat.icon" class="mr-1"></i> {{ cat.label }}
+      <div class="flex gap-2 overflow-x-auto no-scrollbar -mx-5 px-5 py-1">
+        <button v-for="category in categories" :key="category.key" @click="activeCategory = category.key" :class="activeCategory === category.key ? 'bg-slate-950 text-white border-slate-950' : 'bg-white text-slate-500 border-stone-200'" class="shrink-0 px-4 py-2 rounded-full border text-[12px] font-black active:scale-95 transition-all">
+          {{ category.label }}
         </button>
       </div>
 
-      <!-- 列表标题 -->
-      <div class="flex items-end justify-between pt-2 px-1">
-        <div>
-          <h3 class="text-[17px] font-black tracking-tight text-slate-900">药物清单</h3>
-          <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ filteredDrugs.length }} 款前沿药物 · 病友实测数据</p>
-        </div>
-      </div>
-
-      <!-- 空状态 -->
-      <div v-if="filteredDrugs.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-300">
-        <div class="w-16 h-16 mb-3 rounded-2xl bg-white border border-stone-200 flex items-center justify-center">
-          <i class="ri-capsule-line text-2xl"></i>
-        </div>
-        <p class="text-[13px] font-medium text-slate-400">暂无对应前沿药效情报</p>
-      </div>
-
-      <!-- 药物卡片 -->
-      <div v-else class="space-y-3">
-        <article
-            v-for="drug in filteredDrugs"
-            :key="drug.id"
-            @click="openDetail(drug)"
-            class="group relative overflow-hidden bg-white rounded-[24px] p-5 border border-stone-100 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_32px_-12px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-300 cursor-pointer"
-        >
-          <div class="absolute -top-12 -right-12 w-32 h-32 bg-emerald-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
-
-          <div class="relative flex justify-between items-start gap-4">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-1.5 mb-2 flex-wrap">
-                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  {{ drug.typeLabel }}
-                </span>
-                <span v-if="drug.tag" class="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-50 text-slate-600 border border-slate-100">
-                  {{ drug.tag }}
-                </span>
-              </div>
-              <h3 class="text-[16px] font-black text-slate-900 tracking-tight leading-snug group-hover:text-emerald-600 transition-colors line-clamp-1">
-                {{ drug.name }}
-              </h3>
-              <p class="text-[11.5px] text-slate-400 mt-1 font-medium">{{ drug.company }}</p>
+      <section v-if="filteredDrugs.length" class="space-y-3">
+        <article v-for="drug in filteredDrugs" :key="drug.id" @click="openDetail(drug)" class="bg-white border border-stone-100 rounded-[26px] p-4 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.25)] active:scale-[0.99] transition-all">
+          <div class="flex items-start gap-3">
+            <button v-if="drug.coverImage || drug.images.length" @click.stop="previewImages(drug.images.length ? drug.images : [drug.coverImage])" class="shrink-0 w-[74px] h-[74px] rounded-[22px] overflow-hidden bg-stone-100 border border-stone-100">
+              <img :src="drug.coverImage || drug.images[0]" class="w-full h-full object-cover">
+            </button>
+            <div v-else class="shrink-0 w-[74px] h-[74px] rounded-[22px] bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 flex items-center justify-center text-3xl">
+              {{ drug.icon || '💊' }}
             </div>
 
-            <div class="flex gap-3 shrink-0 bg-stone-50/80 px-3 py-2 rounded-2xl border border-stone-100">
-              <div class="text-center">
-                <p class="text-[9px] font-black text-slate-400 tracking-widest uppercase">响应率</p>
-                <p class="text-[15px] font-black text-emerald-600 mt-0.5 leading-none tracking-tighter">{{ drug.responseRate }}%</p>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 mb-2">
+                <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black">{{ drug.typeLabel || '药物' }}</span>
+                <span v-if="drug.tag" class="px-2 py-0.5 rounded-md bg-stone-50 text-slate-500 border border-stone-100 text-[10px] font-black">{{ drug.tag }}</span>
               </div>
-              <div class="w-px h-8 bg-stone-200 self-center"></div>
-              <div class="text-center">
-                <p class="text-[9px] font-black text-slate-400 tracking-widest uppercase">安全度</p>
-                <p class="text-[15px] font-black text-blue-600 mt-0.5 leading-none tracking-tighter">{{ drug.safetyRate }}%</p>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="text-[16px] font-black tracking-tight leading-snug truncate">{{ drug.name }}</h3>
+                  <p class="text-[11.5px] text-slate-400 font-bold mt-1 truncate">{{ drug.company || '来源待补充' }}</p>
+                </div>
+                <div class="shrink-0 text-right">
+                  <p class="text-[20px] font-black text-slate-950 leading-none">{{ drug.reviewCount || 0 }}</p>
+                  <p class="text-[10px] text-slate-400 font-black mt-1">条记录</p>
+                </div>
+              </div>
+              <p class="mt-3 text-[12px] text-slate-600 leading-relaxed bg-stone-50/80 border border-stone-100 rounded-2xl p-3 line-clamp-2">
+                {{ drug.desc || drug.description || '还没有足够病友记录，等你来补第一条。' }}
+              </p>
+              <div class="flex flex-wrap gap-1.5 mt-3">
+                <span v-for="tag in drug.tags.slice(0, 3)" :key="tag" class="px-2 py-1 rounded-md bg-white border border-stone-100 text-[10px] font-bold text-slate-500"># {{ tag }}</span>
               </div>
             </div>
-          </div>
-
-          <p class="text-[12px] text-slate-600 mt-3 line-clamp-2 leading-relaxed bg-stone-50/60 p-3 rounded-xl border border-stone-100 font-medium">
-            {{ drug.desc }}
-          </p>
-
-          <div class="flex justify-between items-center mt-3">
-            <div class="flex flex-wrap gap-1">
-              <span v-for="t in drug.tags.slice(0, 2)" :key="t" class="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-500 border border-slate-100 font-bold">
-                # {{ t }}
-              </span>
-            </div>
-            <span class="text-[11px] font-black text-emerald-600 group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
-              实战详情 <i class="ri-arrow-right-s-line text-base"></i>
-            </span>
           </div>
         </article>
-      </div>
+      </section>
 
+      <section v-else class="rounded-[28px] bg-white border border-stone-100 p-8 text-center">
+        <div class="w-14 h-14 rounded-2xl bg-stone-50 text-slate-400 flex items-center justify-center mx-auto mb-3">
+          <i class="ri-capsule-line text-2xl"></i>
+        </div>
+        <p class="text-[14px] font-black text-slate-700">没找到这款药</p>
+        <button @click="prefillDrugFromSearch" class="mt-4 px-5 py-3 rounded-2xl bg-slate-950 text-white text-[12px] font-black active:scale-95 transition-all">补充这款药</button>
+      </section>
     </main>
 
-    <!-- 详情抽屉 -->
     <div v-if="showDetail && selectedDrug" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div @click="showDetail = false" class="absolute inset-0 bg-slate-900/40 backdrop-blur-md"></div>
-
-      <div class="bg-[#FBF9F5] w-full sm:w-[500px] h-[92vh] sm:h-[88vh] sm:rounded-[32px] rounded-t-[32px] relative z-10 animate-slide-up shadow-2xl flex flex-col overflow-hidden">
-
-        <!-- 抓手 -->
-        <div class="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-300 rounded-full z-20"></div>
-
-        <!-- 详情页顶 -->
-        <header class="px-5 pt-7 pb-4 border-b border-stone-100 bg-[#FBF9F5]/95 backdrop-blur shrink-0 flex justify-between items-start z-10">
-          <div class="min-w-0 pr-3">
-            <span class="text-[10px] font-black tracking-[0.25em] uppercase text-emerald-600">{{ selectedDrug.typeLabel }}</span>
-            <h3 class="text-[19px] font-black text-slate-900 mt-1 tracking-tight leading-tight">{{ selectedDrug.name }}</h3>
+      <div class="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" @click="closeDetail"></div>
+      <div class="relative z-10 w-full sm:w-[500px] h-[92vh] sm:h-[88vh] rounded-t-[34px] sm:rounded-[34px] bg-[#F8F6F1] shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+        <div class="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-stone-300"></div>
+        <header class="px-5 pt-7 pb-4 bg-[#F8F6F1]/95 border-b border-stone-200/70 flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-[10px] font-black tracking-[0.18em] text-emerald-600">{{ selectedDrug.typeLabel || '用药记录' }}</p>
+            <h2 class="text-[20px] font-black tracking-tight leading-tight mt-1">{{ selectedDrug.name }}</h2>
+            <p class="text-[11.5px] text-slate-400 font-bold mt-1">{{ selectedDrug.company || '来源待补充' }}</p>
           </div>
-          <button @click="showDetail = false" class="w-9 h-9 rounded-full bg-white border border-stone-200 hover:bg-stone-100 text-slate-500 flex items-center justify-center transition-all active:scale-90 shrink-0">
-            <i class="ri-close-line text-lg"></i>
-          </button>
+          <div class="flex items-center gap-1 shrink-0">
+            <template v-if="canManageDrug(selectedDrug)">
+              <button @click.stop="openEditDrug(selectedDrug)" class="w-9 h-9 rounded-full bg-white border border-stone-200 text-slate-500 flex items-center justify-center active:scale-95 transition-all">
+                <i class="ri-edit-line text-lg"></i>
+              </button>
+              <button @click.stop="requestDeleteDrug(selectedDrug)" class="w-9 h-9 rounded-full bg-white border border-stone-200 text-rose-500 flex items-center justify-center active:scale-95 transition-all">
+                <i class="ri-delete-bin-line text-lg"></i>
+              </button>
+            </template>
+            <button @click="closeDetail" class="w-9 h-9 rounded-full bg-white border border-stone-200 text-slate-500 flex items-center justify-center active:scale-95 transition-all">
+              <i class="ri-close-line text-lg"></i>
+            </button>
+          </div>
         </header>
 
-        <!-- 详情内容 -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar px-5 py-5 space-y-4 pb-28">
-
-          <!-- 指标双星盘 -->
-          <div class="grid grid-cols-2 gap-3">
-            <div class="bg-white rounded-2xl p-4 border border-stone-100 text-center relative overflow-hidden">
-              <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-100/60 rounded-full blur-xl"></div>
-              <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase relative">临床有效应率</p>
-              <p class="text-[32px] font-black text-emerald-600 mt-1.5 tracking-tighter leading-none relative">{{ selectedDrug.responseRate }}%</p>
-              <p class="text-[10px] text-slate-400 mt-2 font-medium relative">12周临床缓解</p>
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4 pb-6">
+          <section class="rounded-[24px] bg-white border border-stone-100 p-4 space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-[13px] font-black text-slate-900">基础信息</h3>
+              <span class="text-[10px] font-black text-slate-400">{{ selectedDrug.reviewCount || 0 }} 条记录</span>
             </div>
-            <div class="bg-white rounded-2xl p-4 border border-stone-100 text-center relative overflow-hidden">
-              <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-blue-100/60 rounded-full blur-xl"></div>
-              <p class="text-[10px] font-black text-slate-400 tracking-widest uppercase relative">长期安全指数</p>
-              <p class="text-[32px] font-black text-blue-600 mt-1.5 tracking-tighter leading-none relative">{{ selectedDrug.safetyRate }}%</p>
-              <p class="text-[10px] text-slate-400 mt-2 font-medium relative">无严重不良反应</p>
+            <p class="text-[12.5px] text-slate-600 leading-relaxed">{{ selectedDrug.desc || selectedDrug.description || '暂无说明，先看病友记录。' }}</p>
+            <div v-if="selectedDrug.mechanism" class="rounded-2xl bg-emerald-50/70 border border-emerald-100 p-3 text-[12px] text-emerald-900 leading-relaxed">
+              {{ selectedDrug.mechanism }}
             </div>
-          </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-bold">
+              <div class="rounded-2xl bg-stone-50 p-3 text-slate-500">参考原价：<span class="text-slate-900">{{ formatPrice(selectedDrug.priceOriginal) }}</span></div>
+              <div class="rounded-2xl bg-stone-50 p-3 text-slate-500">医保后：<span class="text-slate-900">{{ formatPrice(selectedDrug.priceReimbursed) }}</span></div>
+            </div>
+            <div v-if="selectedDrug.sideEffects" class="rounded-2xl bg-rose-50 border border-rose-100 p-3 text-[12px] text-rose-800 leading-relaxed">
+              {{ selectedDrug.sideEffects }}
+            </div>
+            <div v-if="selectedDrug.images.length" class="grid grid-cols-3 gap-2">
+              <button v-for="(image, index) in selectedDrug.images.slice(0, 6)" :key="image" @click="previewImages(selectedDrug.images, index)" class="aspect-square rounded-2xl overflow-hidden bg-stone-100">
+                <img :src="image" class="w-full h-full object-cover">
+              </button>
+            </div>
+          </section>
 
-          <!-- 靶点机制 -->
-          <div class="bg-white rounded-2xl p-4 border border-stone-100 space-y-2">
-            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <i class="ri-pulse-line text-emerald-600 text-sm"></i> 作用机制与靶点
-            </h4>
-            <p class="text-[13.5px] font-black text-slate-900 tracking-tight">{{ selectedDrug.tags[0] }}</p>
-            <p class="text-[12px] text-slate-500 leading-relaxed">{{ selectedDrug.mechanism }}</p>
-          </div>
-
-          <!-- 价格与医保 -->
-          <div class="bg-white rounded-2xl p-4 border border-stone-100 space-y-3">
-            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <i class="ri-bank-card-2-line text-emerald-600 text-sm"></i> 参考价格与医保
-            </h4>
-            <div class="grid grid-cols-2 gap-4 text-[12px]">
-              <div class="bg-stone-50 rounded-xl p-3">
-                <p class="text-slate-400 font-black tracking-widest uppercase text-[9.5px]">原始单价</p>
-                <p class="text-slate-900 font-bold mt-1 text-[13px]">{{ selectedDrug.priceOriginal }}</p>
+          <section class="rounded-[26px] bg-white border border-emerald-100 p-4 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-[13px] font-black text-slate-900">写一条用药记录</h3>
+                <p class="text-[10px] text-slate-400 font-bold mt-1">效果、耐受、剂量和图片一起留档</p>
               </div>
-              <div class="bg-emerald-50/80 rounded-xl p-3 border border-emerald-100/50">
-                <p class="text-emerald-700 font-black tracking-widest uppercase text-[9.5px]">医保后</p>
-                <p class="text-emerald-700 font-black mt-1 text-[13px]">{{ selectedDrug.priceReimbursed }}</p>
+              <button @click="drugReviewForm.isAnonymous = drugReviewForm.isAnonymous ? 0 : 1" :class="drugReviewForm.isAnonymous ? 'bg-slate-950 text-white' : 'bg-stone-50 text-slate-500'" class="px-3 py-1.5 rounded-full text-[10px] font-black active:scale-95 transition-all">
+                {{ drugReviewForm.isAnonymous ? '匿名' : '实名' }}
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              <p class="text-[10px] font-black text-slate-400">身体反馈</p>
+              <div class="grid grid-cols-3 gap-2">
+                <button v-for="option in drugFeelingOptions" :key="option.value" @click="drugReviewForm.effectScore = option.value" :class="drugReviewForm.effectScore === option.value ? option.active : 'bg-stone-50 text-slate-500 border-stone-100'" class="py-2.5 rounded-2xl border text-[11px] font-black active:scale-95 transition-all">
+                  {{ option.label }}
+                </button>
               </div>
             </div>
-            <p class="text-[10.5px] text-slate-400 leading-relaxed border-t border-stone-100 pt-2.5 font-medium">
-              * 各地医保双通道药店具体报销政策有差异，可在"医保地图"查看专属城市详情。
-            </p>
-          </div>
 
-          <!-- 副作用 -->
-          <div class="bg-rose-50/60 rounded-2xl p-4 border border-rose-100 space-y-2">
-            <h4 class="text-[10px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-1.5">
-              <i class="ri-error-warning-line text-sm"></i> 不良反应与红线
-            </h4>
-            <p class="text-[12px] text-rose-900/80 leading-relaxed font-medium">{{ selectedDrug.sideEffects }}</p>
-          </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-2">
+                <p class="text-[10px] font-black text-slate-400">耐受感</p>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button v-for="option in drugSafetyOptions" :key="option.value" @click="drugReviewForm.safetyScore = option.value" :class="drugReviewForm.safetyScore === option.value ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-stone-50 text-slate-500 border-stone-100'" class="py-2 rounded-xl border text-[10px] font-black active:scale-95 transition-all">
+                    {{ option.label }}
+                  </button>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <p class="text-[10px] font-black text-slate-400">副作用</p>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button v-for="option in sideEffectOptions" :key="option.value" @click="drugReviewForm.sideEffectLevel = option.value" :class="drugReviewForm.sideEffectLevel === option.value ? 'bg-rose-500 text-white border-rose-500' : 'bg-stone-50 text-slate-500 border-stone-100'" class="py-2 rounded-xl border text-[10px] font-black active:scale-95 transition-all">
+                    {{ option.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
 
-          <!-- 病友吐槽墙 -->
-          <div class="space-y-2.5">
-            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 px-1">
-              <i class="ri-chat-quote-line text-emerald-600 text-sm"></i> 病友吐槽墙 · {{ selectedDrug.reviews.length }} 条真实反馈
-            </h4>
-            <div class="space-y-2.5">
-              <div v-for="rev in selectedDrug.reviews" :key="rev.id" class="bg-white p-4 rounded-2xl border border-stone-100">
-                <div class="flex justify-between items-center mb-2">
-                  <div class="flex items-center gap-2">
-                    <img :src="avatarOf('', rev.user)" class="w-7 h-7 rounded-full bg-stone-50 border border-stone-100 shrink-0">
-                    <span class="text-[12.5px] font-black text-slate-900 tracking-tight">{{ rev.user }}</span>
+            <div class="grid grid-cols-2 gap-2">
+              <input v-model="drugReviewForm.usageDuration" placeholder="用了多久" class="rounded-2xl bg-stone-50 border border-stone-100 px-3 py-3 text-[12px] font-bold outline-none focus:border-emerald-200">
+              <input v-model="drugReviewForm.dosage" placeholder="剂量 / 频率" class="rounded-2xl bg-stone-50 border border-stone-100 px-3 py-3 text-[12px] font-bold outline-none focus:border-emerald-200">
+            </div>
+            <input v-model="drugReviewForm.priceNote" placeholder="价格 / 医保 / 购药渠道" class="w-full rounded-2xl bg-stone-50 border border-stone-100 px-3 py-3 text-[12px] font-bold outline-none focus:border-emerald-200">
+            <textarea v-model="drugReviewForm.content" rows="4" placeholder="真实写：有没有起效、哪里不舒服、多久见效、医生怎么说、踩了什么坑。" class="w-full rounded-2xl bg-stone-50 border border-stone-100 px-3.5 py-3 text-[12.5px] font-medium outline-none resize-none focus:border-emerald-200"></textarea>
+
+            <div class="rounded-2xl bg-stone-50 border border-stone-100 p-3">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-[11px] font-black text-slate-600">药盒 / 处方 / 缴费图</p>
+                <button @click="pickDrugReviewImages" :disabled="isUploadingDrugReviewImages" class="text-[11px] font-black text-emerald-600 disabled:text-slate-300">
+                  {{ isUploadingDrugReviewImages ? '上传中…' : '上传图片' }}
+                </button>
+              </div>
+              <input id="drug-review-image-input" type="file" accept="image/*" multiple class="hidden" @change="uploadDrugReviewImages">
+              <div v-if="drugReviewForm.images.length" class="grid grid-cols-4 gap-2">
+                <div v-for="(image, index) in drugReviewForm.images" :key="image" class="relative aspect-square rounded-xl overflow-hidden bg-white">
+                  <img :src="image" class="w-full h-full object-cover">
+                  <button @click="removeImage(drugReviewForm, index)" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-950/70 text-white text-[10px] flex items-center justify-center">
+                    <i class="ri-close-line"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button @click="submitDrugReview" :disabled="isDrugReviewSubmitting" class="w-full py-3.5 rounded-2xl bg-slate-950 text-white text-[13px] font-black active:scale-95 transition-all disabled:bg-slate-400">
+              {{ isDrugReviewSubmitting ? '发布中...' : '发布用药记录' }}
+            </button>
+          </section>
+
+          <section class="space-y-2.5">
+            <h3 class="text-[13px] font-black text-slate-900 px-1">病友记录 · {{ drugReviews.length }}</h3>
+            <div v-if="isDrugReviewsLoading" class="rounded-2xl bg-white border border-stone-100 p-5 text-center text-[12px] text-slate-400 font-bold">加载中…</div>
+            <div v-else-if="drugReviews.length" class="space-y-2.5">
+              <article v-for="review in drugReviews" :key="review.id" class="rounded-[22px] bg-white border border-stone-100 p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <img :src="avatarOf(review.userAvatar, review.userId)" class="w-8 h-8 rounded-full bg-stone-100 border border-white object-cover">
+                    <div class="min-w-0">
+                      <p class="text-[12.5px] font-black truncate">{{ review.isAnonymous ? '匿名病友' : (review.userName || '病友') }}</p>
+                      <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ drugFeelingLabel(review.effectScore) }}<span v-if="review.usageDuration"> · {{ review.usageDuration }}</span></p>
+                    </div>
                   </div>
-                  <span class="text-[10.5px] text-slate-400 font-medium">{{ rev.date }}</span>
+                  <button v-if="canDeleteReview(review)" @click="deleteDrugReview(review)" class="text-slate-300 hover:text-rose-500 active:scale-95">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
                 </div>
-                <p class="text-[12px] text-slate-600 leading-relaxed font-medium pl-[36px]">
-                  "{{ rev.content }}"
-                </p>
-                <div class="flex gap-0.5 mt-2 text-amber-500 text-[11px] pl-[36px]">
-                  <i v-for="star in rev.rating" :key="star" class="ri-star-fill"></i>
+                <p class="text-[12.5px] text-slate-600 leading-relaxed mt-3">{{ review.content }}</p>
+                <div v-if="review.images.length" class="grid grid-cols-4 gap-2 mt-3">
+                  <button v-for="(image, index) in review.images.slice(0, 4)" :key="image" @click="previewImages(review.images, index)" class="aspect-square rounded-xl overflow-hidden bg-stone-100">
+                    <img :src="image" class="w-full h-full object-cover">
+                  </button>
                 </div>
-              </div>
+                <div class="flex flex-wrap gap-1.5 mt-3">
+                  <span v-if="review.dosage" class="px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold">{{ review.dosage }}</span>
+                  <span v-if="review.priceNote" class="px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold">{{ review.priceNote }}</span>
+                  <span class="px-2 py-1 rounded-md bg-stone-50 text-slate-500 text-[10px] font-bold">耐受 {{ drugSafetyLabel(review.safetyScore) }}</span>
+                  <span class="px-2 py-1 rounded-md bg-stone-50 text-slate-500 text-[10px] font-bold">副作用 {{ sideEffectLabel(review.sideEffectLevel) }}</span>
+                </div>
+              </article>
             </div>
-          </div>
-
-        </div>
-
-        <!-- 底部 CTA -->
-        <div class="absolute bottom-0 w-full px-4 py-3 border-t border-stone-100 bg-white/95 backdrop-blur-xl z-20 flex gap-3">
-          <button
-              v-if="isInCabinet(selectedDrug.id)"
-              @click="removeFromCabinet(selectedDrug.id)"
-              class="flex-1 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-black py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 text-[13.5px] shadow-[0_8px_20px_-6px_rgba(244,63,94,0.4)]"
-          >
-            <i class="ri-delete-bin-line text-base"></i> 从药箱卸载
-          </button>
-          <button
-              v-else
-              @click="openAddToCabinet(selectedDrug)"
-              class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-95 text-[13.5px] shadow-[0_8px_20px_-6px_rgba(16,185,129,0.4)]"
-          >
-            <i class="ri-add-circle-fill text-base"></i> 纳入药箱闹钟
-          </button>
+            <div v-else class="rounded-2xl bg-white border border-stone-100 p-6 text-center text-[12px] text-slate-400 font-bold">暂无记录，第一条很重要。</div>
+          </section>
         </div>
 
       </div>
     </div>
 
-    <!-- 配置药箱抽屉 -->
-    <van-popup
-        v-model:show="showCabinetConfig"
-        position="bottom"
-        round
-        teleport="body"
-        class="bg-[#FBF9F5] text-slate-900 pb-[env(safe-area-inset-bottom)]"
-    >
-      <div class="p-6 space-y-5 bg-[#FBF9F5] rounded-t-3xl">
-        <div class="flex justify-between items-center">
+    <div v-if="showCreateDrug" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+      <div class="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" @click="showCreateDrug = false"></div>
+      <div class="relative z-10 w-full sm:w-[500px] max-h-[88vh] rounded-t-[30px] sm:rounded-[30px] bg-[#F8F6F1] p-5 animate-slide-up overflow-y-auto custom-scrollbar">
+        <div class="flex items-center justify-between mb-4">
           <div>
-            <div class="text-[10px] font-black text-emerald-600 tracking-[0.18em] mb-1">药箱设置</div>
-            <h3 class="text-[18px] font-black text-slate-900 tracking-tight">配置药箱守护</h3>
+            <p class="text-[10px] font-black tracking-[0.18em] text-emerald-600">补充药品</p>
+            <h3 class="text-[19px] font-black mt-1">{{ editingDrugId ? '编辑药品档案' : '添加一款药' }}</h3>
+            <p class="text-[11px] text-slate-400 font-medium mt-0.5">填药名选个类就能存，其余知道再补</p>
           </div>
-          <button @click="showCabinetConfig = false" class="w-9 h-9 rounded-full bg-white border border-stone-200 text-slate-500 hover:bg-stone-100 flex items-center justify-center active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
+          <button @click="showCreateDrug = false" class="w-9 h-9 rounded-full bg-white border border-stone-200 text-slate-500 flex items-center justify-center">
+            <i class="ri-close-line"></i>
+          </button>
         </div>
 
-        <div class="space-y-4" v-if="configDrug">
-          <div class="bg-white p-4 rounded-2xl border border-stone-100">
-            <p class="text-[10px] text-slate-400 font-black tracking-widest">已选药物</p>
-            <p class="text-[14px] font-black text-emerald-700 mt-1.5 tracking-tight">{{ configDrug.name }}</p>
-          </div>
+        <div class="space-y-3">
+          <!-- 必填 · 极简 -->
+          <section class="rounded-[24px] bg-white border border-stone-100 p-4 space-y-3.5">
+            <input v-model="newDrug.name" placeholder="药名 / 商品名（必填）" class="w-full rounded-2xl bg-stone-50 border border-stone-100 px-4 py-3.5 text-[14px] font-bold outline-none focus:border-emerald-200 focus:bg-white transition-all">
+            <div>
+              <p class="text-[11px] font-bold text-slate-400 mb-2">药物分类</p>
+              <div class="flex flex-wrap gap-1.5">
+                <button v-for="option in drugTypeOptions" :key="option.key" @click="newDrug.type = option.key; newDrug.typeLabel = option.label" :class="newDrug.type === option.key ? 'bg-slate-950 text-white border-slate-950' : 'bg-stone-50 text-slate-500 border-stone-100'" class="px-3.5 py-1.5 rounded-full border text-[12px] font-bold active:scale-95 transition-all">{{ option.label }}</button>
+              </div>
+            </div>
+            <textarea v-model="newDrug.description" rows="2" placeholder="一句话说明：用于什么、适合什么阶段（推荐填）" class="w-full rounded-2xl bg-stone-50 border border-stone-100 px-4 py-3 text-[13px] font-medium outline-none resize-none focus:border-emerald-200 focus:bg-white transition-all"></textarea>
+          </section>
 
-          <div>
-            <label class="text-[10px] font-black text-slate-500 tracking-widest uppercase block mb-2">服用剂量描述</label>
-            <input
-                v-model="cabinetForm.dosage"
-                type="text"
-                placeholder="例如: 每次1片 (15mg)，温水送服"
-                class="w-full bg-white border border-stone-200 rounded-xl px-3.5 py-3 text-[13.5px] text-slate-900 font-medium outline-none focus:border-emerald-500/40 focus:shadow-sm transition-all placeholder-slate-300"
-            >
-          </div>
+          <!-- 展开更多（全部可选）-->
+          <button @click="showMoreDrugFields = !showMoreDrugFields" class="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-white border border-stone-100 text-[12px] font-black text-slate-500 active:scale-95 transition-all">
+            <i :class="showMoreDrugFields ? 'ri-subtract-line' : 'ri-add-line'"></i>
+            {{ showMoreDrugFields ? '收起补充信息' : '继续补充价格 / 标签 / 说明（可选）' }}
+          </button>
 
-          <div>
-            <label class="text-[10px] font-black text-slate-500 tracking-widest uppercase block mb-2">打卡提醒频次</label>
-            <div class="grid grid-cols-3 gap-2">
-              <button
-                  v-for="freq in ['每日一次', '每周一次', '每两周一次', '每四周一次', '每八周一次', '自定义']"
-                  :key="freq"
-                  @click="cabinetForm.frequency = freq"
-                  :class="[
-                    'py-2.5 px-3 rounded-xl border text-[11.5px] font-black transition-all active:scale-95',
-                    cabinetForm.frequency === freq
-                      ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
-                      : 'bg-white border-stone-200 text-slate-500 hover:border-stone-300'
-                  ]"
-              >
-                {{ freq }}
+          <template v-if="showMoreDrugFields">
+          <section class="rounded-[24px] bg-white border border-stone-100 p-4 space-y-3.5">
+            <p class="text-[11px] font-black text-slate-500">价格与来源</p>
+            <div class="grid grid-cols-2 gap-2">
+              <input v-model="newDrug.priceOriginal" inputmode="numeric" placeholder="参考原价" class="rounded-2xl bg-stone-50 border border-stone-100 px-4 py-3 text-[13px] font-bold outline-none focus:border-emerald-200">
+              <input v-model="newDrug.priceReimbursed" inputmode="numeric" placeholder="医保后价格" class="rounded-2xl bg-stone-50 border border-stone-100 px-4 py-3 text-[13px] font-bold outline-none focus:border-emerald-200">
+            </div>
+            <input v-model="newDrug.company" placeholder="厂家 / 来源（可选）" class="w-full rounded-2xl bg-stone-50 border border-stone-100 px-4 py-3 text-[13px] font-bold outline-none focus:border-emerald-200">
+            <div>
+              <p class="text-[11px] font-bold text-slate-400 mb-1.5">标签（可多选）</p>
+              <div class="flex flex-wrap gap-1.5">
+                <button v-for="t in drugTagOptions" :key="t" @click="toggleDrugTag(t)" :class="drugChip(hasDrugTag(t))" class="px-3.5 py-1.5 rounded-full border text-[12px] font-bold active:scale-95 transition-all">{{ t }}</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="rounded-[24px] bg-white border border-stone-100 p-4 space-y-3">
+            <p class="text-[11px] font-black text-slate-500">说明与注意（可选）</p>
+            <textarea v-model="newDrug.mechanism" rows="2" placeholder="作用理解：比如抗 TNF、肠道选择性、营养支持。" class="w-full rounded-2xl bg-stone-50 border border-stone-100 px-4 py-3 text-[13px] font-medium outline-none resize-none focus:border-emerald-200"></textarea>
+            <textarea v-model="newDrug.sideEffects" rows="2" placeholder="常见不适 / 需要提前知道的坑。" class="w-full rounded-2xl bg-rose-50 border border-rose-100 px-4 py-3 text-[13px] font-medium outline-none resize-none focus:border-rose-200"></textarea>
+          </section>
+
+          <section class="rounded-[24px] bg-white border border-stone-100 p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <p class="text-[11px] font-black text-slate-500">药盒 / 说明书图片</p>
+              <button @click="pickDrugImages" :disabled="isUploadingDrugImages" class="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-black disabled:text-slate-300">
+                {{ isUploadingDrugImages ? '上传中…' : '上传' }}
               </button>
             </div>
-          </div>
+            <input id="drug-create-image-input" type="file" accept="image/*" multiple class="hidden" @change="uploadDrugImages">
+            <div v-if="newDrug.images.length" class="grid grid-cols-4 gap-2">
+              <div v-for="(image, index) in newDrug.images" :key="image" class="relative aspect-square rounded-xl overflow-hidden bg-stone-100">
+                <img :src="image" class="w-full h-full object-cover">
+                <button @click="removeImage(newDrug, index)" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-950/70 text-white text-[10px] flex items-center justify-center">
+                  <i class="ri-close-line"></i>
+                </button>
+              </div>
+            </div>
+            <button v-else @click="pickDrugImages" class="w-full py-5 rounded-2xl border border-dashed border-stone-300 bg-stone-50 text-[12px] font-black text-slate-400">
+              <i class="ri-image-add-line mr-1"></i> 添加图片
+            </button>
+          </section>
+          </template>
 
-          <div>
-            <label class="text-[10px] font-black text-slate-500 tracking-widest uppercase block mb-2">提醒打卡时刻</label>
-            <input
-                v-model="cabinetForm.time"
-                type="time"
-                class="w-full bg-white border border-stone-200 rounded-xl px-3.5 py-3 text-[13.5px] text-slate-900 font-medium outline-none focus:border-emerald-500/40 transition-all"
-            >
-          </div>
-
-          <button
-              @click="confirmAddToCabinet"
-              class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(16,185,129,0.45)] hover:shadow-xl active:scale-[0.98] transition-all text-[14px] flex items-center justify-center gap-2"
-          >
-            <i class="ri-shield-check-line text-lg"></i> 激活药箱协议 · 开启闹钟守护
+          <button @click="requestSubmitDrug" :disabled="isCreatingDrug" class="w-full py-3.5 rounded-2xl bg-slate-950 text-white text-[13px] font-black active:scale-95 transition-all disabled:bg-slate-400">
+            {{ isCreatingDrug ? '保存中...' : (editingDrugId ? '保存修改' : '确认补充') }}
           </button>
         </div>
       </div>
-    </van-popup>
+    </div>
 
-    <!-- 我的药箱 -->
-    <van-popup
-        v-model:show="showCabinet"
-        position="bottom"
-        round
-        teleport="body"
-        class="bg-[#FBF9F5] text-slate-900 pb-[env(safe-area-inset-bottom)]"
-    >
-      <div class="p-6 bg-[#FBF9F5] rounded-t-3xl h-[70vh] flex flex-col">
-        <div class="flex justify-between items-center mb-5 shrink-0">
-          <div>
-            <div class="text-[10px] font-black text-emerald-600 tracking-[0.18em] mb-1">守护药箱</div>
-            <h3 class="text-[19px] font-black text-slate-900 tracking-tight">我的守护药箱</h3>
-            <p class="text-[11px] text-slate-400 mt-1 font-medium">{{ cabinetList.length }} 款药物 · 静默护肠</p>
-          </div>
-          <button @click="showCabinet = false" class="w-9 h-9 rounded-full bg-white border border-stone-200 text-slate-500 hover:bg-stone-100 flex items-center justify-center active:scale-90 transition-all"><i class="ri-close-line text-lg"></i></button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
-          <div v-if="cabinetList.length === 0" class="flex flex-col items-center justify-center h-full text-slate-300">
-            <div class="w-16 h-16 mb-3 rounded-2xl bg-white border border-stone-200 flex items-center justify-center">
-              <i class="ri-inbox-archive-line text-2xl"></i>
-            </div>
-            <p class="text-[13px] font-medium text-slate-400">药箱空空，快去添加吧</p>
-          </div>
-
-          <div
-              v-else
-              v-for="item in cabinetList"
-              :key="item.id"
-              class="bg-white p-4 rounded-2xl border border-stone-100 flex items-start gap-3.5 hover:border-emerald-200 transition-all shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)]"
-          >
-            <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0 border border-emerald-100">
-              <i :class="item.icon || 'ri-capsule-line'"></i>
-            </div>
-
-            <div class="flex-1 min-w-0">
-              <div class="flex justify-between items-start gap-2">
-                <h4 class="text-[14px] font-black text-slate-900 truncate tracking-tight">{{ item.name }}</h4>
-                <button @click="removeFromCabinet(item.id)" class="text-[10.5px] font-black text-rose-500 bg-rose-50 px-2.5 py-1 rounded-md hover:bg-rose-100 transition-colors shrink-0">卸载</button>
-              </div>
-              <p class="text-[11.5px] text-slate-500 mt-1.5 flex items-center gap-1.5 font-medium">
-                <span class="font-black text-slate-400 tracking-wider text-[9.5px]">剂量</span> {{ item.dosage }}
-              </p>
-              <div class="flex items-center gap-2 mt-2.5 border-t border-stone-100 pt-2.5 flex-wrap">
-                <span class="text-[10px] text-slate-600 font-bold bg-stone-50 px-2 py-1 rounded-md border border-stone-100 flex items-center gap-1">
-                  <i class="ri-calendar-todo-line text-emerald-600"></i> {{ item.frequency }}
-                </span>
-                <span class="text-[10px] text-slate-600 font-bold bg-stone-50 px-2 py-1 rounded-md border border-stone-100 flex items-center gap-1">
-                  <i class="ri-alarm-warning-line text-blue-600"></i> {{ item.time }} 提醒
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-stone-100 shrink-0 mt-4">
-          <p class="text-[10.5px] text-slate-400 text-center leading-relaxed font-medium">
-            * 手机将在设定时间派发静默闹钟进行安全打卡，保障抗体血药浓度稳定。
-          </p>
-        </div>
-      </div>
-    </van-popup>
-
+    <SupplementConfirmModal
+      v-model:show="showDrugConfirm"
+      kind="drug"
+      :mode="confirmMode"
+      :submitting="isCreatingDrug"
+      @confirm="handleDrugConfirm"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, ref, reactive, onMounted } from 'vue'
+import { computed, reactive, ref, onMounted } from 'vue'
+import { showConfirmDialog, showFailToast, showImagePreview, showSuccessToast, showToast } from 'vant'
 import http from '@/api/http'
+import { SERVER_DOWN_HINT } from '@/utils/serverHint'
 import { avatarOf } from '@/utils/avatarPool'
+import { useAuth } from '@/components/useAuth'
+import SupplementConfirmModal from '@/components/ui/SupplementConfirmModal.vue'
 
 const emit = defineEmits(['change-tab'])
+const { currentUserId, checkPermission } = useAuth()
 
-// 分类体系
 const categories = [
-  { key: 'all', label: '全部前沿药', icon: 'ri-apps-2-line' },
-  { key: 'targeted', label: '小分子靶向', icon: 'ri-key-line' },
-  { key: 'bio', label: '生物制剂', icon: 'ri-dna-line' },
-  { key: 'immunosuppressant', label: '免疫抑制剂', icon: 'ri-shield-cross-line' },
-  { key: 'anti-inflammatory', label: '基础抗炎', icon: 'ri-first-aid-kit-line' },
-  { key: 'nutrition', label: '肠内营养', icon: 'ri-cup-line' }
+  { key: 'all', label: '全部' },
+  { key: 'bio', label: '生物制剂' },
+  { key: 'targeted', label: '小分子' },
+  { key: 'immunosuppressant', label: '免疫抑制' },
+  { key: 'anti-inflammatory', label: '基础抗炎' },
+  { key: 'nutrition', label: '营养剂' },
+  { key: 'other', label: '其它' }
 ]
+
+const categoryAliases = {
+  bio: ['bio', 'biological'],
+  targeted: ['targeted', 'small_molecule'],
+  'anti-inflammatory': ['anti-inflammatory']
+}
+
+const drugFeelingOptions = [
+  { value: 5, label: '很有用', active: 'bg-emerald-500 text-white border-emerald-500' },
+  { value: 3, label: '说不准', active: 'bg-amber-500 text-white border-amber-500' },
+  { value: 1, label: '不舒服', active: 'bg-rose-500 text-white border-rose-500' }
+]
+
+const drugSafetyOptions = [
+  { value: 5, label: '很稳' },
+  { value: 3, label: '一般' },
+  { value: 1, label: '难受' }
+]
+
+const sideEffectOptions = [
+  { value: 1, label: '轻微' },
+  { value: 3, label: '明显' },
+  { value: 5, label: '严重' }
+]
+
+const drugTypeOptions = categories.filter(category => category.key !== 'all')
 
 const activeCategory = ref('all')
 const keyword = ref('')
 const showDetail = ref(false)
+const showCreateDrug = ref(false)
 const selectedDrug = ref(null)
+const editingDrugId = ref(null)
+const showDrugConfirm = ref(false)
+const confirmMode = ref('create')
+const pendingDrugPassword = ref('')
+const drugDatabase = ref([])
+const drugReviews = ref([])
+const isDrugReviewsLoading = ref(false)
+const isDrugReviewSubmitting = ref(false)
+const isCreatingDrug = ref(false)
+const isUploadingDrugImages = ref(false)
+const isUploadingDrugReviewImages = ref(false)
 
-const showCabinet = ref(false)
-const showCabinetConfig = ref(false)
-const configDrug = ref(null)
-
-const cabinetForm = reactive({
+const drugReviewForm = reactive({
+  effectScore: 3,
+  safetyScore: 3,
+  sideEffectLevel: 1,
+  usageDuration: '',
   dosage: '',
-  frequency: '每日一次',
-  time: '08:00'
+  priceNote: '',
+  content: '',
+  images: [],
+  isAnonymous: 0
 })
 
-const cabinetList = ref([])
+const newDrug = reactive({
+  name: '',
+  type: 'other',
+  typeLabel: '',
+  company: '',
+  tag: '',
+  tagsText: '',
+  description: '',
+  mechanism: '',
+  sideEffects: '',
+  priceOriginal: '',
+  priceReimbursed: '',
+  images: []
+})
+
+// 建档表单：点选式 + 分步折叠
+const showMoreDrugFields = ref(false)
+const drugTagOptions = ['医保覆盖', '需自费', '口服', '针剂', '输注', '起效快', '副作用小', '需冷藏', '院外购买', '院内开药']
+const drugChip = (active) => active
+  ? 'bg-emerald-500 text-white border-emerald-500'
+  : 'bg-stone-50 text-slate-500 border-stone-100'
+const hasDrugTag = (label) => String(newDrug.tagsText || '').split(/[，,\s#]+/).map(s => s.trim()).includes(label)
+const toggleDrugTag = (label) => {
+  const set = new Set(String(newDrug.tagsText || '').split(/[，,\s#]+/).map(s => s.trim()).filter(Boolean))
+  if (set.has(label)) set.delete(label)
+  else set.add(label)
+  newDrug.tagsText = Array.from(set).join(' ')
+}
+
+const safeJson = (value, fallback = []) => {
+  if (!value) return fallback
+  try { return JSON.parse(value) } catch (error) { return fallback }
+}
+
+const normalizeDrug = (drug) => ({
+  ...drug,
+  desc: drug.description || '',
+  tags: Array.isArray(drug.tags) ? drug.tags : safeJson(drug.tagsJson, []),
+  images: Array.isArray(drug.images) ? drug.images : safeJson(drug.imagesJson, []),
+  reviewCount: Number(drug.reviewCount || 0)
+})
+
+const normalizeDrugReview = (review) => ({
+  ...review,
+  images: Array.isArray(review.images) ? review.images : safeJson(review.imagesJson, [])
+})
+
+const formatPrice = (value) => {
+  const amount = Number(value || 0)
+  return amount > 0 ? `¥${amount}` : '待补'
+}
+
+const scoreLabel = (options, value, fallback) => options.find(option => Number(option.value) === Number(value))?.label || fallback
+const drugFeelingLabel = (score) => scoreLabel(drugFeelingOptions, score, '说不准')
+const drugSafetyLabel = (score) => scoreLabel(drugSafetyOptions, score, '一般')
+const sideEffectLabel = (score) => scoreLabel(sideEffectOptions, score, '轻微')
+const drugTypeLabelByKey = (key) => drugTypeOptions.find(option => option.key === key)?.label || '病友补充'
+const parsePrice = (value) => Number.parseInt(String(value || '').replace(/[^\d]/g, ''), 10) || 0
+
+const uploadOneMedia = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await http.post('/upload', formData, { timeout: 120000 })
+  if (res.status === 200 && res.data) return res.data
+  throw new Error(res.message || '上传失败')
+}
+
+const uploadImagesTo = async (event, target, loadingRef, limit = 6) => {
+  const files = Array.from(event.target.files || [])
+  event.target.value = ''
+  if (!files.length) return
+  const remaining = Math.max(0, limit - target.images.length)
+  if (!remaining) return alert(`最多上传 ${limit} 张图片`)
+  loadingRef.value = true
+  try {
+    const results = await Promise.allSettled(files.slice(0, remaining).map(uploadOneMedia))
+    const urls = results.filter(result => result.status === 'fulfilled').map(result => result.value)
+    target.images.push(...urls)
+    if (results.some(result => result.status === 'rejected')) alert('有图片上传失败，已保留成功的')
+  } catch (error) {
+    console.error('图片上传失败', error)
+    alert('图片上传失败，稍后再试')
+  } finally {
+    loadingRef.value = false
+  }
+}
+
+const pickDrugImages = () => document.getElementById('drug-create-image-input')?.click()
+const pickDrugReviewImages = () => document.getElementById('drug-review-image-input')?.click()
+const uploadDrugImages = (event) => uploadImagesTo(event, newDrug, isUploadingDrugImages)
+const uploadDrugReviewImages = (event) => uploadImagesTo(event, drugReviewForm, isUploadingDrugReviewImages)
+const removeImage = (target, index) => target.images.splice(index, 1)
+const previewImages = (images, start = 0) => {
+  if (!images?.length) return
+  showImagePreview({ images, startPosition: start })
+}
+
+const resetNewDrug = () => {
+  editingDrugId.value = null
+  Object.assign(newDrug, {
+    name: '',
+    type: 'other',
+    typeLabel: '',
+    company: '',
+    tag: '',
+    tagsText: '',
+    description: '',
+    mechanism: '',
+    sideEffects: '',
+    priceOriginal: '',
+    priceReimbursed: '',
+    images: []
+  })
+  showMoreDrugFields.value = false
+}
+
+const loadDrugs = async () => {
+  try {
+    const res = await http.get('/drug/list')
+    if (res.status === 200 && Array.isArray(res.data)) {
+      drugDatabase.value = res.data.map(normalizeDrug)
+      return
+    }
+    drugDatabase.value = []
+    showToast({ type: 'fail', message: SERVER_DOWN_HINT })
+  } catch (error) {
+    console.error('药物列表加载失败', error)
+    drugDatabase.value = []
+    showToast({ type: 'fail', message: SERVER_DOWN_HINT })
+  }
+}
+
+const loadCabinet = async () => {
+  try {
+    const res = await http.get('/drug/cabinet')
+    if (res.status === 200) cabinetList.value = res.data || []
+  } catch (error) {
+    console.error('药箱加载失败', error)
+  }
+}
 
 onMounted(async () => {
   try {
-    const drugRes = await http.get('/drug/list')
-    if (drugRes.status === 200) {
-      drugDatabase.value = drugRes.data.map(d => ({
-        ...d,
-        desc: d.description || '',
-        tags: d.tagsJson ? JSON.parse(d.tagsJson) : [],
-        reviews: []
-      }))
-    }
-  } catch (e) {
-    console.error('药物列表加载失败', e)
-  }
-  try {
-    const cabinetRes = await http.get('/drug/cabinet')
-    if (cabinetRes.status === 200) cabinetList.value = cabinetRes.data
-  } catch (e) {
-    console.error('药箱加载失败', e)
+    await loadDrugs()
+    await loadCabinet()
+  } catch (error) {
+    console.error('药物列表加载失败', error)
   }
 })
 
-const isInCabinet = (id) => {
-  return cabinetList.value.some(item => item.id === id)
+const filteredDrugs = computed(() => {
+  let list = drugDatabase.value
+  if (activeCategory.value !== 'all') {
+    const aliases = categoryAliases[activeCategory.value] || [activeCategory.value]
+    list = list.filter(item => aliases.includes(item.type) || String(item.typeLabel || '').includes(drugTypeLabelByKey(activeCategory.value)))
+  }
+  const searchText = keyword.value.trim().toLowerCase()
+  if (searchText) {
+    list = list.filter(item =>
+      [item.name, item.typeLabel, item.company, item.description, item.mechanism, item.sideEffects, ...(item.tags || [])]
+        .filter(Boolean)
+        .some(text => String(text).toLowerCase().includes(searchText))
+    )
+  }
+  return list
+})
+
+const totalDrugReviewCount = computed(() => drugDatabase.value.reduce((sum, item) => sum + Number(item.reviewCount || 0), 0))
+const canDeleteReview = (review) => currentUserId.value > 0 && Number(review?.userId || 0) === currentUserId.value
+const canManageDrug = (drug) => drug && checkPermission(drug.createdBy)
+const currentCabinetItem = computed(() => {
+  if (!selectedDrug.value) return null
+  return cabinetList.value.find(item => item.drugName === selectedDrug.value.name) || null
+})
+
+const resetDrugReviewForm = () => {
+  drugReviewForm.effectScore = 3
+  drugReviewForm.safetyScore = 3
+  drugReviewForm.sideEffectLevel = 1
+  drugReviewForm.usageDuration = ''
+  drugReviewForm.dosage = ''
+  drugReviewForm.priceNote = ''
+  drugReviewForm.content = ''
+  drugReviewForm.images = []
+  drugReviewForm.isAnonymous = 0
+}
+
+const loadDrugReviews = async (drugId) => {
+  isDrugReviewsLoading.value = true
+  try {
+    const res = await http.get(`/drug/${drugId}/reviews`)
+    if (res.status === 200 && Array.isArray(res.data)) {
+      drugReviews.value = res.data.map(normalizeDrugReview)
+      const target = drugDatabase.value.find(item => Number(item.id) === Number(drugId))
+      if (target) target.reviewCount = res.data.length
+      if (selectedDrug.value) selectedDrug.value.reviewCount = res.data.length
+    }
+  } finally {
+    isDrugReviewsLoading.value = false
+  }
+}
+
+const openDetail = async (drug) => {
+  selectedDrug.value = normalizeDrug(drug)
+  drugReviews.value = []
+  resetDrugReviewForm()
+  showDetail.value = true
+  await loadDrugReviews(drug.id)
+}
+
+const closeDetail = () => {
+  showDetail.value = false
+  selectedDrug.value = null
+}
+
+const submitDrugReview = async () => {
+  if (!selectedDrug.value) return
+  const content = drugReviewForm.content.trim()
+  if (!content) return alert('写点真实用药感受再发布')
+  isDrugReviewSubmitting.value = true
+  try {
+    const res = await http.post(`/drug/${selectedDrug.value.id}/reviews`, {
+      ...drugReviewForm,
+      content,
+      imagesJson: JSON.stringify(drugReviewForm.images)
+    })
+    if (res.status === 200) {
+      resetDrugReviewForm()
+      await loadDrugReviews(selectedDrug.value.id)
+    } else {
+      alert(res.message || '发布失败')
+    }
+  } catch (error) {
+    console.error('药品评价发布失败', error)
+    alert('发布失败，稍后再试')
+  } finally {
+    isDrugReviewSubmitting.value = false
+  }
+}
+
+const deleteDrugReview = async (review) => {
+  if (!selectedDrug.value || !review?.id) return
+  if (!confirm('确定删除这条用药记录吗？')) return
+  const res = await http.post(`/drug/${selectedDrug.value.id}/reviews/${review.id}/delete`)
+  if (res.status === 200) await loadDrugReviews(selectedDrug.value.id)
+}
+
+const prefillDrugFromSearch = () => {
+  resetNewDrug()
+  newDrug.name = keyword.value.trim()
+  showCreateDrug.value = true
+}
+
+const fillDrugForm = (drug) => {
+  const normalized = normalizeDrug(drug)
+  editingDrugId.value = normalized.id
+  newDrug.name = normalized.name || ''
+  newDrug.type = normalized.type || 'other'
+  newDrug.typeLabel = normalized.typeLabel || ''
+  newDrug.company = normalized.company || ''
+  newDrug.tag = normalized.tag || ''
+  newDrug.tagsText = (normalized.tags || []).join(' ')
+  newDrug.description = normalized.description || normalized.desc || ''
+  newDrug.mechanism = normalized.mechanism || ''
+  newDrug.sideEffects = normalized.sideEffects || ''
+  newDrug.priceOriginal = normalized.priceOriginal ? String(normalized.priceOriginal) : ''
+  newDrug.priceReimbursed = normalized.priceReimbursed ? String(normalized.priceReimbursed) : ''
+  newDrug.images = [...(normalized.images || [])]
+  showMoreDrugFields.value = Boolean(
+    newDrug.company || newDrug.mechanism || newDrug.sideEffects || newDrug.priceOriginal || newDrug.priceReimbursed || newDrug.images.length
+  )
+}
+
+const openEditDrug = (drug) => {
+  fillDrugForm(drug)
+  showCreateDrug.value = true
+}
+
+const buildDrugPayload = () => {
+  const tags = newDrug.tagsText
+    .split(/[，,\s#]+/)
+    .map(item => item.trim())
+    .filter(Boolean)
+  const typeLabel = newDrug.typeLabel.trim() || drugTypeLabelByKey(newDrug.type)
+  return {
+    name: newDrug.name.trim(),
+    type: newDrug.type || 'other',
+    typeLabel,
+    icon: '💊',
+    tag: newDrug.tag || typeLabel,
+    company: newDrug.company,
+    description: newDrug.description,
+    mechanism: newDrug.mechanism,
+    sideEffects: newDrug.sideEffects,
+    priceOriginal: parsePrice(newDrug.priceOriginal),
+    priceReimbursed: parsePrice(newDrug.priceReimbursed),
+    coverImage: newDrug.images[0] || '',
+    imagesJson: JSON.stringify(newDrug.images),
+    tagsJson: JSON.stringify(tags.length ? tags : [typeLabel])
+  }
+}
+
+const requestSubmitDrug = () => {
+  if (!newDrug.name.trim()) return alert('先写药名')
+  confirmMode.value = editingDrugId.value ? 'edit' : 'create'
+  showDrugConfirm.value = true
+}
+
+const requestDeleteDrug = (drug) => {
+  if (!canManageDrug(drug)) return
+  editingDrugId.value = drug.id
+  confirmMode.value = 'delete'
+  showDrugConfirm.value = true
+}
+
+const handleDrugConfirm = async (password) => {
+  pendingDrugPassword.value = password
+  if (confirmMode.value === 'delete') {
+    await deleteDrug(password)
+    return
+  }
+  await submitDrug(password)
+}
+
+const submitDrug = async (password) => {
+  const name = newDrug.name.trim()
+  if (!name) return alert('先写药名')
+  isCreatingDrug.value = true
+  try {
+    const payload = { ...buildDrugPayload(), password }
+    const isEdit = Boolean(editingDrugId.value)
+    const res = isEdit
+      ? await http.post(`/drug/${editingDrugId.value}/update`, payload)
+      : await http.post('/drug/create', payload)
+    if (res.status === 200 && res.data) {
+      const drug = normalizeDrug(res.data)
+      if (isEdit) {
+        const index = drugDatabase.value.findIndex(item => Number(item.id) === Number(drug.id))
+        if (index >= 0) drugDatabase.value[index] = drug
+        if (selectedDrug.value && Number(selectedDrug.value.id) === Number(drug.id)) {
+          selectedDrug.value = drug
+        }
+      } else {
+        drugDatabase.value.unshift(drug)
+      }
+      showDrugConfirm.value = false
+      showCreateDrug.value = false
+      resetNewDrug()
+      if (!isEdit) await openDetail(drug)
+    } else {
+      alert(res.message || '保存失败')
+    }
+  } catch (error) {
+    console.error('补充药品失败', error)
+    alert('保存失败，稍后再试')
+  } finally {
+    isCreatingDrug.value = false
+  }
+}
+
+const deleteDrug = async (password) => {
+  if (!editingDrugId.value) return
+  isCreatingDrug.value = true
+  try {
+    const res = await http.post(`/drug/${editingDrugId.value}/delete`, { password })
+    if (res.status === 200) {
+      drugDatabase.value = drugDatabase.value.filter(item => Number(item.id) !== Number(editingDrugId.value))
+      showDrugConfirm.value = false
+      closeDetail()
+      resetNewDrug()
+    } else {
+      alert(res.message || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除药品失败', error)
+    alert('删除失败，稍后再试')
+  } finally {
+    isCreatingDrug.value = false
+  }
 }
 
 const openAddToCabinet = (drug) => {
   configDrug.value = drug
-  cabinetForm.dosage = drug.type === 'targeted' ? '每次1片 (15mg)' : (drug.type === 'bio' ? '1支 (80mg/130mg)' : '每次1袋，温水冲服')
-  cabinetForm.frequency = drug.type === 'targeted' ? '每日一次' : (drug.type === 'bio' ? '每八周一次' : '每日两次')
+  cabinetForm.dosage = ''
+  cabinetForm.frequency = '每日一次'
   cabinetForm.time = '08:00'
   showCabinetConfig.value = true
 }
 
 const confirmAddToCabinet = async () => {
-  if (!cabinetForm.dosage) return alert('兄弟，写个剂量呗！')
-  const payload = {
+  if (!configDrug.value) return
+  const res = await http.post('/drug/cabinet/add', {
     drugName: configDrug.value.name,
     drugIcon: configDrug.value.icon,
     dosage: cabinetForm.dosage,
     frequency: cabinetForm.frequency,
     timeOfDay: cabinetForm.time
-  }
-  const res = await http.post('/drug/cabinet/add', payload)
+  })
   if (res.status === 200) {
-    const cabinetRes = await http.get('/drug/cabinet')
-    if (cabinetRes.status === 200) cabinetList.value = cabinetRes.data
+    await loadCabinet()
+    showCabinetConfig.value = false
   }
-  showCabinetConfig.value = false
-  alert(`"${configDrug.value.name}"已纳入闹钟守护，祝你早日红区降绿区！🍃`)
 }
 
 const removeFromCabinet = async (id) => {
-  if (confirm('兄弟，确定要把这个药物从药箱移除，关闭提醒吗？')) {
-    await http.delete(`/drug/cabinet/delete/${id}`)
-    cabinetList.value = cabinetList.value.filter(item => item.id !== id)
-    alert('已成功卸载该守护协议。')
-  }
-}
-
-const drugDatabase = ref([])
-
-const filteredDrugs = computed(() => {
-  let list = drugDatabase.value
-
-  if (activeCategory.value !== 'all') {
-    list = list.filter(d => d.type === activeCategory.value)
-  }
-
-  if (keyword.value.trim()) {
-    const k = keyword.value.toLowerCase().trim()
-    list = list.filter(d =>
-      d.name.toLowerCase().includes(k) ||
-      d.typeLabel.toLowerCase().includes(k) ||
-      d.company.toLowerCase().includes(k) ||
-      d.tags.some(tag => tag.toLowerCase().includes(k))
-    )
-  }
-
-  return list
-})
-
-const openDetail = (drug) => {
-  selectedDrug.value = drug
-  showDetail.value = true
+  if (!confirm('确定移出药箱吗？')) return
+  await http.delete(`/drug/cabinet/delete/${id}`)
+  cabinetList.value = cabinetList.value.filter(item => Number(item.id) !== Number(id))
 }
 </script>
 
 <style scoped>
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 2px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 999px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-.animate-slide-up {
-  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
+.animate-slide-up { animation: slide-up 0.34s cubic-bezier(0.16, 1, 0.3, 1); }
 </style>

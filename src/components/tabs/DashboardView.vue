@@ -13,6 +13,7 @@
           <PolicyMapTab v-else-if="activeTab === 'policy'" />
           <LibraryTab v-else-if="activeTab === 'library'" />
           <ProfileTab v-else-if="activeTab === 'profile'" @change-tab="activeTab = $event" />
+          <HealthDiaryTab v-else-if="activeTab === 'diary'" @change-tab="activeTab = $event" />
           <AdminConsoleTab v-else-if="activeTab === 'admin'" />
           <DrugMapTab v-else-if="activeTab === 'drugmap'" @change-tab="activeTab = $event" />
           <HospitalTab v-else-if="activeTab === 'hospital'" @change-tab="activeTab = $event" />
@@ -74,12 +75,13 @@ const CheckinTab = defineAsyncComponent(() => import('@/components/tabs/CheckinT
 const PolicyMapTab = defineAsyncComponent(() => import('@/components/tabs/PolicyMapTab.vue'))
 const LibraryTab = defineAsyncComponent(() => import('@/components/tabs/LibraryTab.vue'))
 const ProfileTab = defineAsyncComponent(() => import('@/components/tabs/ProfileTab.vue'))
+const HealthDiaryTab = defineAsyncComponent(() => import('@/components/tabs/HealthDiaryTab.vue'))
 const AdminConsoleTab = defineAsyncComponent(() => import('@/components/tabs/AdminConsoleTab.vue'))
 const DrugMapTab = defineAsyncComponent(() => import('@/components/tabs/DrugMapTab.vue'))
 const HospitalTab = defineAsyncComponent(() => import('@/components/tabs/HospitalTab.vue'))
 
 const tabItems = [
-  { name: 'circle', label: '小队', icon: 'ri-team-line', badge: 3 },
+  { name: 'circle', label: '小队', icon: 'ri-team-line' },
   { name: 'checkin', label: '情报', icon: 'ri-sparkling-2-line' },
   { name: 'policy', label: '地图', icon: 'ri-map-pin-2-line' },
   { name: 'library', label: '金库', icon: 'ri-archive-drawer-line' },

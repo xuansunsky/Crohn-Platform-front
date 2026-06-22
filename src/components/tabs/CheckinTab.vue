@@ -14,12 +14,14 @@
 
     <div class="px-4 pb-4">
       <div class="relative">
-        <i class="ri-search-line absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+        <span class="pointer-events-none select-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-7 h-7 rounded-xl bg-blue-50 text-[15px] flex items-center justify-center border border-blue-100/80 shadow-sm">
+          🍜
+        </span>
         <input
             v-model="keyword"
             type="text"
             placeholder="搜品牌或单品"
-            class="w-full bg-white/90 backdrop-blur-xl text-slate-900 text-[13px] font-medium rounded-2xl py-3 pl-10 pr-20 outline-none border border-white shadow-[0_4px_16px_-8px_rgba(15,23,42,0.08)] focus:bg-white focus:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.12)] focus:border-blue-200 transition-all placeholder-slate-400"
+            class="w-full bg-white/90 backdrop-blur-xl text-slate-900 text-[13px] font-medium rounded-2xl py-3 pl-12 pr-20 outline-none border border-white shadow-[0_4px_16px_-8px_rgba(15,23,42,0.08)] focus:bg-white focus:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.12)] focus:border-blue-200 transition-all placeholder-slate-400"
         >
         <button @click="runRadarSearch" class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-[11px] font-black rounded-xl shadow-sm hover:bg-slate-800 active:scale-95 transition-all flex items-center gap-1">
           <i class="ri-radar-line text-[12px]"></i>
@@ -843,6 +845,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http.js'
+import { SERVER_DOWN_HINT } from '@/utils/serverHint'
 import { avatarOf } from '@/utils/avatarPool'
 
 const emit = defineEmits(['change-tab'])
@@ -1075,7 +1078,12 @@ const foodList = ref([])
 const fetchFoodList = async () => {
   try {
     const res = await http.get('/diet/list')
-    const rawData = Array.isArray(res) ? res : (res.data || [])
+    const rawData = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+    if (!rawData.length && res?.status && res.status !== 200) {
+      showToast(SERVER_DOWN_HINT)
+      foodList.value = []
+      return
+    }
 
     foodList.value = rawData.map(dbItem => {
       let currentType = 'warning'
@@ -1105,6 +1113,8 @@ const fetchFoodList = async () => {
     })
   } catch (error) {
     console.error("获取大盘数据失败，兄弟检查下网络：", error)
+    foodList.value = []
+    showToast(SERVER_DOWN_HINT)
   }
 }
 
@@ -1190,7 +1200,8 @@ const handleFileUpload = async (event) => {
 
   try {
     const res = await http.post('/upload', uploadData, {
-      headers: {'Content-Type': 'multipart/form-data'}
+      headers: {'Content-Type': 'multipart/form-data'},
+      timeout: 12000,
     })
 
     formData.value.coverImg = pickUploadUrl(res)

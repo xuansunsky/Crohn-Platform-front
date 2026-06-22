@@ -9,6 +9,10 @@ const keyOf = (myId, mode, type) => {
   return `discovery_${type}_${myId}_${mode}_${todayText()}`
 }
 
+const persistentSeenKeyOf = (myId, mode) => {
+  return `discovery_seen_${myId}_${mode}_all`
+}
+
 const readJson = (key, fallback = []) => {
   try {
     const value = JSON.parse(localStorage.getItem(key) || 'null')
@@ -37,24 +41,48 @@ export const recordDiscoveryGreet = (myId, mode, targetId) => {
   return greets
 }
 
-export const readDiscoverySeenRecords = (myId, mode) => {
-  return readJson(keyOf(myId, mode, 'seen'))
-    .map(item => {
-      if (item && typeof item === 'object') return item
-      const idText = String(item)
-      return {
-        id: idText,
-        name: `编号 ${idText}`,
-        sign: '今天看过的朋友',
-        distance: '',
-        tags: [],
-        avatar: '',
-        requested: false,
-        isFriend: false,
-        seenAt: 0
+const normalizeSeenRecord = (item) => {
+  if (item && typeof item === 'object') return item
+  const idText = String(item)
+  return {
+    id: idText,
+    name: `编号 ${idText}`,
+    sign: '看过的朋友',
+    distance: '',
+    tags: [],
+    avatar: '',
+    requested: false,
+    isFriend: false,
+    seenAt: 0
+  }
+}
+
+const mergeSeenRecords = (records) => {
+  const merged = new Map()
+  records
+    .map(normalizeSeenRecord)
+    .filter(item => item.id !== undefined && item.id !== null)
+    .forEach(item => {
+      const idText = String(item.id)
+      const existing = merged.get(idText)
+      if (!existing || (item.seenAt || 0) >= (existing.seenAt || 0)) {
+        merged.set(idText, { ...existing, ...item, id: idText })
       }
     })
-    .filter(item => item.id !== undefined && item.id !== null)
+  return Array.from(merged.values())
+}
+
+export const readDiscoverySeenRecords = (myId, mode) => {
+  const persistentKey = persistentSeenKeyOf(myId, mode)
+  const legacyDailyKey = keyOf(myId, mode, 'seen')
+  const records = mergeSeenRecords([
+    ...readJson(persistentKey),
+    ...readJson(legacyDailyKey)
+  ])
+  if (records.length) {
+    writeJson(persistentKey, records)
+  }
+  return records
 }
 
 export const readDiscoverySeenIds = (myId, mode) => {
@@ -62,7 +90,7 @@ export const readDiscoverySeenIds = (myId, mode) => {
 }
 
 export const recordDiscoverySeen = (myId, mode, pickOrId) => {
-  const key = keyOf(myId, mode, 'seen')
+  const key = persistentSeenKeyOf(myId, mode)
   const records = readDiscoverySeenRecords(myId, mode)
   const id = pickOrId && typeof pickOrId === 'object' ? pickOrId.id : pickOrId
   const idText = String(id)

@@ -65,7 +65,7 @@
           </button>
         </div>
 
-        <!-- 记住密码 -->
+        <!-- 记住账号 -->
         <div class="options-row">
           <label class="remember-me-label">
             <input
@@ -74,7 +74,7 @@
                 class="remember-checkbox"
             />
             <span class="custom-checkbox"></span>
-            <span class="remember-text">记住账号密码</span>
+            <span class="remember-text">记住手机号</span>
           </label>
         </div>
 
@@ -111,13 +111,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginUser } from '@/api/user.js'
 import { parseJwtPayload } from '@/utils/authToken'
+import { showToast } from 'vant'
 
 const router = useRouter()
 
 // 表单状态
 const phone = ref('')
 const password = ref('')
-const rememberMe = ref(true) // 默认勾选记住密码
+const rememberMe = ref(true)
 const showPass = ref(false)
 const loading = ref(false)
 const error = ref('')
@@ -126,16 +127,15 @@ const heroHover = ref(false)
 const showWelcomeGate = ref(false)
 const welcomeName = ref('')
 
-// 页面加载时，尝试读取记住的密码
+// 页面加载时，只读取记住的手机号，不保存明文密码
 onMounted(() => {
   const savedPhone = localStorage.getItem('remember_phone')
-  const savedPassword = localStorage.getItem('remember_password')
-  if (savedPhone && savedPassword) {
+  localStorage.removeItem('remember_password')
+  if (savedPhone) {
     phone.value = savedPhone
-    password.value = savedPassword
     rememberMe.value = true
   } else {
-    rememberMe.value = false // 如果没有记住，则默认不勾选，或者默认勾选也行，这里设为false
+    rememberMe.value = false
   }
 })
 
@@ -173,14 +173,13 @@ async function submit() {
       else localStorage.removeItem('nickname')
       welcomeName.value = nickname || '欢迎回来'
 
-      // 保存或清除记住的密码
+      // 只保存登录标识，不保存密码
       if (rememberMe.value) {
         localStorage.setItem('remember_phone', phone.value)
-        localStorage.setItem('remember_password', password.value)
       } else {
         localStorage.removeItem('remember_phone')
-        localStorage.removeItem('remember_password')
       }
+      localStorage.removeItem('remember_password')
 
       showWelcomeGate.value = true
       console.log("前端热更新成功")
@@ -195,9 +194,7 @@ async function submit() {
 
   } catch (err) {
     console.error(err)
-    const detail = err?.message || '未知错误'
-    const url = err?.config?.baseURL || '无'
-    alert(`[调试] 请求失败\nbaseURL: ${url}\n错误: ${detail}`)
+    showToast({ type: 'fail', message: '网络连接失败，请稍后再试' })
     error.value = '连接王国的通道拥堵，请稍后再试 (网络错误)'
   } finally {
     loading.value = false

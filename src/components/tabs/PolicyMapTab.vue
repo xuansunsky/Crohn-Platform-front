@@ -58,12 +58,6 @@
             <h2 class="text-[22px] font-black text-slate-900 tracking-tight whitespace-nowrap">
               {{ selectedArea.name }}
             </h2>
-            <span v-if="currentPolicy.auditStatus === 1" class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[10px] font-black border border-blue-100">
-              <i class="ri-verified-badge-fill text-[11px]"></i> 已核验
-            </span>
-            <span v-else class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200">
-              <i class="ri-information-line text-[11px]"></i> 待核验
-            </span>
 
             <div class="flex-1"></div>
 
@@ -86,13 +80,15 @@
             </button>
           </div>
 
-          <!-- 第二行：元信息 · 版本切换 -->
-          <div class="flex items-center gap-2 px-4 pb-2 text-[11px] text-slate-400 font-medium overflow-hidden">
+          <!-- 第二行：元信息 · 版本切换（仅有数据时显示贡献者）-->
+          <div v-if="currentPolicy.hasData" class="flex items-center gap-2 px-4 pb-2 text-[11px] text-slate-400 font-medium overflow-hidden">
+            <img :src="currentPolicy.avatar || DEFAULT_AVATAR" class="w-5 h-5 rounded-full object-cover bg-slate-100 border border-slate-100 shrink-0" />
             <span class="truncate">
               <span class="text-slate-600 font-bold">{{ currentPolicy.nickname || '匿名大侠' }}</span>
               <span class="mx-1.5 text-slate-300">·</span>
               {{ currentPolicy.updateTime || '' }}
             </span>
+            <span v-if="isMyVersion" class="shrink-0 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-black border border-blue-100">我的版本</span>
             <span class="w-px h-2.5 bg-slate-300 shrink-0"></span>
             <button
                 @click="openHistoryDrawer"
@@ -137,6 +133,13 @@
             </div>
 
             <div class="space-y-3 pb-6">
+              <div v-if="!historyList.length" class="py-12 flex flex-col items-center text-center">
+                <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-300 flex items-center justify-center mb-3">
+                  <i class="ri-stack-line text-2xl"></i>
+                </div>
+                <p class="text-[13px] font-bold text-slate-500">暂无其他版本</p>
+                <p class="text-[11.5px] text-slate-400 mt-1">当前已是这座城市唯一的一份情报</p>
+              </div>
               <div
                   v-for="(item, index) in historyList"
                   :key="item.id"
@@ -150,10 +153,9 @@
 
                 <div class="flex justify-between items-start mb-2">
                   <div class="flex items-center gap-2">
-                    <span class="font-bold text-slate-800 text-sm">{{ item.nickname }}</span>
-                    <span v-if="item.auditStatus === 1" class="text-blue-600 text-[10px] bg-blue-100 px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
-                    <i class="ri-verified-badge-fill"></i> 已核验
-                  </span>
+                    <img :src="item.avatar || DEFAULT_AVATAR" class="w-5 h-5 rounded-full object-cover bg-slate-100 shrink-0" />
+                    <span class="font-bold text-slate-800 text-sm">{{ item.nickname || '匿名大侠' }}</span>
+                    <span v-if="myUserId && item.userId === myUserId" class="text-blue-600 text-[10px] bg-blue-100 px-1.5 py-0.5 rounded font-bold">我的</span>
                   </div>
                   <span class="text-xs text-slate-400">{{ item.updateTime }}</span>
                 </div>
@@ -177,6 +179,7 @@
 
           <div class="w-full md:w-2/3 h-full overflow-y-auto px-4 pt-3 pb-24 md:px-8 md:pt-5 scroll-smooth">
 
+            <template v-if="currentPolicy.hasData">
             <!-- 政策亮点 chips · 圆角淡彩 -->
             <div v-if="policyHighlights.length" class="mb-3 flex flex-wrap gap-1.5">
               <span
@@ -385,6 +388,19 @@
               </div>
             </div>
 
+            </template>
+
+            <!-- 无数据空状态 -->
+            <div v-else class="pt-10 pb-4 flex flex-col items-center text-center">
+              <div class="w-16 h-16 rounded-3xl bg-slate-100 text-slate-300 flex items-center justify-center mb-4">
+                <i class="ri-map-pin-add-line text-3xl"></i>
+              </div>
+              <h3 class="text-[16px] font-black text-slate-800">{{ selectedArea.name }} 还没有这条情报</h3>
+              <p class="text-[12.5px] text-slate-500 leading-relaxed mt-1.5 max-w-[260px]">
+                当前「{{ activeTypeLabel }}」暂无病友上传报销 / 用药数据，你可以成为第一个补充的人。
+              </p>
+            </div>
+
             <!-- 贡献 CTA · 深色实心圆角 -->
             <div class="mt-6">
               <button
@@ -392,10 +408,10 @@
                 class="w-full rounded-2xl bg-slate-900 hover:bg-slate-800 py-3.5 text-white font-black text-[14px] shadow-lg shadow-slate-300 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
               >
                 <i class="ri-edit-2-line text-base"></i>
-                <span>修正数据 / 补充情报</span>
+                <span>{{ contributeLabel }}</span>
               </button>
               <p class="text-[10.5px] text-slate-400 text-center mt-2 font-medium">
-                你的实测能让下一个病友少走一段弯路 ✨
+                {{ currentPolicy.hasData && !isMyVersion ? '不会覆盖 TA 的版本，你填的是属于你自己的一份 ✨' : '你的实测能让下一个病友少走一段弯路 ✨' }}
               </p>
             </div>
 
@@ -420,7 +436,7 @@
 
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white rounded-t-2xl">
               <button @click="showEditDrawer = false" class="text-slate-500 hover:text-slate-800 text-sm font-medium">取消</button>
-              <span class="font-bold text-slate-800 text-lg">修正情报 / {{ selectedArea.name }}</span>
+              <span class="font-bold text-slate-800 text-lg">我的版本 / {{ selectedArea.name }}</span>
               <div class="w-8"></div>
             </div>
 
@@ -705,11 +721,13 @@
           </div>
 
           <button
-              @click="showMobileChat = true"
+              @click="openCityBoard"
               class="md:hidden fixed bottom-24 right-6 mb-[env(safe-area-inset-bottom)] h-14 w-14 bg-blue-600 text-white rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center z-50 active:scale-90 transition-transform"
           >
             <i class="ri-message-3-line text-2xl"></i>
-            <div class="absolute top-3 right-3 h-2 w-2 bg-red-500 rounded-full border border-blue-600"></div>
+            <div v-if="cityComments.length" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-black rounded-full border border-white flex items-center justify-center">
+              {{ cityComments.length > 99 ? '99+' : cityComments.length }}
+            </div>
           </button>
 
           <div v-if="showMobileChat" @click="showMobileChat = false" class="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm md:hidden transition-opacity"></div>
@@ -722,17 +740,71 @@
               <div class="h-1.5 w-12 bg-slate-300 rounded-full"></div>
             </div>
 
-            <div class="flex-1 p-4 overflow-y-auto">
-              <h3 class="font-bold text-slate-700 mb-4">💊 病友阵地</h3>
-              <div v-for="i in 3" :key="i" class="mb-4">
-                <div class="bg-slate-50 p-3 rounded-lg text-sm text-slate-600">
-                  内江的报销太难跑了...
-                </div>
-              </div>
+            <div class="px-4 pt-1 pb-3 border-b border-slate-100 flex items-center gap-2">
+              <i class="ri-group-2-line text-blue-500 text-lg"></i>
+              <h3 class="font-black text-slate-800">病友阵地 · {{ selectedArea.name }}</h3>
+              <span v-if="cityComments.length" class="text-[11px] font-bold text-slate-400">{{ cityComments.length }} 条留言</span>
             </div>
 
-            <div class="p-4 border-t safe-area-bottom">
-              <input type="text" placeholder="说点什么..." class="w-full bg-slate-100 rounded-full py-3 px-4 outline-none">
+            <div class="flex-1 p-4 overflow-y-auto custom-scrollbar space-y-3">
+              <div v-if="isLoadingComments" class="flex items-center justify-center py-12 text-slate-400 gap-2">
+                <i class="ri-loader-4-line animate-spin text-xl"></i> 正在加载留言…
+              </div>
+
+              <template v-else>
+                <div v-if="cityComments.length === 0" class="flex flex-col items-center justify-center py-14 text-center">
+                  <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-300 flex items-center justify-center mb-3">
+                    <i class="ri-chat-3-line text-2xl"></i>
+                  </div>
+                  <p class="text-[13px] font-bold text-slate-500">还没有人在 {{ selectedArea.name }} 留言</p>
+                  <p class="text-[11.5px] text-slate-400 mt-1">说说你在这座城市办医保 / 报销的真实经历吧</p>
+                </div>
+
+                <div v-for="c in cityComments" :key="c.id" class="flex items-start gap-2.5">
+                  <img :src="c.userAvatar || DEFAULT_AVATAR" class="w-9 h-9 rounded-full object-cover bg-slate-100 shrink-0 border border-slate-100" />
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[12.5px] font-black text-slate-700 truncate">{{ c.userName || '匿名病友' }}</span>
+                      <span class="text-[10.5px] text-slate-400 shrink-0">{{ formatCommentTime(c.createTime) }}</span>
+                      <button
+                        v-if="c.userId === myUserId"
+                        @click="deleteCityComment(c)"
+                        class="ml-auto text-[10.5px] text-slate-300 hover:text-rose-500 active:scale-95 transition-all shrink-0"
+                      >删除</button>
+                    </div>
+                    <div class="mt-1 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl rounded-tl-md text-[13px] text-slate-700 leading-relaxed break-words">
+                      {{ c.content }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div class="p-3 border-t border-slate-100 safe-area-bottom flex items-center gap-2">
+              <div class="w-full space-y-2">
+                <div class="rounded-2xl bg-blue-50 border border-blue-100 px-3 py-2 text-[11px] leading-relaxed text-blue-700">
+                  <p class="font-black mb-1">留言建议</p>
+                  <p>可以写：办理时间、材料清单、窗口反馈、报销到账周期。</p>
+                  <p class="text-blue-500">不要写：催别人去某地参保、代办承诺、伪造材料、规避资格审核。</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input
+                    v-model="cityCommentInput"
+                    type="text"
+                    maxlength="500"
+                    @keydown.enter="sendCityComment"
+                    placeholder="例：我在本地办门特，用了诊断证明和出院小结"
+                    class="flex-1 bg-slate-100 rounded-full py-3 px-4 text-[14px] outline-none focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all"
+                  >
+                  <button
+                    @click="sendCityComment"
+                    :disabled="isSendingComment || !cityCommentInput.trim()"
+                    class="shrink-0 h-11 w-11 rounded-full bg-blue-600 text-white flex items-center justify-center disabled:bg-slate-300 active:scale-90 transition-all"
+                  >
+                    <i :class="isSendingComment ? 'ri-loader-4-line animate-spin' : 'ri-send-plane-fill'" class="text-lg"></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -826,6 +898,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { showConfirmDialog, showToast } from 'vant'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import * as echarts from 'echarts'
 import chinaJson from '@/assets/map/china.json'
@@ -887,7 +960,8 @@ const handleFileChange = async (event) => {
     const res = await http.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      timeout: 12000,
     })
     if (res.status === 200) {
       const serverUrl = res.data
@@ -912,15 +986,57 @@ watch(calculatedRealRatio, (val) => {
   editForm.dualRatio = val
 })
 
-const openEditDialog = () => {
-  editForm.mente = currentPolicy.value.mente || false
-  editForm.dualChannel = currentPolicy.value.dualChannel || false
-  editForm.dualRatio = currentPolicy.value.dualRatio || 0
-  editForm.summary = currentPolicy.value.summary || ''
-  editForm.dualNote = currentPolicy.value.dualNote || ''
-  editForm.evidenceList = currentPolicy.value.evidenceList || ''
-  editForm.deductible = currentPolicy.value.deductible || ''
+// 把一份 policy 数据灌进编辑表单（没有就给空白）
+const fillEditForm = (p) => {
+  const src = p || {}
+  editForm.mente = src.mente || false
+  editForm.dualChannel = src.dualChannel || false
+  editForm.dualRatio = src.dualRatio || 0
+  editForm.summary = src.summary || ''
+  editForm.dualNote = src.dualNote || ''
+  editForm.evidenceList = Array.isArray(src.evidenceList) ? [...src.evidenceList] : []
+  editForm.deductible = src.deductible || 0
+  editForm.nominalRatio = src.nominalRatio || 80
+  editForm.hiddenSelfPay = src.hiddenSelfPay || 0
+  editForm.drugs = drugOptions.map(opt => {
+    const existing = Array.isArray(src.drugs) ? src.drugs.find(d => d.key === opt.key) : null
+    return {
+      key: opt.key,
+      name: opt.name,
+      icon: opt.icon,
+      color: opt.color,
+      status: existing?.status || 'unknown',
+      phone: existing?.phone || '',
+      comment: existing?.comment || ''
+    }
+  })
+}
+
+const openEditDialog = async () => {
+  // 编辑永远基于「我自己的版本」：当前看的就是我的就直接用，否则去后端拿我的，没有就空白新建
+  if (isMyVersion.value) {
+    fillEditForm(currentPolicy.value)
+    showEditDrawer.value = true
+    return
+  }
   showEditDrawer.value = true
+  try {
+    const res = await http.get('/policy/mine', {
+      params: { city: selectedArea.name, type: activeType.value }
+    })
+    if (res.code === 200 && res.data) {
+      fillEditForm(res.data)
+    } else {
+      fillEditForm(null)
+    }
+  } catch (e) {
+    if (e?.response?.status === 401) {
+      alert('请先登录再补充情报')
+      showEditDrawer.value = false
+      return
+    }
+    fillEditForm(null)
+  }
 }
 
 const submitEdit = async () => {
@@ -937,19 +1053,133 @@ const submitEdit = async () => {
     const res = await http.post('/policy/save', payload)
 
     if (res.code === 200) {
-      alert('提交成功！你的贡献已被记录！')
+      alert('提交成功！这是你自己的版本，已记录到「其他版本」里')
       showEditDrawer.value = false
-      await loadPolicyData(selectedArea.name)
+      // 提交后直接显示「我的版本」，让用户看到自己刚填的内容
+      try {
+        const mineRes = await http.get('/policy/mine', {
+          params: { city: selectedArea.name, type: activeType.value }
+        })
+        if (mineRes.code === 200 && mineRes.data) {
+          currentPolicy.value = { ...mineRes.data, hasData: true }
+        } else {
+          await loadPolicyData(selectedArea.name)
+        }
+      } catch (e) {
+        await loadPolicyData(selectedArea.name)
+      }
+    } else if (res.code === 401) {
+      alert('请先登录再补充情报')
     } else {
       alert('提交失败: ' + res.msg)
     }
   } catch (error) {
-    alert('网络连接失败，请稍后再试')
+    if (error?.response?.status === 401) {
+      alert('请先登录再补充情报')
+    } else {
+      alert('网络连接失败，请稍后再试')
+    }
   }
 }
 
 // 地图与详情状态
 const showMobileChat = ref(false)
+
+// ===== 病友阵地（城市留言板）=====
+const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/thumbs/svg?seed=crohn'
+const myUserId = Number(localStorage.getItem('userId')) || null
+const cityComments = ref([])
+const cityCommentInput = ref('')
+const isLoadingComments = ref(false)
+const isSendingComment = ref(false)
+
+const formatCommentTime = (value) => {
+  const date = value ? new Date(typeof value === 'string' ? value.replace(' ', 'T') : value) : null
+  if (!date || Number.isNaN(date.getTime())) return ''
+  const diff = Date.now() - date.getTime()
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`
+  return `${date.getMonth() + 1}.${date.getDate()}`
+}
+
+const loadCityComments = async () => {
+  const city = selectedArea.name
+  if (!city) return
+  isLoadingComments.value = true
+  try {
+    const res = await http.get('/policy/comments', { params: { city } })
+    if (res.code === 200) {
+      cityComments.value = Array.isArray(res.data) ? res.data : []
+    }
+  } catch (e) {
+    console.error('加载病友阵地留言失败:', e)
+  } finally {
+    isLoadingComments.value = false
+  }
+}
+
+const openCityBoard = async () => {
+  showMobileChat.value = true
+  await loadCityComments()
+}
+
+const riskyPolicyCommentPattern = /(代办|包过|挂靠|伪造|假材料|刷流水|骗保|套利|随便填|不用资格|不查资格|快来.*参保|推荐.*参保|哪里便宜去哪)/i
+
+const sendCityComment = async () => {
+  const content = cityCommentInput.value.trim()
+  if (!content || isSendingComment.value) return
+  const city = selectedArea.name
+  if (!city) return
+  if (riskyPolicyCommentPattern.test(content)) {
+    showToast({ type: 'fail', message: '换成真实办理经历会更安全' })
+    return
+  }
+  isSendingComment.value = true
+  try {
+    const res = await http.post('/policy/comments', { cityName: city, content })
+    if (res.code === 200 && res.data) {
+      cityComments.value.unshift(res.data)
+      cityCommentInput.value = ''
+    } else {
+      showToast({ type: 'fail', message: res.msg || '留言失败，稍后再试' })
+    }
+  } catch (e) {
+    if (e?.response?.status === 401) {
+      showToast({ type: 'fail', message: '请先登录再留言' })
+    } else {
+      showToast({ type: 'fail', message: '网络不太稳，留言没发出去' })
+    }
+  } finally {
+    isSendingComment.value = false
+  }
+}
+
+const deleteCityComment = async (comment) => {
+  if (!comment || comment.userId !== myUserId) return
+  try {
+    await showConfirmDialog({
+      title: '删除留言',
+      message: '确定删除这条留言吗？',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消'
+    })
+  } catch (e) {
+    return
+  }
+  try {
+    const res = await http.post(`/policy/comments/${comment.id}/delete`)
+    if (res.code === 200) {
+      cityComments.value = cityComments.value.filter(c => c.id !== comment.id)
+    } else {
+      showToast({ type: 'fail', message: res.msg || '删除失败' })
+    }
+  } catch (e) {
+    showToast({ type: 'fail', message: '删除失败，稍后再试' })
+  }
+}
+
 const chartRef = ref(null)
 let myChart = null
 const currentMap = ref('china')
@@ -1009,6 +1239,14 @@ const policyTypes = [
   { key: 'flexible', label: '灵活就业', icon: 'ri-user-voice-line' }
 ]
 const activeType = ref('employee')
+const activeTypeLabel = computed(() => policyTypes.find(t => t.key === activeType.value)?.label || '该险种')
+// 当前显示的这份是不是「我自己」上传的版本
+const isMyVersion = computed(() => !!myUserId && currentPolicy.value?.userId === myUserId)
+// 贡献按钮文案：随场景变，避免「修正」歧义
+const contributeLabel = computed(() => {
+  if (!currentPolicy.value?.hasData) return '我来补充第一条情报'
+  return isMyVersion.value ? '编辑我的版本' : '我也来填一份'
+})
 
 const selectedArea = reactive({
   name: '',
@@ -1058,6 +1296,10 @@ const loadPolicyData = async (areaName) => {
   const type = activeType.value
 
   currentPolicy.value = { hasData: false }
+  // 切换城市，重置病友阵地
+  cityComments.value = []
+  cityCommentInput.value = ''
+  loadCityComments()
 
   try {
     const res = await http.get('/policy/detail', {
@@ -1260,19 +1502,20 @@ const handleLike = async () => {
 }
 
 const openHistoryDrawer = async () => {
+  // 先把抽屉打开，没有版本也能看到「暂无其他版本」
+  const city = currentPolicy.value.cityName || currentPolicy.value.city || selectedArea.name
+  const type = currentPolicy.value.policyType || activeType.value
+  historyList.value = []
+  showHistoryDrawer.value = true
   try {
-    const city = currentPolicy.value.cityName || currentPolicy.value.city; // 兼容不同字段名
-    const type = currentPolicy.value.policyType;
-
     const res = await http.get('/policy/history', {
       params: { city: city, type: type }
     });
-
     if (res.code === 200) {
-      historyList.value = res.data;
-      showHistoryDrawer.value = true;
+      historyList.value = Array.isArray(res.data) ? res.data : []
     }
   } catch (e) {
+    console.error('加载其他版本失败:', e)
   }
 }
 // 简单的看图 (暂时用新窗口打开，省事)

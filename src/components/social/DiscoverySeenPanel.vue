@@ -10,7 +10,7 @@
 
         <header class="shrink-0 px-6 pt-8 pb-4 flex items-center justify-between gap-3">
           <div>
-            <p class="text-[10px] font-black tracking-[0.18em] text-slate-400 mb-1">今天看过</p>
+            <p class="text-[10px] font-black tracking-[0.18em] text-slate-400 mb-1">已看过</p>
             <h2 class="text-[22px] font-black text-slate-950 tracking-tight">{{ title }}</h2>
           </div>
           <button
@@ -31,7 +31,7 @@
             <img :src="pick.avatar || avatarOf('', pick.id)" class="w-12 h-12 rounded-[18px] object-cover bg-slate-100 border border-white shrink-0">
             <button @click="$emit('open-profile', pick)" class="flex-1 min-w-0 text-left active:scale-[0.99] transition-all">
               <h3 class="text-[14px] font-black text-slate-900 truncate">{{ pick.name }}</h3>
-              <p class="text-[11px] font-bold text-slate-400 mt-0.5 truncate">{{ pick.sign || pick.distance || '今天看过的朋友' }}</p>
+              <p class="text-[11px] font-bold text-slate-400 mt-0.5 truncate">{{ pick.sign || pick.distance || '看过的朋友' }}</p>
             </button>
             <button
               @click="$emit('greet', pick)"

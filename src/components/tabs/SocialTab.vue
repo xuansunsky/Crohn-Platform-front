@@ -94,12 +94,12 @@
                     <!-- 交互按钮区域 -->
                     <div class="flex gap-2.5">
                       <button
-                        @click="triggerPainRescue"
-                        :disabled="isBroadcasting"
+                        @click="togglePainRescue"
                         class="flex-1 py-3 px-4 rounded-2xl text-[12px] font-black text-white bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:from-slate-400 disabled:to-slate-500"
+                        :class="isBroadcasting ? 'from-rose-500 via-pink-500 to-orange-400' : ''"
                       >
                         <i class="ri-heart-add-fill" :class="{ 'animate-pulse': isBroadcasting }"></i>
-                        {{ isBroadcasting ? '信号广播中...' : '一键痛痛呼救 🩹' }}
+                        {{ isBroadcasting ? '正在呼救 · 点我停止' : '一键痛痛呼救 🩹' }}
                       </button>
 
                       <button
@@ -118,7 +118,7 @@
                         <span class="absolute w-8 h-8 rounded-full bg-pink-500/30 animate-pulse"></span>
                         <i class="ri-radar-line text-indigo-600 text-2xl z-10 relative"></i>
                       </div>
-                      <p class="text-[11.5px] font-bold text-indigo-700 animate-pulse">痛痛微光已向全网放飞... 别怕，有我们在</p>
+                      <p class="text-[11.5px] font-bold text-indigo-700 animate-pulse">你正在呼救中，别人现在可以给你送关心</p>
                       <div class="text-[10px] text-slate-400 mt-1">深呼吸，吸气... 呼气... 🍂</div>
                     </div>
 
@@ -415,9 +415,6 @@
                   <h3 class="text-white text-[20px] font-black tracking-tight mb-1 flex items-center gap-2">
                     有限遇见
                   </h3>
-                  <p class="text-white/55 text-[12px] font-medium leading-relaxed">
-                    同城看当前城市，远方看天南海北。每天少量，不刷人。
-                  </p>
                 </div>
                 <div class="shrink-0 w-14 h-14 rounded-[22px] bg-white/10 border border-white/10 flex items-center justify-center shadow-inner">
                   <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-100 to-cyan-100 text-slate-950 flex items-center justify-center shadow-[0_0_28px_rgba(255,255,255,0.24)]">
@@ -426,36 +423,20 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-[1fr_auto] gap-2">
+              <div>
                 <div
                   class="min-w-0 bg-white/10 border border-white/10 rounded-2xl px-4 py-3 text-[13px] font-black flex items-center justify-between gap-2"
                   :class="myCity ? 'text-white' : 'text-white/45'"
                 >
-                  <span class="truncate">{{ cityDisplay || '定位后确认当前城市' }}</span>
+                  <span class="truncate">{{ cityDisplay || '当前城市' }}</span>
                   <i class="ri-shield-check-line text-base text-white/45 shrink-0"></i>
                 </div>
-                <button
-                  @click="detectAndSaveLocation"
-                  :disabled="isLocating"
-                  class="px-4 py-3 rounded-2xl text-[12px] font-black text-slate-950 bg-white shadow-md shadow-white/10 active:scale-95 transition-all disabled:bg-white/40 disabled:text-white/60"
-                >
-                  <i class="ri-crosshair-2-line" :class="{ 'animate-pulse': isLocating }"></i>
-                  {{ isLocating ? '确认中' : '定位确认' }}
-                </button>
               </div>
-              <p class="text-[10.5px] font-bold text-white/36 -mt-2">
-                定位只取城市，会同步到我的主页；不能手动切城市。
-              </p>
-
-              <p v-if="locationStatus" class="text-[11px] font-bold text-white/45 leading-relaxed">
-                {{ locationStatus }}
-              </p>
 
               <div class="rounded-[24px] bg-white/10 border border-white/10 p-3.5 space-y-3">
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <p class="text-[13px] font-black text-white">允许被遇见</p>
-                    <p class="text-[10.5px] font-bold text-white/42 mt-0.5">关闭后不会出现在同城和远方推荐里</p>
                   </div>
                   <button
                     @click="toggleDiscoveryEnabled"
@@ -496,7 +477,6 @@
                 >
                   <span class="w-8 h-8 rounded-2xl bg-white/15 text-cyan-100 flex items-center justify-center mb-2"><i class="ri-map-pin-user-line"></i></span>
                   <span class="text-[13px] font-black">同城精选</span>
-                  <span class="text-[10.5px] font-bold text-white/42 mt-0.5">按当前城市</span>
                 </button>
                 <button
                   @click="openDiscovery('distant')"
@@ -504,7 +484,6 @@
                 >
                   <span class="w-8 h-8 rounded-2xl bg-white/15 text-amber-100 flex items-center justify-center mb-2"><i class="ri-route-line"></i></span>
                   <span class="text-[13px] font-black">远方朋友</span>
-                  <span class="text-[10.5px] font-bold text-white/42 mt-0.5">不按距离</span>
                 </button>
               </div>
             </div>
@@ -698,8 +677,7 @@
             <i class="ri-arrow-left-s-line text-lg"></i> 返回
           </button>
           <div class="text-center">
-            <p class="text-[10px] font-black tracking-[0.22em] text-slate-400 leading-none">每日少量</p>
-            <h2 class="text-[15px] font-black tracking-tight text-slate-900 mt-1">{{ discoveryTitle }}</h2>
+            <h2 class="text-[15px] font-black tracking-tight text-slate-900">{{ discoveryTitle }}</h2>
           </div>
           <button @click="showSeenPicksPanel = true" class="h-9 px-3 rounded-full bg-white/72 backdrop-blur-xl border border-white/70 text-slate-600 text-[12px] font-black flex items-center gap-1 active:scale-95 transition-all shadow-sm">
             <i class="ri-history-line"></i> 已看 {{ seenDiscoveryPicks.length }}
@@ -715,12 +693,9 @@
                 <span class="w-8 h-8 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
                   <i class="ri-sparkling-2-line text-amber-100"></i>
                 </span>
-                <span class="text-[11px] font-black tracking-[0.16em] text-white/55">一个个看 · 还能打招呼 {{ discoveryGreetRemaining }} 次</span>
+                <span class="text-[11px] font-black tracking-[0.16em] text-white/55">还能打招呼 {{ discoveryGreetRemaining }} 次</span>
               </div>
               <h1 class="text-[28px] font-black tracking-tight leading-[1.08] whitespace-pre-line">{{ discoveryHeroTitle }}</h1>
-              <p class="text-[12.5px] text-white/58 font-medium leading-relaxed mt-3 max-w-[17rem]">
-                {{ discoveryHeroDesc }}
-              </p>
               <div class="mt-5 inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-2 text-[11px] font-black text-white/72">
                 <i :class="discoveryMode === 'city' ? 'ri-map-pin-user-line' : 'ri-route-line'" class="text-amber-100"></i>
                 {{ discoveryScopeText }}
@@ -808,32 +783,21 @@
                   </button>
                 </div>
               </article>
-
-              <p class="text-center text-[11px] font-bold text-slate-400">
-                不展示精确距离，不做无限刷人。慢慢认识一个人。
-              </p>
             </div>
 
             <div v-else class="rounded-[32px] bg-white/76 border border-white/90 p-7 text-center shadow-sm">
               <div class="mx-auto w-14 h-14 rounded-[24px] bg-slate-100 text-slate-500 flex items-center justify-center mb-4">
                 <i class="ri-moon-clear-line text-2xl"></i>
               </div>
-              <h3 class="text-[18px] font-black text-slate-900 tracking-tight">今天暂时没有精选</h3>
+              <h3 class="text-[18px] font-black text-slate-900 tracking-tight">暂时没有精选</h3>
               <p class="text-[12.5px] text-slate-500 font-medium leading-relaxed mt-2">
                 {{ discoveryEmptyText }}
               </p>
-              <button v-if="discoveryMode === 'city'" @click="openDiscovery('city')" :disabled="isLocating" class="mt-5 px-5 py-3 rounded-2xl bg-slate-950 text-white text-[12px] font-black active:scale-95 transition-all disabled:bg-slate-400">
-                {{ isLocating ? '正在确认' : '定位确认' }}
-              </button>
-              <button v-else @click="closeCityPicks" class="mt-5 px-5 py-3 rounded-2xl bg-slate-950 text-white text-[12px] font-black active:scale-95 transition-all">
+              <button @click="closeCityPicks" class="mt-5 px-5 py-3 rounded-2xl bg-slate-950 text-white text-[12px] font-black active:scale-95 transition-all">
                 先返回
               </button>
             </div>
           </section>
-
-          <p class="mt-5 text-center text-[10.5px] font-bold text-slate-400 leading-relaxed px-5">
-            {{ discoveryFooterText }}
-          </p>
         </main>
       </div>
 
@@ -1299,6 +1263,65 @@ const isBroadcasting = ref(false)
 const incomingComforts = ref([])
 const showPatrol = ref(false)
 const patrolPatients = ref([])
+let painComfortPollTimer = null
+
+const formatPainComfort = (comfort) => {
+  const name = comfort.comforterName || comfort.comforter_name || '有人'
+  return {
+    id: comfort.id || `${comfort.signalId || comfort.signal_id}-${comfort.comforterId || comfort.comforter_id}`,
+    text: `🩹 ${name} 给你送来了一份关心`
+  }
+}
+
+const loadReceivedPainComforts = async () => {
+  try {
+    const res = await http.get('/heal/pain/comforts')
+    if ((res.status === 200 || res.code === 200) && Array.isArray(res.data)) {
+      incomingComforts.value = res.data.map(formatPainComfort)
+      if (incomingComforts.value.length) {
+        loadWarmth()
+      }
+    }
+  } catch (e) {
+    console.error('读取痛痛关心失败', e)
+  }
+}
+
+const stopPainComfortPolling = () => {
+  if (painComfortPollTimer) {
+    clearInterval(painComfortPollTimer)
+    painComfortPollTimer = null
+  }
+}
+
+const startPainComfortPolling = () => {
+  stopPainComfortPolling()
+  loadReceivedPainComforts()
+  painComfortPollTimer = setInterval(loadReceivedPainComforts, 4000)
+}
+
+const applyPainStatus = (data) => {
+  isBroadcasting.value = !!data?.active
+  if (Array.isArray(data?.comforts)) {
+    incomingComforts.value = data.comforts.map(formatPainComfort)
+  }
+  if (isBroadcasting.value) {
+    startPainComfortPolling()
+  } else {
+    stopPainComfortPolling()
+  }
+}
+
+const loadPainStatus = async () => {
+  try {
+    const res = await http.get('/heal/pain/status')
+    if (res.status === 200 || res.code === 200) {
+      applyPainStatus(res.data)
+    }
+  } catch (e) {
+    console.error('读取痛痛状态失败', e)
+  }
+}
 
 const loadWarmth = async () => {
   try {
@@ -1316,31 +1339,37 @@ const triggerPainRescue = async () => {
   isBroadcasting.value = true
   incomingComforts.value = []
   try {
-    await http.post('/heal/pain/broadcast', { location: myCard.value.city || '福州' })
+    const res = await http.post('/heal/pain/broadcast', { location: myCard.value.city || myCity.value || '远方' })
+    if (res.status === 200 || res.code === 200) {
+      isBroadcasting.value = true
+    }
+    startPainComfortPolling()
   } catch (e) {
     console.error('痛痛呼救广播失败', e)
-  }
-  
-  // 模拟陆续收到暖心反馈
-  setTimeout(() => {
-    incomingComforts.value.push({ id: 1, text: '❤️ 有人给你送来了一个热水袋 🩹' })
-    loadWarmth()
-  }, 3000)
-  
-  setTimeout(() => {
-    incomingComforts.value.push({ id: 2, text: '🔥 半夏微凉给你送来一个拥抱 🫂' })
-    loadWarmth()
-  }, 5500)
-  
-  setTimeout(() => {
-    incomingComforts.value.push({ id: 3, text: '✨ 有人默默给你点了一盏小灯 🍀' })
-    loadWarmth()
-  }, 8000)
-
-  // 12秒后自动恢复广播状态
-  setTimeout(() => {
     isBroadcasting.value = false
-  }, 12000)
+  }
+}
+
+const stopPainRescue = async () => {
+  try {
+    const res = await http.post('/heal/pain/stop')
+    if (res.status === 200 || res.code === 200) {
+      applyPainStatus(res.data)
+    } else {
+      isBroadcasting.value = false
+      stopPainComfortPolling()
+    }
+  } catch (e) {
+    console.error('停止痛痛呼救失败', e)
+  }
+}
+
+const togglePainRescue = () => {
+  if (isBroadcasting.value) {
+    stopPainRescue()
+  } else {
+    triggerPainRescue()
+  }
 }
 
 const loadPatrolSignals = async () => {
@@ -1367,6 +1396,7 @@ const sendWarmthTo = async (p) => {
     if (res.status === 200 || res.code === 200) {
       p.warmed = true
       loadWarmth()
+      loadPatrolSignals()
     }
   } catch (e) {
     console.error('揉腹送暖失败', e)
@@ -1541,14 +1571,21 @@ const disintegratePaperBoat = async () => {
   
   try {
     const res = await http.post('/heal/paperboat/release', { content: paperBoatText.value })
+    if (res.status !== 200) {
+      paperBoatHint.value = res.message || '今天已经放不了更多纸船了。'
+      isDisintegrating.value = false
+      return
+    }
     applyPaperBoatQuota(res.data?.quota)
     paperBoatHint.value = res.message || '纸船已经入河。'
     markPaperBoatHistoryDirty()
   } catch (e) {
     console.error('心事放飞失败', e)
     paperBoatHint.value = e?.response?.data?.message || '放飞失败，稍后再试。'
+    isDisintegrating.value = false
+    return
   }
-  
+
   setTimeout(() => {
     paperBoatText.value = ''
     isDisintegrating.value = false
@@ -1808,27 +1845,19 @@ const discoveryHeroTitle = computed(() => discoveryMode.value === 'city'
   ? '不刷人。\n只遇见同一座城。'
   : '不刷人。\n也能遇见远方的人。'
 )
-const discoveryHeroDesc = computed(() => discoveryMode.value === 'city'
-  ? '克制展示，不暴露精确位置。想认识，再轻轻打一声招呼。'
-  : '不靠距离猎人，按真实资料慢慢遇见天南海北的朋友。'
-)
 const discoveryScopeText = computed(() => discoveryMode.value === 'city'
   ? (cityDisplay.value || myCity.value || '先确认你的城市')
   : '不按城市手动挑选'
 )
 const discoveryEmptyText = computed(() => discoveryMode.value === 'city'
-  ? (discoverySeenCount.value > 0 ? '今天这批同城朋友已经看完了，明天再来会更克制。' : '可能是城市还没选，或者同城用户太少。先把城市定下来，再回来看看。')
-  : (discoverySeenCount.value > 0 ? '今天这批远方朋友已经看完了，明天再来慢慢遇见。' : '今天暂时没遇到合适的人。别急，朋友不是刷出来的。')
-)
-const discoveryFooterText = computed(() => discoveryMode.value === 'city'
-  ? '同城精选只按城市展示，不显示精确位置。别急着加很多人，慢慢认识就好。'
-  : '远方朋友不支持手动挑城市，避免被当成到处扫人的工具。'
+  ? (discoverySeenCount.value > 0 ? '这批同城朋友已经看完了。' : '同城朋友还不多，晚点再看看。')
+  : (discoverySeenCount.value > 0 ? '这批远方朋友已经看完了。' : '暂时没遇到合适的人。')
 )
 const currentDiscoveryPick = computed(() => foundPatients.value[discoveryIndex.value] || null)
 const discoveryProgressText = computed(() => {
   const total = discoverySeenCount.value + foundPatients.value.length
-  if (!total) return '今日 0 / 0'
-  return `今日 ${Math.min(discoverySeenCount.value + 1, total)} / ${total}`
+  if (!total) return '本轮 0 / 0'
+  return `本轮 ${Math.min(discoverySeenCount.value + 1, total)} / ${total}`
 })
 
 const readDiscoveryGreets = (mode = discoveryMode.value) => {
@@ -3255,6 +3284,7 @@ onMounted(async () => {
   loadGroups()
   loadMoments()
   loadWarmth()
+  loadPainStatus()
   loadMyCity()
 })
 
@@ -3262,6 +3292,7 @@ onUnmounted(() => {
   window.removeEventListener('popstate', handleSocialBack)
   clearInterval(friendSyncTimer)
   clearTimeout(chatSearchTimer)
+  stopPainComfortPolling()
 })
 
 const plusMenuItems = [
