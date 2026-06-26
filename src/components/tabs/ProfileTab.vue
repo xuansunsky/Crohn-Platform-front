@@ -198,8 +198,29 @@
             <span class="arrow">›</span>
           </div>
         </div>
+
+        <div class="line-divider"></div>
+
+        <div class="status-row hobby-row" @click="showHobbyPicker = true">
+          <span class="row-label">我的爱好</span>
+          <div class="row-value hobby-row-value">
+            <div v-if="myHobbies.length" class="hobby-tags">
+              <span v-for="h in myHobbies" :key="h" class="hobby-tag">{{ h }}</span>
+            </div>
+            <span v-else class="hobby-empty">🌿 点这添加您的爱好！</span>
+            <span class="arrow">›</span>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- 爱好选择面板 -->
+    <HobbyPickerSheet
+      :show="showHobbyPicker"
+      :model-value="myHobbies"
+      @close="showHobbyPicker = false"
+      @save="saveHobbies"
+    />
 
     <!-- 🌳 生命之树（打卡越多，长得越壮） -->
     <button class="tree-card" type="button" @click="waterSprout">
@@ -554,7 +575,8 @@ import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import { closeToast, showToast } from 'vant'
 import http from '@/api/http.js'
 import { DEFAULT_AVATARS, avatarOf } from '@/utils/avatarPool'
-import { clearAuthSession } from '@/utils/authToken'
+import { clearAuthSession, getAuthItem, setAuthItem } from '@/utils/authToken'
+import HobbyPickerSheet from '@/components/social/HobbyPickerSheet.vue'
 
 const emit = defineEmits(['change-tab'])
 const router = useRouter()
@@ -966,6 +988,40 @@ const currentPhase = ref({
 const currentDiet = ref({ id: 'd0', name: '待选择', icon: '🍽️', color: '#64748b', bgColor: 'rgba(100, 116, 139, 0.12)' })
 const currentGut = ref({ id: 'g0', name: '待记录', icon: '🌫️', color: '#64748b', bgColor: 'rgba(100, 116, 139, 0.12)' })
 
+// 我的爱好（复用后端 radarTags 字段）
+const myHobbies = ref([])
+const showHobbyPicker = ref(false)
+
+const parseHobbies = (raw) => {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw.filter(Boolean).slice(0, 6)
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed.filter(Boolean).slice(0, 6)
+  } catch (e) { /* 不是 JSON，按分隔符兜底 */ }
+  return String(raw).split(/[,，\s]+/).map(s => s.trim()).filter(Boolean).slice(0, 6)
+}
+
+const saveHobbies = async (hobbies) => {
+  const list = Array.isArray(hobbies) ? hobbies.filter(Boolean).slice(0, 6) : []
+  try {
+    const res = await http.post('/center/discovery', {
+      radarTags: JSON.stringify(list),
+      discoveryEnabled: true
+    })
+    const okStatus = res?.status === 200 || res?.data?.status === 200
+    if (okStatus) {
+      myHobbies.value = list
+      showHobbyPicker.value = false
+      showToast({ type: 'success', message: '爱好已更新' })
+    } else {
+      showToast({ type: 'fail', message: res?.message || '保存失败' })
+    }
+  } catch (e) {
+    showToast({ type: 'fail', message: '保存失败，检查网络' })
+  }
+}
+
 const showBadgeSelector = ref(false)
 const MAX_BADGES = 3
 
@@ -1025,7 +1081,7 @@ const saveBadges = async () => {
 const currentEditType = ref('')
 
 const userInfo = ref({
-  nickname: localStorage.getItem('nickname') || '未命名用户',
+  nickname: getAuthItem('nickname') || '未命名用户',
   avatar: avatarOf('', 'me'),
   userId: null,
   city: ''
@@ -1374,10 +1430,13 @@ const loadData = async () => {
 
     if (profile) {
       // 1. 同步基础信息
-      userInfo.value.nickname = profile.nickname || localStorage.getItem('nickname') || '未命名用户';
+      userInfo.value.nickname = profile.nickname || getAuthItem('nickname') || '未命名用户';
       userInfo.value.avatar = avatarOf(profile.avatar, profile.userId || profile.nickname || 'me');
       userInfo.value.userId = profile.userId;
       userInfo.value.city = profile.city || '';
+
+      // 爱好（复用 radarTags 字段）
+      myHobbies.value = parseHobbies(profile.radarTags);
 
       // 2. 匹配并点亮【疾病身份】
       if (profile.healthPhase) {
@@ -1442,7 +1501,7 @@ const onConfirmName = async () => {
       return
     }
     userInfo.value.nickname = tempNickname.value
-    localStorage.setItem('nickname', tempNickname.value)
+    setAuthItem('nickname', tempNickname.value)
     showEditName.value = false
     showToast({ message: '标识已重构', icon: 'success' })
   } catch (error) {
@@ -1835,6 +1894,31 @@ const onConfirmName = async () => {
   padding: 3px 9px;
   border-radius: 9px;
   transition: all 0.3s ease;
+}
+
+/* 我的爱好 */
+.hobby-row-value {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.hobby-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.hobby-tag {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: #fff;
+  background: #0f172a;
+}
+.hobby-empty {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
 }
 
 .menu-item-static {

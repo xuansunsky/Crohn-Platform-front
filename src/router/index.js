@@ -1,13 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getValidToken } from '@/utils/authToken'
+import { getAuthItem, getValidToken } from '@/utils/authToken'
+import LoginView2 from '../views/LoginView2.vue'
+import RegisterView from '../views/RegisterView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/login2' },
     { path: '/login', redirect: '/login2' },
-    { path: '/login2', name: 'LoginView2', component: () => import('../views/LoginView2.vue') },
-    { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
+    { path: '/login2', name: 'LoginView2', component: LoginView2 },
+    { path: '/register', name: 'register', component: RegisterView },
     { path: '/dashboard', name: 'dashboard', component: () => import('../components/tabs/DashboardView.vue') },
     { path: '/insuranceMap', name: 'insuranceMap', component: () => import('@/components/tabs/PolicyMapTab.vue') },
     { path: '/ExperienceCard', name: 'ExperienceCard', component: () => import('@/components/ExperienceCard.vue') },
@@ -24,7 +26,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = getValidToken()
-  const roleId = localStorage.getItem('roleId')
+  const roleId = getAuthItem('roleId')
   const publicPaths = ['/login', '/login2', '/register']
 
   if (!token && !publicPaths.includes(to.path)) {
@@ -43,6 +45,24 @@ router.beforeEach((to, from, next) => {
   } else {
     next()
   }
+})
+
+// 发版后旧 index.html 可能还指向已删除的 chunk，动态 import 会拿到 HTML 导致白屏
+const CHUNK_RELOAD_KEY = 'crohn_chunk_reload_once'
+
+router.onError((error) => {
+  const message = String(error?.message || error || '')
+  const isChunkError = /Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(message)
+  if (!isChunkError) return
+
+  if (!sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, '1')
+    window.location.reload()
+    return
+  }
+
+  sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+  window.alert('页面资源加载失败，可能是缓存或部署不完整。请清缓存后重试，或联系管理员重新发布前端。')
 })
 
 export default router

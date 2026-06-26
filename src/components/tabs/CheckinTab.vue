@@ -847,11 +847,12 @@ import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import http from '@/api/http.js'
 import { SERVER_DOWN_HINT } from '@/utils/serverHint'
 import { avatarOf } from '@/utils/avatarPool'
+import { getAuthItem } from '@/utils/authToken'
 
 const emit = defineEmits(['change-tab'])
 
 const DEFAULT_FOOD_COVER = '/img/food-placeholder.svg'
-const currentUserId = Number(localStorage.getItem('userId') || 0)
+const currentUserId = Number(getAuthItem('userId') || 0)
 
 const listAnchor = ref(null)
 const toastMsg = ref('')

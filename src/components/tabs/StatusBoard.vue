@@ -18,8 +18,22 @@
         <div class="relative">
           <div class="flex items-center justify-between mb-3">
             <span class="text-[10px] font-black tracking-[0.18em] text-white/80">我的状态</span>
-            <button @click="showPayQrSetup = true" class="text-[10px] font-bold text-white/80 bg-black/15 px-2.5 py-1 rounded-full active:scale-95 transition-all flex items-center gap-1">
-              <i class="ri-qr-code-line"></i> 我的收款码
+            <button
+              v-if="recentReactors.length"
+              type="button"
+              @click="openReactionDetails"
+              class="flex items-center gap-1.5 rounded-full bg-white/18 border border-white/20 px-2 py-1 active:scale-95 transition-all"
+            >
+              <span class="flex -space-x-1.5">
+                <img
+                  v-for="(r, i) in recentReactors"
+                  :key="i"
+                  :src="avatarOf(r, r.senderId || r.userId || i)"
+                  :title="r.nickname"
+                  class="w-5 h-5 rounded-full border border-white/90 bg-white object-cover"
+                >
+              </span>
+              <span class="text-[10px] font-black text-white/85">最近关心</span>
             </button>
           </div>
           <div class="flex items-center gap-4">
@@ -42,7 +56,7 @@
               <i class="ri-edit-2-line"></i> {{ myStatus.text ? '换个状态' : '设置状态' }}
             </button>
             <button @click="openReactionDetails" class="px-3.5 py-2.5 rounded-2xl bg-black/15 text-white text-[12px] font-black flex items-center gap-1.5 active:scale-95 transition-all">
-              <i class="ri-hand-heart-fill"></i> {{ myStatus.received || 0 }} 份关心
+              <i class="ri-hand-heart-fill"></i> {{ myStatus.received || 0 }} 份
             </button>
           </div>
         </div>
@@ -230,8 +244,8 @@
                 <p class="text-white/70 text-[10px] font-medium mt-2">{{ profileTarget.updatedAt ? '更新于 ' + relTime(profileTarget.updatedAt) : '暂无状态' }} · 共收到 {{ profileTarget.reactions || 0 }} 份关心</p>
               </div>
 
-              <!-- 你们的往来（需我已上传解锁） -->
-              <div v-if="profileData && profileData.myUnlocked" class="mt-4">
+              <!-- 你们的往来：普通互动公开展示，不走病例认证门槛 -->
+              <div v-if="profileData" class="mt-4">
                 <h3 class="text-[12px] font-black text-slate-500 mb-2.5 flex items-center gap-1.5"><i class="ri-arrow-left-right-line text-rose-400"></i> 你们的往来</h3>
                 <div class="grid grid-cols-2 gap-2.5">
                   <div class="bg-white border border-slate-100 rounded-2xl p-3.5 text-center shadow-[0_3px_12px_-4px_rgba(15,23,42,0.06)]">
@@ -246,32 +260,15 @@
                 <p v-if="!(profileData.iSent || profileData.theySent)" class="text-center text-[11px] text-slate-400 font-medium mt-3">还没有往来，点下面给 TA 送上第一份温暖吧</p>
               </div>
 
-              <!-- 未上传：引导上传解锁 -->
-              <div v-else-if="profileData" class="mt-4 rounded-[22px] p-4 bg-slate-900 text-white relative overflow-hidden">
-                <div class="absolute -top-6 -right-4 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl"></div>
-                <div class="relative">
-                  <p class="text-[13.5px] font-black flex items-center gap-1.5"><i class="ri-lock-2-fill text-blue-400"></i> 想看你们的往来与更多资料？</p>
-                  <p class="text-white/65 text-[11px] font-medium mt-1.5 leading-relaxed">上传你自己的证明（可涂黑姓名、医院），认证后能看到更多互动信息。也让大家交流得更安心。</p>
-                  <button @click="showProfile = false; openVerifyUpload()" class="mt-3 w-full py-2.5 rounded-2xl bg-white text-slate-900 text-[13px] font-black active:scale-95 transition-all">
-                    <i class="ri-upload-cloud-2-line"></i> 上传病例，立即解锁
-                  </button>
-                </div>
-              </div>
-
               <p v-if="profileLoading" class="text-center text-[11px] text-slate-300 font-bold mt-3">加载资料中…</p>
 
               <!-- 操作 -->
-              <div class="grid grid-cols-2 gap-2.5 mt-5">
-                <button @click="careFromProfile" :disabled="profileTarget.reactedToday"
-                        class="py-3 rounded-2xl text-[13px] font-black active:scale-95 transition-all"
-                        :class="profileTarget.reactedToday ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white'">
-                  <i :class="profileTarget.reactedToday ? 'ri-check-double-line' : 'ri-hand-heart-fill'"></i>
-                  {{ profileTarget.reactedToday ? '今天已送过' : '送上关心' }}
-                </button>
-                <button @click="transferFromProfile" class="py-3 rounded-2xl bg-gradient-to-r from-rose-400 to-pink-500 text-white text-[13px] font-black active:scale-95 transition-all shadow-sm shadow-rose-500/20">
-                  <i class="ri-hand-coin-fill"></i> 转款送温暖
-                </button>
-              </div>
+              <button @click="careFromProfile" :disabled="profileTarget.reactedToday"
+                      class="w-full mt-5 py-3 rounded-2xl text-[13px] font-black active:scale-95 transition-all"
+                      :class="profileTarget.reactedToday ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white'">
+                <i :class="profileTarget.reactedToday ? 'ri-check-double-line' : 'ri-hand-heart-fill'"></i>
+                {{ profileTarget.reactedToday ? '今天已送过' : '送上关心' }}
+              </button>
             </div>
           </div>
         </div>
@@ -288,7 +285,7 @@
             <div class="px-5 pb-3 flex items-center justify-between">
               <div>
                 <h2 class="text-[18px] font-black text-slate-900">谁关心了你</h2>
-                <p class="text-[11px] text-slate-400 font-bold mt-0.5">这些微光都留在这里</p>
+                <p class="text-[11px] text-slate-400 font-bold mt-0.5">最近动作</p>
               </div>
               <button @click="showReactionDetails = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90">
                 <i class="ri-close-line"></i>
@@ -341,69 +338,7 @@
                 <span class="text-[13px] font-black text-slate-700">{{ REACTIONS[rk].label }}</span>
               </button>
             </div>
-            <div class="px-5 mt-3" v-if="reactTarget">
-              <button @click="openTransfer" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-2xl px-3 py-3.5 active:scale-95 transition-all shadow-sm shadow-rose-500/20">
-                <i class="ri-hand-coin-fill text-[19px]"></i> <span class="text-[14px] font-black">转款送温暖</span>
-              </button>
-            </div>
             <p class="text-center text-[11px] text-slate-400 font-medium mt-4">无声的看见，比一万句安慰都管用</p>
-          </div>
-        </div>
-      </transition>
-    </Teleport>
-
-    <!-- 扫码转账（微信收款码） -->
-    <Teleport to="body">
-      <transition name="sheet">
-        <div v-if="showTransfer" class="fixed inset-0 z-[1950] flex items-center justify-center px-8">
-          <div @click="showTransfer = false" class="absolute inset-0 bg-slate-900/70 backdrop-blur-md"></div>
-          <div class="relative w-full max-w-[320px] bg-white rounded-[28px] p-6 shadow-2xl pop-in">
-            <button @click="showTransfer = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90"><i class="ri-close-line text-lg"></i></button>
-            <div class="flex flex-col items-center text-center" v-if="reactTarget">
-              <img :src="avatarOf(reactTarget)" class="w-14 h-14 rounded-2xl object-cover bg-slate-100 shadow-sm mb-2">
-              <p class="text-[16px] font-black text-slate-900">转款给 {{ reactTarget.nickname }}</p>
-              <p class="text-[11px] text-slate-400 font-medium mt-0.5 mb-4">用微信扫下面的码，直接送到 TA 手里</p>
-
-              <div v-if="payQrLoading" class="w-56 h-56 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 text-[13px] font-bold">读取收款码中…</div>
-              <div v-else-if="payQrUrl" class="w-56 h-56 rounded-2xl bg-white border border-slate-100 shadow-inner p-2 flex items-center justify-center">
-                <img :src="payQrUrl" class="w-full h-full object-contain rounded-xl">
-              </div>
-              <div v-else class="w-56 h-56 rounded-2xl bg-slate-50 flex flex-col items-center justify-center px-4">
-                <div class="text-[34px] mb-2">🙈</div>
-                <p class="text-[12px] font-bold text-slate-500">TA 还没上传收款码</p>
-                <p class="text-[10px] text-slate-400 mt-1">提醒 TA 去「我的收款码」设置一下</p>
-              </div>
-
-              <div class="mt-4 flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-                <i class="ri-shield-check-line text-emerald-500"></i> 平台不经手任何资金，安全直达
-              </div>
-            </div>
-          </div>
-        </div>
-      </transition>
-    </Teleport>
-
-    <!-- 设置我的收款码 -->
-    <Teleport to="body">
-      <transition name="sheet">
-        <div v-if="showPayQrSetup" class="fixed inset-0 z-[1950] flex items-center justify-center px-8">
-          <div @click="showPayQrSetup = false" class="absolute inset-0 bg-slate-900/70 backdrop-blur-md"></div>
-          <div class="relative w-full max-w-[330px] bg-white rounded-[28px] p-6 shadow-2xl pop-in">
-            <button @click="showPayQrSetup = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 active:scale-90"><i class="ri-close-line text-lg"></i></button>
-            <p class="text-[16px] font-black text-slate-900 text-center">我的微信收款码</p>
-            <p class="text-[11px] text-slate-400 font-medium text-center mt-1 mb-4">如果有人想支持你，可以直接扫码送到你手里</p>
-
-            <label class="block w-44 h-44 mx-auto rounded-2xl bg-slate-50 border border-dashed border-slate-200 p-2 flex items-center justify-center mb-4 cursor-pointer active:scale-95 transition-all overflow-hidden">
-              <img v-if="myQrInput.trim()" :src="myQrInput" class="w-full h-full object-contain rounded-xl">
-              <span v-else-if="qrUploading" class="text-[12px] text-slate-400 font-bold">上传中…</span>
-              <span v-else class="text-[12px] text-slate-400 font-bold text-center px-3"><i class="ri-camera-line text-[24px] block mb-1"></i>点这里上传收款码</span>
-              <input type="file" accept="image/*" class="hidden" @change="uploadMyQr" :disabled="qrUploading">
-            </label>
-
-            <p class="text-[10px] text-slate-400 font-medium leading-snug mb-3 text-center">
-              <i class="ri-shield-check-line text-emerald-500"></i> 只存这张图片，绝不保存银行卡号、身份证等任何隐私信息。
-            </p>
-            <button @click="saveMyQr" :disabled="!myQrInput.trim() || qrUploading" class="w-full bg-rose-500 text-white font-black text-[14px] py-3 rounded-2xl active:scale-95 transition-all disabled:bg-slate-200">保存收款码</button>
           </div>
         </div>
       </transition>
@@ -460,11 +395,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import http from '@/api/http'
 import { avatarOf } from '@/utils/avatarPool'
+import { getAuthItem } from '@/utils/authToken'
 
-const myId = Number(localStorage.getItem('userId')) || 0
+const myId = Number(getAuthItem('userId')) || 0
 
 // 主题色表（完整类名直写，保证 Tailwind JIT 能扫到）
 const ACCENTS = {
@@ -544,14 +480,6 @@ const customText = ref('')
 const customEmoji = ref('✏️')
 const toast = ref('')
 
-const showTransfer = ref(false)
-const payQrUrl = ref('')
-const payQrLoading = ref(false)
-
-const showPayQrSetup = ref(false)
-const myQrInput = ref('')
-const qrUploading = ref(false)
-
 // IBD 认证门槛
 const myVerifyStatus = ref('NONE') // NONE / PENDING / APPROVED / REJECTED
 const isVerified = computed(() => myVerifyStatus.value === 'APPROVED')
@@ -577,6 +505,18 @@ const zoneCounts = computed(() => {
   members.value.forEach(m => { if (m.zone) c[m.zone] = (c[m.zone] || 0) + 1 })
   if (myStatus.value.zone) c[myStatus.value.zone]++
   return c
+})
+
+const recentReactors = computed(() => {
+  const seen = new Set()
+  return reactionDetails.value
+    .filter(r => {
+      const key = String(r.senderId || r.userId || r.nickname || '')
+      if (!key || seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .slice(0, 3)
 })
 
 const relTime = (t) => {
@@ -628,6 +568,15 @@ const loadFeed = async () => {
     console.error('加载状态墙失败', e)
   } finally {
     loading.value = false
+  }
+}
+
+const loadReactionPreview = async () => {
+  try {
+    const res = await http.get('/team/status/reactions')
+    if (ok(res)) reactionDetails.value = res.data || []
+  } catch (e) {
+    // 首页预览失败不打扰用户，点开明细时再提示。
   }
 }
 
@@ -711,13 +660,6 @@ const careFromProfile = () => {
   showReact.value = true
 }
 
-const transferFromProfile = () => {
-  if (!profileTarget.value) return
-  reactTarget.value = profileTarget.value
-  showProfile.value = false
-  openTransfer()
-}
-
 const openReact = (m) => { reactTarget.value = m; showReact.value = true }
 
 const sendReaction = async (key) => {
@@ -738,52 +680,6 @@ const sendReaction = async (key) => {
   } catch (e) {
     const msg = e && e.response && e.response.data && e.response.data.message
     flash(msg || '今天已经送过关心啦 🌙')
-  }
-}
-
-const openTransfer = async () => {
-  if (!reactTarget.value) return
-  showReact.value = false
-  showTransfer.value = true
-  payQrUrl.value = ''
-  payQrLoading.value = true
-  try {
-    const res = await http.get(`/team/status/paycode/${reactTarget.value.userId}`)
-    if (ok(res)) payQrUrl.value = res.data || ''
-  } catch (e) {
-    console.error('读取收款码失败', e)
-  } finally {
-    payQrLoading.value = false
-  }
-}
-
-const uploadMyQr = async (e) => {
-  const file = e.target.files && e.target.files[0]
-  if (!file) return
-  qrUploading.value = true
-  try {
-    const fd = new FormData()
-    fd.append('file', file)
-    const res = await http.post('/upload', fd)
-    if (ok(res)) myQrInput.value = res.data
-    else flash(res.message || '上传失败')
-  } catch (err) {
-    flash('上传失败，检查网络')
-  } finally {
-    qrUploading.value = false
-    e.target.value = ''
-  }
-}
-
-const saveMyQr = async () => {
-  const url = myQrInput.value.trim()
-  if (!url) return
-  try {
-    const res = await http.post('/team/status/paycode', { url })
-    if (ok(res)) { flash('收款码已保存 ✦'); showPayQrSetup.value = false }
-    else flash(res.message || '保存失败')
-  } catch (e) {
-    flash('保存失败，检查网络')
   }
 }
 
@@ -840,20 +736,24 @@ const submitVerify = async () => {
   }
 }
 
+const handleOpenVerifyUpload = () => openVerifyUpload()
+
 onMounted(() => {
+  window.addEventListener('open-verify-upload', handleOpenVerifyUpload)
   loadFeed()
+  loadReactionPreview()
   if (localStorage.getItem('openVerifyUpload') === '1') {
     localStorage.removeItem('openVerifyUpload')
     openVerifyUpload()
   }
-  // 预填我已有的收款码
-  http.get(`/team/status/paycode/${myId}`).then(res => {
-    if (ok(res) && res.data) myQrInput.value = res.data
-  }).catch(() => {})
   // 拉取我的认证状态
   http.get('/verify/me').then(res => {
     if (ok(res) && res.data) myVerifyStatus.value = res.data.status || 'NONE'
   }).catch(() => {})
+})
+
+onUnmounted(() => {
+  window.removeEventListener('open-verify-upload', handleOpenVerifyUpload)
 })
 </script>
 

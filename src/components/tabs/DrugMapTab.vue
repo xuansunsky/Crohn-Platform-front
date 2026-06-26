@@ -555,19 +555,9 @@ const loadDrugs = async () => {
   }
 }
 
-const loadCabinet = async () => {
-  try {
-    const res = await http.get('/drug/cabinet')
-    if (res.status === 200) cabinetList.value = res.data || []
-  } catch (error) {
-    console.error('药箱加载失败', error)
-  }
-}
-
 onMounted(async () => {
   try {
     await loadDrugs()
-    await loadCabinet()
   } catch (error) {
     console.error('药物列表加载失败', error)
   }
@@ -593,10 +583,6 @@ const filteredDrugs = computed(() => {
 const totalDrugReviewCount = computed(() => drugDatabase.value.reduce((sum, item) => sum + Number(item.reviewCount || 0), 0))
 const canDeleteReview = (review) => currentUserId.value > 0 && Number(review?.userId || 0) === currentUserId.value
 const canManageDrug = (drug) => drug && checkPermission(drug.createdBy)
-const currentCabinetItem = computed(() => {
-  if (!selectedDrug.value) return null
-  return cabinetList.value.find(item => item.drugName === selectedDrug.value.name) || null
-})
 
 const resetDrugReviewForm = () => {
   drugReviewForm.effectScore = 3
@@ -804,34 +790,6 @@ const deleteDrug = async (password) => {
   }
 }
 
-const openAddToCabinet = (drug) => {
-  configDrug.value = drug
-  cabinetForm.dosage = ''
-  cabinetForm.frequency = '每日一次'
-  cabinetForm.time = '08:00'
-  showCabinetConfig.value = true
-}
-
-const confirmAddToCabinet = async () => {
-  if (!configDrug.value) return
-  const res = await http.post('/drug/cabinet/add', {
-    drugName: configDrug.value.name,
-    drugIcon: configDrug.value.icon,
-    dosage: cabinetForm.dosage,
-    frequency: cabinetForm.frequency,
-    timeOfDay: cabinetForm.time
-  })
-  if (res.status === 200) {
-    await loadCabinet()
-    showCabinetConfig.value = false
-  }
-}
-
-const removeFromCabinet = async (id) => {
-  if (!confirm('确定移出药箱吗？')) return
-  await http.delete(`/drug/cabinet/delete/${id}`)
-  cabinetList.value = cabinetList.value.filter(item => Number(item.id) !== Number(id))
-}
 </script>
 
 <style scoped>

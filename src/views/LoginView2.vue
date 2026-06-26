@@ -27,7 +27,7 @@
       </div>
 
       <h1 class="title">
-        <span class="gradient-text">Crohn Disease Paradise</span>
+        <span class="brand-wordmark">Crohn Parad<span class="heart-i" aria-label="i"></span>se</span>
       </h1>
       <p class="sub">欢迎勇士，开启你的星辉之旅 ✨</p>
 
@@ -39,6 +39,7 @@
               type="tel"
               inputmode="numeric"
               pattern="[0-9]{11}"
+              autocomplete="username"
               required
               id="phone"
               class="input"
@@ -53,6 +54,7 @@
           <input
               :type="showPass ? 'text' : 'password'"
               v-model="password"
+              autocomplete="current-password"
               required
               id="password"
               class="input"
@@ -70,13 +72,27 @@
           <label class="remember-me-label">
             <input
                 type="checkbox"
-                v-model="rememberMe"
+                v-model="rememberPhone"
                 class="remember-checkbox"
             />
             <span class="custom-checkbox"></span>
             <span class="remember-text">记住手机号</span>
           </label>
+
+          <label class="remember-me-label">
+            <input
+                type="checkbox"
+                v-model="keepLogin"
+                class="remember-checkbox"
+            />
+            <span class="custom-checkbox"></span>
+            <span class="remember-text">保持登录</span>
+          </label>
         </div>
+
+        <button type="button" class="sms-login-btn" @click="showSmsHint">
+          手机验证码登录
+        </button>
 
         <!-- 提交按钮 -->
         <button class="primary-btn" :disabled="!canSubmit || loading" type="submit">
@@ -110,7 +126,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { loginUser } from '@/api/user.js'
-import { parseJwtPayload } from '@/utils/authToken'
+import { parseJwtPayload, saveAuthSession } from '@/utils/authToken'
 import { showToast } from 'vant'
 
 const router = useRouter()
@@ -118,7 +134,8 @@ const router = useRouter()
 // 表单状态
 const phone = ref('')
 const password = ref('')
-const rememberMe = ref(true)
+const rememberPhone = ref(true)
+const keepLogin = ref(true)
 const showPass = ref(false)
 const loading = ref(false)
 const error = ref('')
@@ -130,13 +147,15 @@ const welcomeName = ref('')
 // 页面加载时，只读取记住的手机号，不保存明文密码
 onMounted(() => {
   const savedPhone = localStorage.getItem('remember_phone')
+  const savedKeepLogin = localStorage.getItem('remember_keep_login')
   localStorage.removeItem('remember_password')
   if (savedPhone) {
     phone.value = savedPhone
-    rememberMe.value = true
+    rememberPhone.value = true
   } else {
-    rememberMe.value = false
+    rememberPhone.value = false
   }
+  keepLogin.value = savedKeepLogin == null ? true : savedKeepLogin === '1'
 })
 
 // 校验规则
@@ -149,6 +168,13 @@ function goRegister() {
   router.push('/register')
 }
 
+function showSmsHint() {
+  showToast({
+    message: '验证码登录需要接短信服务，正式上线前再开启',
+    duration: 2600
+  })
+}
+
 // 登录逻辑
 async function submit() {
   if (!canSubmit.value || loading.value) return
@@ -159,26 +185,23 @@ async function submit() {
   try {
     const response = await loginUser({
       phoneNumber: phone.value,
-      password: password.value
+      password: password.value,
+      keepLogin: keepLogin.value
     })
 
     if (response.status === 200) {
       const res = response.data
       const tokenPayload = parseJwtPayload(res.token)
-      const nickname = res.nickname || tokenPayload?.nickname || localStorage.getItem('nickname') || ''
-      localStorage.setItem('token', res.token)
-      localStorage.setItem('roleId', res.roleId)
-      localStorage.setItem('userId', res.userId)
-      if (nickname) localStorage.setItem('nickname', nickname)
-      else localStorage.removeItem('nickname')
+      const nickname = res.nickname || tokenPayload?.nickname || ''
+      saveAuthSession({ ...res, nickname }, keepLogin.value)
       welcomeName.value = nickname || '欢迎回来'
 
-      // 只保存登录标识，不保存密码
-      if (rememberMe.value) {
+      if (rememberPhone.value) {
         localStorage.setItem('remember_phone', phone.value)
       } else {
         localStorage.removeItem('remember_phone')
       }
+      localStorage.setItem('remember_keep_login', keepLogin.value ? '1' : '0')
       localStorage.removeItem('remember_password')
 
       showWelcomeGate.value = true
@@ -424,14 +447,48 @@ async function submit() {
 
 /* 标题 */
 .title {
-  font-size: clamp(26px, 6vw, 36px);
-  font-weight: 800;
+  font-size: clamp(30px, 8vw, 42px);
+  font-weight: 900;
   margin: 0 0 12px;
-  background: linear-gradient(135deg, #fff, #ffb86c);
+  text-shadow: 0 2px 10px rgba(255, 184, 108, 0.3);
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.brand-wordmark {
+  display: inline-block;
+  position: relative;
+  color: #fff8ec;
+  background: linear-gradient(135deg, #fff 0%, #ffe1b5 45%, #ff9f6e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 10px rgba(255, 184, 108, 0.3);
+}
+
+.heart-i {
+  position: relative;
+  display: inline-block;
+  width: 0.21em;
+  height: 0.72em;
+  margin: 0 0.02em;
+  vertical-align: -0.04em;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffc28f 0%, #ff9f6e 100%);
+  box-shadow: 0 0 10px rgba(255, 159, 110, 0.28);
+  -webkit-text-fill-color: initial;
+}
+
+.heart-i::before {
+  content: "♥";
+  position: absolute;
+  left: 50%;
+  top: -0.32em;
+  transform: translateX(-50%);
+  font-size: 0.34em;
+  line-height: 1;
+  color: #ff7b8a;
+  -webkit-text-fill-color: #ff7b8a;
+  text-shadow: 0 0 10px rgba(255, 123, 138, 0.6);
 }
 
 .sub {
@@ -519,7 +576,9 @@ async function submit() {
 .options-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   margin: -10px 0 20px;
   padding: 0 2px;
 }
@@ -590,6 +649,21 @@ async function submit() {
 .remember-text {
   font-size: 14px;
   font-weight: 500;
+}
+
+.sms-login-btn {
+  width: 100%;
+  margin: -4px 0 8px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 184, 108, 0.92);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sms-login-btn:active {
+  transform: scale(0.98);
 }
 
 /* 登录按钮 */

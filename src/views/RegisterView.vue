@@ -90,7 +90,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { registerUser } from '@/api/user'
+import { loginUser, registerUser } from '@/api/user'
+import { parseJwtPayload, saveAuthSession } from '@/utils/authToken'
+import { showToast } from 'vant'
 
 const router = useRouter()
 
@@ -126,14 +128,38 @@ async function register() {
     })
 
     if (resData.status === 200) {
-      alert('注册成功！✨ 欢迎加入乐园')
-      await router.push('/login2')
+      try {
+        const loginRes = await loginUser({
+          phoneNumber: phone.value,
+          password: password.value,
+          keepLogin: true
+        })
+
+        if (loginRes.status === 200) {
+          const loginData = loginRes.data
+          const tokenPayload = parseJwtPayload(loginData.token)
+          const loginNickname = loginData.nickname || tokenPayload?.nickname || nickname.value
+          saveAuthSession({ ...loginData, nickname: loginNickname }, true)
+          localStorage.setItem('remember_phone', phone.value)
+          localStorage.setItem('remember_keep_login', '1')
+          localStorage.removeItem('remember_password')
+          showToast({ message: '注册成功，欢迎加入乐园', icon: 'success' })
+          await router.replace('/dashboard')
+        } else {
+          showToast({ message: '注册成功，请登录一次', icon: 'success' })
+          await router.push('/login2')
+        }
+      } catch (loginError) {
+        console.error('注册成功后自动登录失败：', loginError)
+        showToast({ message: '注册成功，请登录一次', icon: 'success' })
+        await router.push('/login2')
+      }
     } else {
       error.value = resData.message || '注册失败，请稍后重试'
     }
   } catch (err) {
     console.error('注册请求出错：', err)
-    error.value = '网络异常，请稍后再试 ⚠️'
+    error.value = err?.response?.data?.message || '网络异常，请稍后再试 ⚠️'
   } finally {
     loading.value = false
   }

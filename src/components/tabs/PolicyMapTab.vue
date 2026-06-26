@@ -784,8 +784,8 @@
               <div class="w-full space-y-2">
                 <div class="rounded-2xl bg-blue-50 border border-blue-100 px-3 py-2 text-[11px] leading-relaxed text-blue-700">
                   <p class="font-black mb-1">留言建议</p>
-                  <p>可以写：办理时间、材料清单、窗口反馈、报销到账周期。</p>
-                  <p class="text-blue-500">不要写：催别人去某地参保、代办承诺、伪造材料、规避资格审核。</p>
+                  <p>可以写客观事实：办理时间、材料清单、窗口反馈、报销到账周期。</p>
+                  <p class="text-blue-500">不要做：评价某市政策、伪造材料、教导规避资格审核。</p>
                 </div>
                 <div class="flex items-center gap-2">
                   <input
@@ -903,6 +903,7 @@ import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import * as echarts from 'echarts'
 import chinaJson from '@/assets/map/china.json'
 import http from '@/api/http.js'
+import { getAuthItem } from '@/utils/authToken'
 
 // 编辑抽屉状态
 const showEditDrawer = ref(false)
@@ -1044,7 +1045,7 @@ const submitEdit = async () => {
     cityName: selectedArea.name,
     policyType: activeType.value,
     updateTime: new Date().toISOString().split('T')[0],
-    nickname: localStorage.getItem('nickname') || '热心病友',
+    nickname: getAuthItem('nickname') || '热心病友',
     userId: 0, // 游客 ID
     ...editForm
   }
@@ -1087,7 +1088,7 @@ const showMobileChat = ref(false)
 
 // ===== 病友阵地（城市留言板）=====
 const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/thumbs/svg?seed=crohn'
-const myUserId = Number(localStorage.getItem('userId')) || null
+const myUserId = Number(getAuthItem('userId')) || null
 const cityComments = ref([])
 const cityCommentInput = ref('')
 const isLoadingComments = ref(false)

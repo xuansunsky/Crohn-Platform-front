@@ -1,12 +1,13 @@
 import { ref } from 'vue'
+import { getAuthItem } from '@/utils/authToken'
 
 export function useAuth() {
   const currentUserId = ref(null)
   const isAdmin = ref(false)
 
   const initAuth = () => {
-    const storedId = localStorage.getItem('userId')
-    const storedRole = localStorage.getItem('roleId')
+    const storedId = getAuthItem('userId')
+    const storedRole = getAuthItem('roleId')
 
     if (storedId) {
       currentUserId.value = Number(storedId)

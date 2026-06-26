@@ -27,7 +27,7 @@
               <div class="min-w-0">
                 <p class="text-white/70 text-[10px] font-bold tracking-wide mb-0.5">我的主页</p>
                 <h2 class="text-white text-[20px] font-bold tracking-tight leading-tight drop-shadow-md">{{ myCard.name }}</h2>
-                <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5 line-clamp-2">{{ myCard.sign }}</p>
+                <p class="text-white/85 text-[11.5px] font-medium tracking-wide drop-shadow-sm mt-0.5 line-clamp-2">{{ myCard.sign || '写一句自己的签名，让病友更快认识你' }}</p>
               </div>
               <button @click="openProfileConfig" class="shrink-0 px-3 py-2 rounded-2xl bg-white/16 backdrop-blur-md border border-white/20 text-white text-[11px] font-black active:scale-95 transition-all">
                 编辑主页
@@ -53,10 +53,13 @@
           </button>
           <button @click="currentTab = 'chat'" :class="currentTab === 'chat' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all relative">
             会话
-            <span class="absolute top-1 right-3 w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            <span v-if="hasUnreadChats" class="absolute top-1 right-3 w-1.5 h-1.5 rounded-full bg-rose-500"></span>
           </button>
-          <button @click="currentTab = 'contacts'" :class="currentTab === 'contacts' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
+          <button @click="currentTab = 'contacts'" :class="currentTab === 'contacts' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all relative">
             联络人
+            <span v-if="pendingRequests.length" class="absolute top-1 right-3 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-black leading-4">
+              {{ pendingRequests.length > 9 ? '9+' : pendingRequests.length }}
+            </span>
           </button>
           <button @click="currentTab = 'moments'" :class="currentTab === 'moments' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'" class="flex-1 py-2 text-[12.5px] font-black rounded-full transition-all">
             动态
@@ -71,106 +74,7 @@
           <StatusBoard>
             <!-- 痛痛共鸣舱：插在「拉响警报」那一排下面 -->
             <template #after-stats>
-              <div class="px-5 pt-4">
-                <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50/80 via-white to-pink-50/50 rounded-[28px] p-5 border border-indigo-100/50 shadow-[0_8px_30px_rgba(99,102,241,0.06)] backdrop-blur-xl">
-                  <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-300/10 rounded-full blur-2xl"></div>
-                  <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-300/10 rounded-full blur-2xl"></div>
-
-                  <div class="relative z-10">
-                    <div class="flex flex-col gap-1.5 mb-3">
-                      <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-black tracking-[0.15em] text-indigo-600 uppercase px-2.5 py-1 bg-indigo-50 rounded-full border border-indigo-100/80">
-                          ✦ 痛痛共鸣舱
-                        </span>
-                        <span class="text-[11px] font-black text-rose-500 flex items-center gap-1 shrink-0">
-                          <i class="ri-heart-pulse-fill animate-pulse"></i> {{ warmthPoints }} 暖心值
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 class="text-[15px] font-black text-slate-800 tracking-tight mb-1">肚子抽痛或感到孤独？</h3>
-                    <p class="text-[12px] text-slate-500 leading-relaxed mb-4">一键向附近朋友发送微光信号，无言守护，默默陪伴。</p>
-
-                    <!-- 交互按钮区域 -->
-                    <div class="flex gap-2.5">
-                      <button
-                        @click="togglePainRescue"
-                        class="flex-1 py-3 px-4 rounded-2xl text-[12px] font-black text-white bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:from-slate-400 disabled:to-slate-500"
-                        :class="isBroadcasting ? 'from-rose-500 via-pink-500 to-orange-400' : ''"
-                      >
-                        <i class="ri-heart-add-fill" :class="{ 'animate-pulse': isBroadcasting }"></i>
-                        {{ isBroadcasting ? '正在呼救 · 点我停止' : '一键痛痛呼救 🩹' }}
-                      </button>
-
-                      <button
-                        @click="openPatrolSignal"
-                        class="py-3 px-4 rounded-2xl text-[12px] font-black text-slate-700 bg-white border border-stone-200 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1"
-                      >
-                        <i class="ri-radar-line text-indigo-500 animate-pulse"></i>
-                        暖暖他人 🫂
-                      </button>
-                    </div>
-
-                    <!-- 广播时涟漪雷达效果 -->
-                    <div v-if="isBroadcasting" class="mt-4 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-100 flex flex-col items-center justify-center relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                      <div class="relative w-16 h-16 flex items-center justify-center mb-2">
-                        <span class="absolute w-12 h-12 rounded-full bg-indigo-500/20 animate-ping"></span>
-                        <span class="absolute w-8 h-8 rounded-full bg-pink-500/30 animate-pulse"></span>
-                        <i class="ri-radar-line text-indigo-600 text-2xl z-10 relative"></i>
-                      </div>
-                      <p class="text-[11.5px] font-bold text-indigo-700 animate-pulse">你正在呼救中，别人现在可以给你送关心</p>
-                      <div class="text-[10px] text-slate-400 mt-1">深呼吸，吸气... 呼气... 🍂</div>
-                    </div>
-
-                    <!-- 接收反馈的浮窗气泡 -->
-                    <transition-group name="fade-up">
-                      <div
-                        v-for="comfort in incomingComforts"
-                        :key="comfort.id"
-                        class="mt-2.5 p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11.5px] font-bold flex items-center gap-2 shadow-md shadow-emerald-500/10"
-                      >
-                        <i class="ri-sparkling-fill"></i>
-                        <span>{{ comfort.text }}</span>
-                      </div>
-                    </transition-group>
-
-                    <!-- 查看他人痛痛求助 -->
-                    <transition name="fade-up">
-                      <div v-if="showPatrol" class="mt-4 p-4 rounded-2xl bg-white border border-stone-150 space-y-3 animate-in fade-in duration-300">
-                        <h4 class="text-[12px] font-black text-slate-700 flex items-center gap-1">
-                          <i class="ri-notification-fill text-amber-500"></i> 附近的痛苦共鸣信号
-                        </h4>
-
-                        <div v-if="patrolPatients.length === 0" class="text-center py-2 text-[11px] text-slate-400 font-bold">
-                          目前天空晴朗，暂时没人求助 🌤️
-                        </div>
-
-                        <div
-                          v-for="p in patrolPatients"
-                          :key="p.id"
-                          class="flex items-center justify-between p-2.5 rounded-xl bg-stone-50 border border-stone-100 animate-in fade-in duration-300"
-                        >
-                          <div>
-                            <div class="flex items-center gap-1">
-                              <span class="text-[12px] font-black text-slate-800">{{ p.name }}</span>
-                              <span class="text-[9px] bg-red-100 text-red-600 px-1 py-0.2 rounded font-bold">{{ p.dist }}</span>
-                            </div>
-                            <p class="text-[10px] text-slate-400 mt-0.5">{{ p.sign }}</p>
-                          </div>
-
-                          <button
-                            @click="sendWarmthTo(p)"
-                            :disabled="p.warmed"
-                            class="px-3 py-1.5 rounded-full text-[10.5px] font-black text-white bg-slate-900 shadow-sm active:scale-95 transition-all disabled:bg-emerald-500 disabled:text-white"
-                          >
-                            {{ p.warmed ? '已送暖 🩹' : '揉揉暖腹 🩹' }}
-                          </button>
-                        </div>
-                      </div>
-                    </transition>
-                  </div>
-                </div>
-              </div>
+              <PainResonanceChamber :city="myCard.city || myCity" />
             </template>
           </StatusBoard>
         </div>
@@ -189,7 +93,7 @@
               <button @click="openMyMoments" class="flex-1 min-w-0 text-left active:scale-[0.99] transition-all">
                 <p class="text-[10px] font-black tracking-[0.16em] text-blue-500">我的动态</p>
                 <h3 class="text-[17px] font-black tracking-tight truncate mt-0.5 text-slate-950">{{ myCard.name }}</h3>
-                <p class="text-[11.5px] text-slate-500 font-medium truncate mt-0.5">{{ myCard.sign }}</p>
+                <p class="text-[11.5px] text-slate-500 font-medium truncate mt-0.5">{{ myCard.sign || '还没有写个人签名' }}</p>
               </button>
               <button @click="openComposerFromQuickMenu" class="w-10 h-10 rounded-2xl bg-slate-950 text-white flex items-center justify-center active:scale-90 transition-all shrink-0 shadow-md">
                 <i class="ri-add-line text-[22px]"></i>
@@ -424,13 +328,16 @@
               </div>
 
               <div>
-                <div
+                <button
+                  type="button"
+                  @click="manualRefreshLocation"
+                  :disabled="isLocating"
                   class="min-w-0 bg-white/10 border border-white/10 rounded-2xl px-4 py-3 text-[13px] font-black flex items-center justify-between gap-2"
                   :class="myCity ? 'text-white' : 'text-white/45'"
                 >
                   <span class="truncate">{{ cityDisplay || '当前城市' }}</span>
-                  <i class="ri-shield-check-line text-base text-white/45 shrink-0"></i>
-                </div>
+                  <i :class="isLocating ? 'ri-loader-4-line animate-spin' : 'ri-shield-check-line'" class="text-base text-white/45 shrink-0"></i>
+                </button>
               </div>
 
               <div class="rounded-[24px] bg-white/10 border border-white/10 p-3.5 space-y-3">
@@ -452,21 +359,16 @@
                   v-model="broadcastSign"
                   rows="2"
                   maxlength="60"
-                  placeholder="一句话介绍你的情况，比如：缓解期，想认识能互相鼓劲的人。"
+                  placeholder="写一段别人刷到你时看到的话，比如：缓解期，想认识能互相鼓劲的人。"
                   class="w-full rounded-2xl bg-white/10 border border-white/10 px-3.5 py-3 text-[12.5px] font-bold text-white placeholder-white/30 outline-none resize-none focus:bg-white/14 transition-all"
                   @blur="saveDiscoverySettings"
                 ></textarea>
 
-                <div class="flex gap-1.5 overflow-x-auto custom-scroll -mx-0.5 px-0.5">
-                  <button
-                    v-for="tag in lifeTags"
-                    :key="tag.id"
-                    @click="toggleTag(tag.id)"
-                    class="shrink-0 px-2.5 py-1.5 rounded-full text-[10.5px] font-black border transition-all active:scale-95"
-                    :class="selectedTags.includes(tag.id) ? 'bg-white text-slate-950 border-white' : 'bg-white/8 text-white/50 border-white/10'"
-                  >
-                    {{ tag.icon }} {{ tag.label }}
-                  </button>
+                <div class="flex items-start gap-2 rounded-2xl bg-white/8 border border-white/10 px-3.5 py-3">
+                  <i class="ri-price-tag-3-line text-white/45 text-base mt-0.5"></i>
+                  <p class="text-[11px] leading-relaxed text-white/55 font-bold">
+                    您的标签会从「我的」里同步展示，这里只写一句遇见宣言。
+                  </p>
                 </div>
               </div>
 
@@ -746,7 +648,13 @@
                       {{ currentDiscoveryPick.sign }}
                     </p>
 
-                    <div class="flex flex-wrap justify-center gap-1.5 mt-4">
+                    <div v-if="currentDiscoveryPick.statusChips?.length" class="grid grid-cols-1 gap-1.5 mt-4 w-full max-w-[18rem]">
+                      <span v-for="chip in currentDiscoveryPick.statusChips" :key="chip" class="rounded-2xl bg-white/75 border border-white text-slate-600 px-3 py-2 text-[11.5px] font-black shadow-sm">
+                        {{ chip }}
+                      </span>
+                    </div>
+
+                    <div v-if="currentDiscoveryPick.tags?.length" class="flex flex-wrap justify-center gap-1.5 mt-3">
                       <span v-for="tag in currentDiscoveryPick.tags" :key="tag" class="rounded-full bg-stone-100/90 text-slate-600 px-3 py-1.5 text-[11px] font-black">
                         {{ tag }}
                       </span>
@@ -821,7 +729,7 @@
           <div class="flex justify-between items-center mb-6 mt-4 shrink-0">
             <div>
               <h2 class="text-slate-900 text-[22px] font-black tracking-tight">我的主页</h2>
-              <p class="text-slate-500 text-[12px] mt-1">封面、签名和遇见偏好放在这里</p>
+              <p class="text-slate-500 text-[12px] mt-1">封面、个人签名和标签分开放，不再混成一坨</p>
             </div>
             <button @click="showProfileConfig = false" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 active:scale-90 transition-all">
               <i class="ri-close-line text-lg"></i>
@@ -870,56 +778,23 @@
               </div>
             </div>
 
+            <!-- 预览别人眼中的我 -->
             <div>
-              <div class="flex items-center gap-2 mb-4">
-                <div class="w-1.5 h-4 bg-blue-500 rounded-full"></div>
-                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">首要诉求</h3>
-              </div>
-              <div class="grid grid-cols-4 gap-4">
-                <div v-for="item in mainPurposes" :key="item.id"
-                     @click="selectedPurpose = item.id"
-                     class="flex flex-col items-center gap-2 cursor-pointer group">
-                  <div class="w-[60px] h-[60px] rounded-[22px] flex items-center justify-center text-[32px] transition-all duration-300"
-                       :class="selectedPurpose === item.id ? 'bg-blue-100 shadow-[0_8px_20px_rgba(59,130,246,0.25)] scale-110 border-2 border-blue-400' : 'bg-slate-50 hover:bg-slate-100 border-2 border-transparent'">
-                    {{ item.icon }}
-                  </div>
-                  <span class="text-[12px] font-bold transition-colors mt-1" :class="selectedPurpose === item.id ? 'text-blue-600' : 'text-slate-500'">{{ item.label }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between items-end mb-4">
-                <div class="flex items-center gap-2">
-                  <div class="w-1.5 h-4 bg-purple-500 rounded-full"></div>
-                  <h3 class="text-slate-800 text-[15px] font-black tracking-widest">相同兴趣 / 状态</h3>
-                </div>
-                <span class="text-[11px] text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded-full">已选 {{ selectedTags.length }} / 3</span>
-              </div>
-
-              <div class="grid grid-cols-4 gap-y-6 gap-x-2">
-                <div v-for="tag in lifeTags" :key="tag.id"
-                     @click="toggleTag(tag.id)"
-                     class="flex flex-col items-center gap-2 cursor-pointer group">
-                  <div class="w-[56px] h-[56px] rounded-full flex items-center justify-center text-[28px] transition-all duration-300 relative"
-                       :class="selectedTags.includes(tag.id) ? 'bg-slate-900 shadow-[0_8px_15px_rgba(0,0,0,0.2)] scale-105' : 'bg-slate-50 hover:bg-slate-100 border border-slate-100'">
-                    <div v-if="selectedTags.includes(tag.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center z-10 animate-in zoom-in duration-200">
-                      <i class="ri-check-line text-white text-[12px] font-black"></i>
-                    </div>
-                    {{ tag.icon }}
-                  </div>
-                  <span class="text-[11px] font-bold text-center" :class="selectedTags.includes(tag.id) ? 'text-slate-900' : 'text-slate-400'">{{ tag.label }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex items-center gap-2 mb-4">
+              <div class="flex items-center gap-2 mb-3">
                 <div class="w-1.5 h-4 bg-emerald-500 rounded-full"></div>
-                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">问候签名</h3>
+                <h3 class="text-slate-800 text-[15px] font-black tracking-widest">别人眼中的我</h3>
               </div>
-              <textarea v-model="broadcastSign" rows="3" placeholder="说点什么，吸引频率相同的人..."
-                        class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-800 text-[14px] font-medium outline-none focus:border-blue-400 focus:bg-white focus:shadow-[0_8px_20px_rgba(59,130,246,0.1)] transition-all resize-none"></textarea>
+              <button @click="previewMyProfile"
+                      class="w-full flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-4 active:scale-[0.99] transition-all text-left">
+                <div class="w-11 h-11 rounded-2xl bg-blue-100 text-blue-500 flex items-center justify-center text-[20px] shrink-0">
+                  <i class="ri-eye-line"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[14px] font-black text-slate-800">预览我的主页</p>
+                  <p class="text-[11.5px] text-slate-400 font-medium mt-0.5 leading-snug">看看别人点开你时，看到的样子（爱好在「我的状态」里设置）</p>
+                </div>
+                <i class="ri-arrow-right-s-line text-slate-300 text-xl shrink-0"></i>
+              </button>
             </div>
 
           </div>
@@ -1197,14 +1072,17 @@
       :display-name="profileDisplayName"
       :remark="profileRemark"
       :can-remark="canRemarkProfile"
+      :is-friend="!!profileFriendChat"
       :my-id="myId"
       :moment-visibility-meta="momentVisibilityMeta"
       @close="closeUserProfile"
       @edit-remark="editProfileRemark"
       @open-moments="openProfileMomentsPanel"
-      @care="careFromUserProfile"
+      @greet="greetFromUserProfile"
       @start-chat="startChatFromProfile"
       @open-image="openImageViewer"
+      @delete-friend="onDeleteFriendFromProfile"
+      @request-verify="requestVerifyFromProfile"
     />
 
     <ProfileMomentsSheet
@@ -1233,7 +1111,7 @@
 <script setup>
 import { nextTick, onMounted, onUnmounted, ref, computed, watch } from 'vue'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
-import http from '@/api/http'
+import http, { getWsBaseURL } from '@/api/http'
 import StatusBoard from '@/components/tabs/StatusBoard.vue'
 import DiscoverySeenPanel from '@/components/social/DiscoverySeenPanel.vue'
 import SocialQuickCreateMenu from '@/components/social/SocialQuickCreateMenu.vue'
@@ -1246,7 +1124,9 @@ import BroadcastSheet from '@/components/social/BroadcastSheet.vue'
 import GroupProfileSheet from '@/components/social/GroupProfileSheet.vue'
 import InviteMembersSheet from '@/components/social/InviteMembersSheet.vue'
 import PaperBoatSheet from '@/components/social/PaperBoatSheet.vue'
+import PainResonanceChamber from '@/components/social/PainResonanceChamber.vue'
 import { avatarOf } from '@/utils/avatarPool'
+import { getAuthItem } from '@/utils/authToken'
 import {
   readDiscoveryGreets as readStoredDiscoveryGreets,
   recordDiscoveryGreet as recordStoredDiscoveryGreet,
@@ -1257,149 +1137,14 @@ import {
 
 const emit = defineEmits(['chat-active'])
 
-// ============ 痛痛抱抱舱状态与逻辑 ============
-const warmthPoints = ref(Number(localStorage.getItem('warmthPoints')) || 36)
-const isBroadcasting = ref(false)
-const incomingComforts = ref([])
-const showPatrol = ref(false)
-const patrolPatients = ref([])
-let painComfortPollTimer = null
-
-const formatPainComfort = (comfort) => {
-  const name = comfort.comforterName || comfort.comforter_name || '有人'
-  return {
-    id: comfort.id || `${comfort.signalId || comfort.signal_id}-${comfort.comforterId || comfort.comforter_id}`,
-    text: `🩹 ${name} 给你送来了一份关心`
-  }
-}
-
-const loadReceivedPainComforts = async () => {
-  try {
-    const res = await http.get('/heal/pain/comforts')
-    if ((res.status === 200 || res.code === 200) && Array.isArray(res.data)) {
-      incomingComforts.value = res.data.map(formatPainComfort)
-      if (incomingComforts.value.length) {
-        loadWarmth()
-      }
-    }
-  } catch (e) {
-    console.error('读取痛痛关心失败', e)
-  }
-}
-
-const stopPainComfortPolling = () => {
-  if (painComfortPollTimer) {
-    clearInterval(painComfortPollTimer)
-    painComfortPollTimer = null
-  }
-}
-
-const startPainComfortPolling = () => {
-  stopPainComfortPolling()
-  loadReceivedPainComforts()
-  painComfortPollTimer = setInterval(loadReceivedPainComforts, 4000)
-}
-
-const applyPainStatus = (data) => {
-  isBroadcasting.value = !!data?.active
-  if (Array.isArray(data?.comforts)) {
-    incomingComforts.value = data.comforts.map(formatPainComfort)
-  }
-  if (isBroadcasting.value) {
-    startPainComfortPolling()
-  } else {
-    stopPainComfortPolling()
-  }
-}
-
-const loadPainStatus = async () => {
-  try {
-    const res = await http.get('/heal/pain/status')
-    if (res.status === 200 || res.code === 200) {
-      applyPainStatus(res.data)
-    }
-  } catch (e) {
-    console.error('读取痛痛状态失败', e)
-  }
-}
-
 const loadWarmth = async () => {
   try {
     const res = await http.get('/heal/warmth')
     if (res.status === 200 || res.code === 200) {
-      warmthPoints.value = res.data
       localStorage.setItem('warmthPoints', res.data)
     }
   } catch (e) {
     console.error('加载暖心值失败', e)
-  }
-}
-
-const triggerPainRescue = async () => {
-  isBroadcasting.value = true
-  incomingComforts.value = []
-  try {
-    const res = await http.post('/heal/pain/broadcast', { location: myCard.value.city || myCity.value || '远方' })
-    if (res.status === 200 || res.code === 200) {
-      isBroadcasting.value = true
-    }
-    startPainComfortPolling()
-  } catch (e) {
-    console.error('痛痛呼救广播失败', e)
-    isBroadcasting.value = false
-  }
-}
-
-const stopPainRescue = async () => {
-  try {
-    const res = await http.post('/heal/pain/stop')
-    if (res.status === 200 || res.code === 200) {
-      applyPainStatus(res.data)
-    } else {
-      isBroadcasting.value = false
-      stopPainComfortPolling()
-    }
-  } catch (e) {
-    console.error('停止痛痛呼救失败', e)
-  }
-}
-
-const togglePainRescue = () => {
-  if (isBroadcasting.value) {
-    stopPainRescue()
-  } else {
-    triggerPainRescue()
-  }
-}
-
-const loadPatrolSignals = async () => {
-  try {
-    const res = await http.get('/heal/pain/patrol')
-    if (res.status === 200 || res.code === 200) {
-      patrolPatients.value = res.data
-    }
-  } catch (e) {
-    console.error('拉取痛痛信号失败', e)
-  }
-}
-
-const openPatrolSignal = () => {
-  showPatrol.value = !showPatrol.value
-  if (showPatrol.value) {
-    loadPatrolSignals()
-  }
-}
-
-const sendWarmthTo = async (p) => {
-  try {
-    const res = await http.post('/heal/pain/comfort', { signalId: p.id })
-    if (res.status === 200 || res.code === 200) {
-      p.warmed = true
-      loadWarmth()
-      loadPatrolSignals()
-    }
-  } catch (e) {
-    console.error('揉腹送暖失败', e)
   }
 }
 
@@ -1754,6 +1499,12 @@ const onProfileCoverChange = async (event) => {
   }
 }
 
+const previewMyProfile = () => {
+  // 关掉编辑弹窗，用「别人视角」打开自己的主页卡片
+  showProfileConfig.value = false
+  openUserProfile(myId)
+}
+
 const saveProfileConfig = async () => {
   if (isSavingProfileConfig.value) return
   isSavingProfileConfig.value = true
@@ -1764,8 +1515,7 @@ const saveProfileConfig = async () => {
       profileCover: profileEdit.value.cover,
       profileStyle: profileEdit.value.style
     })
-    broadcastSign.value = nextSign
-    await saveDiscoverySettings()
+    // 主页只管签名/封面/风格；爱好(radarTags)已移到「我的状态」里设置，这里不再写，避免覆盖
     myCard.value.sign = nextSign || myCard.value.sign
     myCard.value.cover = profileEdit.value.cover || myCard.value.cover
     myCard.value.style = profileEdit.value.style || myCard.value.style
@@ -1798,9 +1548,9 @@ const saveDiscoverySettings = async () => {
   if (discoverySaving.value) return
   discoverySaving.value = true
   try {
+    // radarTags 已改作「爱好」用途，所有权归「我的状态」页，这里不再写它，避免覆盖用户的爱好
     await http.post('/center/discovery', {
       discoveryEnabled: discoveryEnabled.value,
-      radarTags: JSON.stringify(selectedTags.value),
       radarSign: broadcastSign.value.trim()
     })
   } catch (e) {
@@ -1888,6 +1638,35 @@ const recordDiscoveryGreet = (targetId, mode = discoveryMode.value) => {
   refreshDiscoveryGreetCount(mode)
 }
 
+const parseHealthPhaseLabel = (raw) => {
+  if (!raw) return ''
+  if (typeof raw !== 'string') return ''
+  const trimmed = raw.trim()
+  if (!trimmed) return ''
+  try {
+    const parsed = JSON.parse(trimmed)
+    if (parsed && typeof parsed === 'object') {
+      const parts = [
+        parsed.disease,
+        parsed.duration ? `确诊${parsed.duration}` : '',
+        Array.isArray(parsed.tags) ? parsed.tags.join('、') : ''
+      ].filter(Boolean)
+      return parts.join(' · ')
+    }
+  } catch (e) {
+    // 兼容旧数据：不是 JSON 就当普通文本展示
+  }
+  return trimmed
+}
+
+const buildDiscoveryStatusChips = (user) => {
+  return [
+    parseHealthPhaseLabel(user.healthPhase),
+    user.dietStrategy ? `饮食：${user.dietStrategy}` : '',
+    user.bowelStatus ? `生活状态：${user.bowelStatus}` : ''
+  ].filter(Boolean).slice(0, 3)
+}
+
 const mapCityPick = (user, mode = discoveryMode.value) => {
   const rawCity = user.city || ''
   const city = mode === 'city' ? (myCity.value || rawCity) : rawCity
@@ -1899,6 +1678,7 @@ const mapCityPick = (user, mode = discoveryMode.value) => {
     name: user.nickname || '未命名朋友',
     distance: place,
     tags: tags.length ? tags.slice(0, 3) : (isCityMode ? ['同城', '可先打招呼', '不显示距离'] : ['远方', '慢慢认识', '不显示距离']),
+    statusChips: buildDiscoveryStatusChips(user),
     sign: user.radarSign || (isCityMode ? `也在${place}，先从一句轻轻的问候开始。` : `${city ? `来自${city}，` : ''}也在认真生活，先从一句问候开始。`),
     avatar: avatarOf(user, user.userId),
     requested: false,
@@ -2041,13 +1821,13 @@ const currentTab = ref('status')
 // ============ 我的朋友圈封面 ============
 const myCard = ref({
   name: 'Xuan',
-  sign: '缓解期 · 每天努力多吃一勺白粥',
+  sign: '',
   avatar: avatarOf('', 'Xuan'),
   cover: 'https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1200&q=80',
   style: 'warm'
 })
 
-const myId = Number(localStorage.getItem('userId')) || 1
+const myId = Number(getAuthItem('userId')) || 1
 const moments = ref([])
 
 const parseMomentImages = (imagesJson) => {
@@ -2433,6 +2213,7 @@ const friendSyncReady = ref(false)
 const chatList = computed(() => {
   return [...groupChats.value, ...friendChats.value].sort((a, b) => (b.sortAt || 0) - (a.sortAt || 0))
 })
+const hasUnreadChats = computed(() => chatList.value.some(item => Number(item.unread || 0) > 0))
 const filteredChatList = computed(() => {
   const keyword = chatSearchKeyword.value.trim().toLowerCase()
   if (!keyword) return chatList.value
@@ -2944,6 +2725,18 @@ const closeUserProfile = () => {
   showUserProfile.value = false
 }
 
+const onDeleteFriendFromProfile = async (friendId) => {
+  const ok = await deleteFriend(friendId)
+  if (ok) showUserProfile.value = false
+}
+
+const requestVerifyFromProfile = () => {
+  showUserProfile.value = false
+  localStorage.setItem('openVerifyUpload', '1')
+  currentTab.value = 'status'
+  window.dispatchEvent(new Event('open-verify-upload'))
+}
+
 const closeProfileMomentsPanel = () => {
   showProfileMomentsPanel.value = false
 }
@@ -2964,6 +2757,10 @@ const openUserProfile = async (userId) => {
 
     if (profileRes.status === 'fulfilled' && (profileRes.value.status === 200 || profileRes.value.code === 200)) {
       userProfileData.value = profileRes.value.data
+      const user = userProfileData.value?.user
+      if (user?.radarTags) {
+        user.radarTagList = discoveryTagLabels(user.radarTags)
+      }
     }
 
     if (momentsRes.status === 'fulfilled' && (momentsRes.value.status === 200 || momentsRes.value.code === 200)) {
@@ -3027,22 +2824,28 @@ const editProfileRemark = () => {
   }
 }
 
-const careFromUserProfile = async () => {
-  if (!profileUser.value || profileUser.value.reactedToday) return
+// 送个奇怪招呼：主页/同城遇见的人都能打招呼（走 react，后端每人每天一次额度）
+const greetFromUserProfile = async (reactionKey) => {
+  if (!profileUser.value) return
+  if (Number(profileUser.value.userId) === myId) return
+  if (profileUser.value.reactedToday) { alert('今天已经给 TA 打过招呼啦，明天再来 🌙'); return }
+  const key = reactionKey || 'seen'
   try {
     const res = await http.post('/team/status/react', {
       targetUserId: profileUser.value.userId,
-      reactionType: 'seen'
+      reactionType: key
     })
     if (res.status === 200 || res.code === 200) {
       profileUser.value.reactedToday = 1
       profileUser.value.reactions = (profileUser.value.reactions || 0) + 1
-      userProfileData.value.iSent = (userProfileData.value.iSent || 0) + 1
+      if (userProfileData.value) userProfileData.value.iSent = (userProfileData.value.iSent || 0) + 1
+      alert('招呼已送达 👋')
     } else {
-      alert(res.message || '送关心失败')
+      alert(res.message || '今天已打过招呼啦 🌙')
     }
   } catch (e) {
-    alert('送关心失败，请稍后再试')
+    const msg = e?.response?.data?.message
+    alert(msg || '今天已经打过招呼啦 🌙')
   }
 }
 
@@ -3214,6 +3017,29 @@ const acceptRequest = async (id) => {
   }
 }
 
+const deleteFriend = async (friendId) => {
+  if (!friendId) return false
+  if (!confirm('确定要解除好友关系吗？聊天记录会保留，但需要重新加好友才能继续私聊。')) return false
+  try {
+    // 对应后端: POST /api/friend/delete/{friendId}
+    const res = await http.post(`/friend/delete/${friendId}`)
+    if (res.status === 200 || res.code === 200) {
+      alert('已解除好友关系')
+      // 如果正在和这个人聊天，退出会话
+      if (activeChat.value && Number(activeChat.value.id) === Number(friendId)) {
+        activeChat.value = null
+      }
+      await loadFriends()
+      return true
+    }
+    alert(res.message || res.msg || '操作失败')
+    return false
+  } catch (error) {
+    alert(error?.response?.data?.message || '操作失败')
+    return false
+  }
+}
+
 const syncFriendState = async () => {
   await Promise.all([
     loadPendingRequests(),
@@ -3284,7 +3110,6 @@ onMounted(async () => {
   loadGroups()
   loadMoments()
   loadWarmth()
-  loadPainStatus()
   loadMyCity()
 })
 
@@ -3292,7 +3117,6 @@ onUnmounted(() => {
   window.removeEventListener('popstate', handleSocialBack)
   clearInterval(friendSyncTimer)
   clearTimeout(chatSearchTimer)
-  stopPainComfortPolling()
 })
 
 const plusMenuItems = [
@@ -3301,8 +3125,7 @@ const plusMenuItems = [
   { icon: 'ri-map-pin-line', label: '位置', color: 'text-red-500', action: 'location' },
   { icon: 'ri-folder-2-line', label: '文件', color: 'text-orange-500', action: 'file' },
   { icon: 'ri-vidicon-line', label: '视频通话', color: 'text-green-500', action: 'call' },
-  { icon: 'ri-lock-2-line', label: '密聊', color: 'text-violet-500', action: 'secret' },
-  { icon: 'ri-bank-card-line', label: '心意', color: 'text-yellow-500', action: 'redpacket' }
+  { icon: 'ri-lock-2-line', label: '密聊', color: 'text-violet-500', action: 'secret' }
 ]
 
 const myCity = ref(localStorage.getItem('myCity') || '')
@@ -3320,9 +3143,9 @@ const loadMyCity = async () => {
   try {
     const res = await http.get('/center/info')
     if (res.status === 200 && res.data) {
-      myCard.value.name = res.data.nickname || localStorage.getItem('nickname') || myCard.value.name
+      myCard.value.name = res.data.nickname || getAuthItem('nickname') || myCard.value.name
       myCard.value.avatar = avatarOf(res.data.avatar, res.data.userId || res.data.nickname || myId)
-      myCard.value.sign = res.data.radarSign || res.data.healthPhase || myCard.value.sign
+      myCard.value.sign = res.data.radarSign || ''
       myCard.value.cover = res.data.profileCover || myCard.value.cover
       myCard.value.style = res.data.profileStyle || myCard.value.style
       myCard.value.city = res.data.city || myCard.value.city
@@ -3490,6 +3313,13 @@ const detectAndSaveLocation = () => new Promise((resolve) => {
   )
 })
 
+const manualRefreshLocation = async () => {
+  const ok = await detectAndSaveLocation()
+  if (ok && myCity.value) {
+    await saveMyCity(false)
+  }
+}
+
 const handlePlusItem = async (item) => {
   showPlusMenu.value = false
   if (item.action === 'album') {
@@ -3500,8 +3330,6 @@ const handlePlusItem = async (item) => {
     document.getElementById('chat-file-input')?.click()
   } else if (item.action === 'location') {
     sendLocationMessage()
-  } else if (item.action === 'redpacket') {
-    sendRedPacket()
   } else if (item.action === 'secret') {
     if (!activeChat.value || activeChat.value.type === 'group') {
       alert('密聊只适合一对一。')
@@ -3561,10 +3389,6 @@ const sendLocationMessage = async () => {
   await dispatchMessage(content, 'text')
 }
 
-const sendRedPacket = async () => {
-  const content = '🧧 想给你一点心意。平台不经手钱款，需要的话请去对方主页查看自愿公开的收款码。'
-  await dispatchMessage(content, 'text')
-}
 const openChat = async (item) => {
   activeChat.value = item
   currentView.value = 'chat'
@@ -3654,32 +3478,7 @@ const initWebSocket = () => {
     return
   }
 
-  const isLocalNetworkHost = (hostname) => {
-    if (!hostname) return false
-    return (
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      hostname.startsWith('192.168.') ||
-      hostname.startsWith('10.') ||
-      /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
-    )
-  }
-
-  // 甩手掌柜全自动：智能切换本地/生产环境的 WebSocket 聊天链路
-  const getWsUrl = () => {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname
-      // 本地/局域网真机调试：让手机连回电脑后端，而不是误飞公网
-      if (isLocalNetworkHost(hostname)) {
-        const wsHost = hostname === 'localhost' ? 'localhost' : hostname
-        return `ws://${wsHost}:8080/ws/${myId}`
-      }
-    }
-    // 如果你在手机 App 上运行或者访问部署上线的网页，直接连接公网服务器的 WebSocket 通道！
-    return `ws://106.55.249.7:8080/ws/${myId}`
-  }
-
-  const wsUrl = getWsUrl()
+  const wsUrl = getWsBaseURL(myId)
   socket = new WebSocket(wsUrl)
 
   socket.onopen = () => console.log("🟢 WebSocket 链路已接通")

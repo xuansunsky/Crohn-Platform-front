@@ -69,6 +69,7 @@
 <script setup>
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import http from '@/api/http.js'
+import { getAuthItem, setAuthItem } from '@/utils/authToken'
 
 const SocialTab = defineAsyncComponent(() => import('@/components/tabs/SocialTab.vue'))
 const CheckinTab = defineAsyncComponent(() => import('@/components/tabs/CheckinTab.vue'))
@@ -88,7 +89,7 @@ const tabItems = [
   { name: 'profile', label: '我的', icon: 'ri-user-smile-line' },
 ]
 
-const roleId = ref(localStorage.getItem('roleId') || '0')
+const roleId = ref(getAuthItem('roleId') || '0')
 const activeTab = ref(localStorage.getItem('lastActiveTab') || 'checkin')
 const isChatActive = ref(false)
 const scrollMain = ref(null)
@@ -114,7 +115,7 @@ onMounted(async () => {
   try {
     const res = await http.get("users/getRole")
     roleId.value = res.data
-    localStorage.setItem('roleId', res.data)
+    setAuthItem('roleId', res.data)
   } catch (e) { console.error(e) }
 })
 </script>
