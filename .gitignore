@@ -28,3 +28,9 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# 本地浏览器验证用户目录、截图与 Claude 本机权限
+.chrome-verify/
+.chrome-journal-verify*/
+.claude/settings.local.json
+verify-*.png
