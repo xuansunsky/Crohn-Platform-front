@@ -25,7 +25,7 @@ export const getWsBaseURL = (userId) => {
 
   if (isLocalNetworkHost(hostname)) {
     const wsHost = hostname === 'localhost' ? 'localhost' : hostname
-    return `ws://${wsHost}:8080/ws/${userId}`
+    return `ws://${wsHost}:8081/ws/${userId}`
   }
 
   const wsProtocol = protocol === 'https:' ? 'wss' : 'ws'

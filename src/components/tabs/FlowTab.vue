@@ -17,6 +17,7 @@
               <p>{{ todayLabel }} · 本周 {{ weekFillLabel }}</p>
             </div>
             <div class="record-tools">
+              <button type="button" @click="showDanceIntro = true" aria-label="起舞说明"><i class="ri-question-line"></i></button>
               <button type="button" @click="loadEntries(true)" aria-label="刷新"><i class="ri-refresh-line"></i></button>
               <button type="button" @click="openExport" :disabled="exporting" aria-label="导出"><i class="ri-download-2-line"></i></button>
             </div>
@@ -24,19 +25,58 @@
 
           <JournalMascot mode="home" :tone="companionTone" :line="companionLine" />
 
+          <section class="dance-hot" :class="{ open: danceHotOpen }">
+            <button type="button" class="dance-hot-summary" @click="danceHotOpen = !danceHotOpen">
+              <span class="dance-hot-flame"><i class="ri-fire-fill"></i></span>
+              <span class="dance-hot-copy">
+                <span><b>HOT</b> 起舞正在发生</span>
+                <small>记录此刻 · 问问指南 · 选择一种回应</small>
+              </span>
+              <i :class="danceHotOpen ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"></i>
+            </button>
+            <transition name="hot-reveal">
+              <div v-if="danceHotOpen" class="dance-hot-body">
+                <button type="button" @click="openFeelingChoices">
+                  <i class="ri-quill-pen-line"></i>
+                  <span><strong>记录一种感觉</strong><small>去选择亮的、平常的或暗的。</small></span>
+                </button>
+                <button type="button" @click="guidelineInfoOpen = !guidelineInfoOpen">
+                  <i class="ri-book-open-line"></i>
+                  <span><strong>问一个真实问题</strong><small>先了解资料来源，再进入问问指南。</small></span>
+                </button>
+                <div v-if="guidelineInfoOpen" class="guideline-info">
+                  <strong>问问指南参考资料</strong>
+                  <ul>
+                    <li>ESPEN 2023 IBD 临床营养指南</li>
+                    <li>IOIBD 2020 饮食指导</li>
+                    <li>CCF Medical Nutrition 2025</li>
+                    <li>NICE NG129 克罗恩病管理指南</li>
+                    <li>Crohn’s &amp; Colitis Foundation 饮食资料</li>
+                  </ul>
+                  <p>回答由 AI 根据公开资料、近期记录与对话生成，不构成诊断、处方或个体化医疗建议。医疗结论若没有可打开的原文引用、引用失效或资料已更新，请勿作为医疗决定依据，并向医生或注册营养师确认。</p>
+                  <button type="button" @click="openGuidelineFromHot"><span>进入问问指南</span><i class="ri-arrow-right-line"></i></button>
+                </div>
+                <button type="button" @click="openRolesFromHot">
+                  <i class="ri-chat-smile-3-line"></i>
+                  <span><strong>选择一种回应</strong><small>被理解、被梳理，或直接建议。</small></span>
+                </button>
+              </div>
+            </transition>
+          </section>
+
           <section class="record-prompt">
             <span>今天想留下哪一种？</span>
             <p>不用完整，也不用写得漂亮。</p>
           </section>
 
-          <div class="write-launch">
+          <div ref="feelingChoicesRef" class="write-launch" :class="{ spotlight: feelingChoicesSpotlight }">
             <button type="button" class="launch-tile bright" @click="openWrite('bright')">
               <span class="launch-copy">
                 <i class="ri-sun-line"></i>
                 <strong>亮的</strong>
                 <small>开心、松一口气、值得记住</small>
               </span>
-              <img src="/media/journal-companion/bright.png" alt="" />
+              <img src="/media/journal-companion/bright.webp" alt="" loading="lazy" decoding="async" />
             </button>
             <button type="button" class="launch-tile calm" @click="openWrite('calm')">
               <span class="launch-copy">
@@ -44,7 +84,7 @@
                 <strong>平常的</strong>
                 <small>没什么大事，但这是我的一天</small>
               </span>
-              <img src="/media/journal-companion/normal.png" alt="" />
+              <img src="/media/journal-companion/normal.webp" alt="" loading="lazy" decoding="async" />
             </button>
             <button type="button" class="launch-tile dark" @click="openWrite('dark')">
               <span class="launch-copy">
@@ -52,15 +92,27 @@
                 <strong>暗的</strong>
                 <small>疼、累、孤独，或者说不上来</small>
               </span>
-              <img src="/media/journal-companion/comfort.png" alt="" />
+              <img src="/media/journal-companion/comfort.webp" alt="" loading="lazy" decoding="async" />
             </button>
           </div>
 
           <section class="nb-body">
             <header class="memory-head">
-              <div><span>最近留下的感觉</span><small>她和你一起记得</small></div>
-              <strong>{{ entries.length }} 条</strong>
+              <div><span>最近留下的感觉</span><small>按亮、平、暗分别查看</small></div>
+              <strong>{{ filteredEntries.length }} / {{ entries.length }} 条</strong>
             </header>
+
+            <div class="tone-filters" role="group" aria-label="筛选感觉记录">
+              <button
+                v-for="item in toneFilters"
+                :key="item.id"
+                type="button"
+                :class="[item.id, { active: entryFilter === item.id }]"
+                @click="entryFilter = item.id"
+              >
+                <i :class="item.icon"></i><span>{{ item.label }}</span><strong>{{ item.count }}</strong>
+              </button>
+            </div>
 
             <div v-if="entriesLoading" class="stream-empty">正在拿回你的记录…</div>
             <div v-else-if="!entries.length" class="stream-empty warm">
@@ -68,12 +120,17 @@
               <strong>这里还没有内容</strong>
               <span>从上面选一种感觉，写一句就好。</span>
             </div>
+            <div v-else-if="!filteredEntries.length" class="stream-empty warm">
+              <i class="ri-filter-3-line"></i>
+              <strong>这一类还没有记录</strong>
+              <span>换个分类看看，或者从上面留下一条。</span>
+            </div>
 
             <div v-else class="week-stack">
-              <article v-for="week in weekGroups" :key="week.key" class="week-block">
+              <article v-for="week in filteredWeekGroups" :key="week.key" class="week-block">
                 <header class="week-head">
                   <strong>{{ week.label }}</strong>
-                  <span v-if="weekGroups.length > 1">{{ week.items.length }} 条</span>
+                  <span v-if="filteredWeekGroups.length > 1">{{ week.items.length }} 条</span>
                 </header>
                 <div class="entry-rows">
                   <button
@@ -254,6 +311,29 @@
     <transition name="fade">
       <div v-if="toastMsg" class="dance-toast">{{ toastMsg }}</div>
     </transition>
+
+    <Teleport to="body">
+      <transition name="intro-rise">
+        <div v-if="showDanceIntro" class="dance-intro-mask" @click.self="closeDanceIntro(false)">
+          <article class="dance-intro-card">
+            <button type="button" class="dance-intro-close" aria-label="关闭" @click="closeDanceIntro(false)"><i class="ri-close-line"></i></button>
+            <div class="dance-intro-spark"><i class="ri-sparkling-fill"></i></div>
+            <p class="dance-intro-eyebrow">A NOTE FROM THE MAKER</p>
+            <h2>你点开了作者<br>最喜欢的一个模块</h2>
+            <p class="dance-intro-lead">“起舞”不要求你振作，也不催你变好。你只需要从一句真实的话开始。</p>
+            <div class="dance-intro-points">
+              <span><i class="ri-quill-pen-line"></i>留下一种感觉</span>
+              <span><i class="ri-book-open-line"></i>向公开指南提问</span>
+              <span><i class="ri-chat-smile-3-line"></i>选择此刻需要的回应</span>
+            </div>
+            <button type="button" class="dance-intro-start" @click="closeDanceIntro(true)">
+              <span>开始起舞</span><i class="ri-arrow-right-line"></i>
+            </button>
+            <button type="button" class="dance-intro-later" @click="closeDanceIntro(false)">我先自己看看</button>
+          </article>
+        </div>
+      </transition>
+    </Teleport>
 
     <input ref="recordFileInput" class="hidden-input" type="file" accept="image/*" multiple @change="handleRecordFiles" />
 
@@ -451,7 +531,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import http from '@/api/http'
 import JournalMascot from './JournalMascot.vue'
 
@@ -491,6 +571,39 @@ const toast = (m) => {
   setTimeout(() => (toastMsg.value = ''), 1800)
 }
 
+const DANCE_INTRO_KEY = 'crohn_dance_intro_seen_v1'
+const showDanceIntro = ref(false)
+const danceHotOpen = ref(false)
+const guidelineInfoOpen = ref(false)
+const feelingChoicesRef = ref(null)
+const feelingChoicesSpotlight = ref(false)
+let feelingSpotlightTimer = null
+const closeDanceIntro = (start = false) => {
+  showDanceIntro.value = false
+  try { localStorage.setItem(DANCE_INTRO_KEY, '1') } catch (e) { /* 无本地存储时不阻断使用 */ }
+  if (start) danceHotOpen.value = true
+}
+const openFeelingChoices = () => {
+  feelingChoicesSpotlight.value = true
+  nextTick(() => feelingChoicesRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  window.clearTimeout(feelingSpotlightTimer)
+  feelingSpotlightTimer = window.setTimeout(() => { feelingChoicesSpotlight.value = false }, 1800)
+}
+const openGuidelineFromHot = () => {
+  guidelineInfoOpen.value = false
+  page.value = 1
+  nextTick(() => createAndOpen('guideline', ''))
+}
+const openRolesFromHot = () => {
+  page.value = 1
+}
+
+onMounted(() => {
+  let seen = false
+  try { seen = localStorage.getItem(DANCE_INTRO_KEY) === '1' } catch (e) { /* 首次提示仍可展示 */ }
+  if (!seen) window.setTimeout(() => { showDanceIntro.value = true }, 360)
+})
+
 const todayLabel = computed(() => {
   const d = new Date()
   const w = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()]
@@ -501,19 +614,19 @@ const companionLine = ref('')
 const TONE_META = {
   bright: {
     short: '亮', long: '亮起来的一刻', action: '记下亮的', icon: 'ri-sun-line',
-    portrait: '/media/journal-companion/bright.png',
+    portrait: '/media/journal-companion/bright.webp',
     placeholder: '刚刚发生了什么，让你心里亮了一下？',
     replies: ['这份开心，我和你一起收好。', '原来今天有这样一束光呀。', '看到你开心，我也分到一点。'],
   },
   calm: {
     short: '平', long: '平常的一刻', action: '记下平常的', icon: 'ri-cloud-line',
-    portrait: '/media/journal-companion/normal.png',
+    portrait: '/media/journal-companion/normal.webp',
     placeholder: '没什么大事也可以，写写此刻在想什么。',
     replies: ['平常的一天，也被我们认真看见了。', '这一刻没有被日子悄悄带走。', '嗯，我记得你今天这样生活过。'],
   },
   dark: {
     short: '暗', long: '有点暗的一刻', action: '记下暗的', icon: 'ri-moon-line',
-    portrait: '/media/journal-companion/comfort.png',
+    portrait: '/media/journal-companion/comfort.webp',
     placeholder: '难受、疼、累，或者说不上来，都可以写。',
     replies: ['不用马上好起来，我先陪你待着。', '这份难受不需要解释，我听见了。', '你愿意写下来就已经够了，我在。'],
   },
@@ -540,6 +653,17 @@ const companionReply = (tone, seed = '') => {
 const entries = ref([])
 const weekCount = ref(0)
 const entriesLoading = ref(false)
+const entryFilter = ref('all')
+const toneCount = (tone) => entries.value.filter(entry => normalizeTone(entry?.tone) === tone).length
+const toneFilters = computed(() => [
+  { id: 'all', label: '全部', icon: 'ri-stack-line', count: entries.value.length },
+  { id: 'bright', label: '亮', icon: 'ri-sun-line', count: toneCount('bright') },
+  { id: 'calm', label: '平', icon: 'ri-cloud-line', count: toneCount('calm') },
+  { id: 'dark', label: '暗', icon: 'ri-moon-line', count: toneCount('dark') },
+])
+const filteredEntries = computed(() => entryFilter.value === 'all'
+  ? entries.value
+  : entries.value.filter(entry => normalizeTone(entry?.tone) === entryFilter.value))
 const writeTone = ref(null) // 'bright' | 'dark' | null
 const writeDepth = ref(null) // null | 'simple' | 'rich'
 const editingEntry = ref(null)
@@ -597,10 +721,10 @@ const thisWeekItems = computed(() => {
   return entries.value.filter(e => (e.tone === 'bright' || e.tone === 'dark' || e.tone === 'calm') && isoWeekKey(e.createdAt) === cur)
 })
 
-const weekGroups = computed(() => {
+const createWeekGroups = (source, includeCurrent = true) => {
   const map = new Map()
   const cur = currentWeekKey()
-  for (const entry of entries.value) {
+  for (const entry of source) {
     if (entry.tone !== 'bright' && entry.tone !== 'dark' && entry.tone !== 'calm') continue
     const key = isoWeekKey(entry.createdAt)
     if (!map.has(key)) {
@@ -619,11 +743,13 @@ const weekGroups = computed(() => {
   for (const g of map.values()) {
     g.items.sort((a, b) => (parseEntryDate(b.createdAt)?.getTime() || 0) - (parseEntryDate(a.createdAt)?.getTime() || 0))
   }
-  if (!map.has(cur)) {
+  if (includeCurrent && !map.has(cur)) {
     map.set(cur, { key: cur, label: '本周', items: [], sortAt: Date.now() })
   }
   return Array.from(map.values()).sort((a, b) => b.sortAt - a.sortAt)
-})
+}
+const weekGroups = computed(() => createWeekGroups(entries.value))
+const filteredWeekGroups = computed(() => createWeekGroups(filteredEntries.value, entryFilter.value === 'all'))
 
 const loadWriteImages = (existing) => {
   recordImages.value.forEach(image => image.previewUrl && URL.revokeObjectURL(image.previewUrl))
@@ -1088,29 +1214,29 @@ loadEntries()
 // 图还没放的时候，用 fallback 渐变兜底，不会露黑底
 const AI_ROLES = [
   { id: 'guideline', label: '问问指南', desc: '查权威资料，结合健康日记', icon: 'ri-book-open-line', grad: 'linear-gradient(135deg,#2dd4bf,#0f766e)',
-    photo: '/media/roles/teacher.png', fallback: 'linear-gradient(165deg, #edf9f6 0%, #d7f0e9 55%, #bde3d8 100%)',
+    photo: '/media/roles/teacher.webp', fallback: 'linear-gradient(165deg, #edf9f6 0%, #d7f0e9 55%, #bde3d8 100%)',
     paper: 'rgba(237,249,246,0.96)', ink: '#163c35' },
   { id: 'summary', label: '总结员', desc: '梳理近况，说重点', icon: 'ri-file-list-3-line', grad: 'linear-gradient(135deg,#60a5fa,#6366f1)',
-    photo: '/media/roles/summary.png', fallback: 'linear-gradient(165deg, #eef4fc 0%, #dce8f7 55%, #c9dcf2 100%)',
+    photo: '/media/roles/summary.webp', fallback: 'linear-gradient(165deg, #eef4fc 0%, #dce8f7 55%, #c9dcf2 100%)',
     paper: 'rgba(236,244,253,0.94)', ink: '#1f3350' },
   { id: 'teacher', label: '老师', desc: '专业中肯的指导', icon: 'ri-graduation-cap-line', grad: 'linear-gradient(135deg,#34d399,#0ea5e9)',
-    photo: '/media/roles/teacher.png', fallback: 'linear-gradient(165deg, #eef8f0 0%, #d9efdd 55%, #c3e6cc 100%)',
+    photo: '/media/roles/teacher.webp', fallback: 'linear-gradient(165deg, #eef8f0 0%, #d9efdd 55%, #c3e6cc 100%)',
     paper: 'rgba(234,248,236,0.94)', ink: '#1c3a26' },
   { id: 'madonna', label: '圣母', desc: '无条件包容安慰', icon: 'ri-heart-3-line', grad: 'linear-gradient(135deg,#fb7185,#f472b6)',
-    photo: '/media/roles/madonna.png', fallback: 'linear-gradient(165deg, #fdf1f4 0%, #fbe1e8 55%, #f8d0dd 100%)',
+    photo: '/media/roles/madonna.webp', fallback: 'linear-gradient(165deg, #fdf1f4 0%, #fbe1e8 55%, #f8d0dd 100%)',
     paper: 'rgba(253,240,244,0.94)', ink: '#4a2233' },
   { id: 'pressure', label: '鞭策者', desc: '不夸你，只说你欠的账', icon: 'ri-boxing-line', grad: 'linear-gradient(135deg,#f97316,#ef4444)',
-    photo: '/media/roles/pressure.png', fallback: 'linear-gradient(165deg, #fef2e8 0%, #fce1cf 55%, #f8ceb0 100%)',
+    photo: '/media/roles/pressure.webp', fallback: 'linear-gradient(165deg, #fef2e8 0%, #fce1cf 55%, #f8ceb0 100%)',
     paper: 'rgba(254,242,232,0.94)', ink: '#4a2c14' },
   { id: 'natural', label: '纯天然', desc: '不设人设，自然聊', icon: 'ri-seedling-line', grad: 'linear-gradient(135deg,#5eead4,#14b8a6)',
-    photo: '/media/roles/natural.png', fallback: 'linear-gradient(165deg, #eefaf3 0%, #d9f1e2 55%, #c2e8cf 100%)',
+    photo: '/media/roles/natural.webp', fallback: 'linear-gradient(165deg, #eefaf3 0%, #d9f1e2 55%, #c2e8cf 100%)',
     paper: 'rgba(234,250,241,0.94)', ink: '#183a2c' },
   { id: 'custom', label: '自定义', desc: '自己写想要的风格', icon: 'ri-quill-pen-line', grad: 'linear-gradient(135deg,#fbbf24,#f97316)',
-    photo: '/media/roles/custom.png', fallback: 'linear-gradient(165deg, #fbf6ec 0%, #f3ead4 55%, #ecdfbe 100%)',
+    photo: '/media/roles/custom.webp', fallback: 'linear-gradient(165deg, #fbf6ec 0%, #f3ead4 55%, #ecdfbe 100%)',
     paper: 'rgba(251,246,236,0.94)', ink: '#3d3320' },
 ]
 const DEFAULT_ROLE_META = { label: '纯天然', icon: 'ri-seedling-line', grad: 'linear-gradient(135deg,#a78bfa,#6366f1)',
-  photo: '/media/roles/natural.png', fallback: 'linear-gradient(165deg, #eefaf3 0%, #d9f1e2 55%, #c2e8cf 100%)',
+  photo: '/media/roles/natural.webp', fallback: 'linear-gradient(165deg, #eefaf3 0%, #d9f1e2 55%, #c2e8cf 100%)',
   paper: 'rgba(234,250,241,0.94)', ink: '#183a2c' }
 const roleMeta = (id) => AI_ROLES.find(r => r.id === id) || DEFAULT_ROLE_META
 
@@ -1158,20 +1284,18 @@ const escapeHtml = (value) => String(value || '')
   .replace(/'/g, '&#039;')
 
 const PDF_CITATIONS = [
-  { pattern: /【?ESPEN(?:\s*2023)?[^】\n]{0,40}?第\s*(\d+)\s*页】?/gi, id: 'espen-ibd-nutrition-2023' },
-  { pattern: /【?IOIBD(?:\s*Dietary\s*Guidance)?(?:\s*2020)?[^】\n]{0,40}?第\s*(\d+)\s*页】?/gi, id: 'ioibd-dietary-guidance-2020' },
-  { pattern: /【?CCF\s*Medical\s*Nutrition(?:\s*2025)?[^】\n]{0,40}?第\s*(\d+)\s*页】?/gi, id: 'ccf-medical-nutrition-2025' },
-  { pattern: /【?NICE(?:\s*NG129)?[^】\n]{0,40}?第\s*(\d+)\s*页】?/gi, id: 'nice-crohn-management-ng129' },
+  { pattern: /(?:【|\[)?ESPEN(?:\s*2023)?(?:\s*指南)?\s*[·:：-]?\s*第?\s*(\d+)\s*页(?:】|\])?/gi, id: 'espen-ibd-nutrition-2023' },
+  { pattern: /(?:【|\[)?IOIBD(?:\s*Dietary\s*Guidance|\s*饮食指南)?(?:\s*2020)?\s*[·:：-]?\s*第?\s*(\d+)\s*页(?:】|\])?/gi, id: 'ioibd-dietary-guidance-2020' },
+  { pattern: /(?:【|\[)?CCF\s*Medical\s*Nutrition(?:\s*2025)?\s*[·:：-]?\s*第?\s*(\d+)\s*页(?:】|\])?/gi, id: 'ccf-medical-nutrition-2025' },
+  { pattern: /(?:【|\[)?NICE(?:\s*NG129)?\s*[·:：-]?\s*第?\s*(\d+)\s*页(?:】|\])?/gi, id: 'nice-crohn-management-ng129' },
 ]
 const CCF_WEB_URL = 'https://www.crohnscolitisfoundation.org/patientsandcaregivers/diet-and-nutrition/what-should-i-eat'
 
 const renderAiHtml = (content, role) => {
   let html = escapeHtml(content).replace(/\r\n/g, '\n')
-  html = html.replace(/^###\s+(.+)$/gm, '<h4>$1</h4>')
-    .replace(/^##\s+(.+)$/gm, '<h3>$1</h3>')
-    .replace(/^#\s+(.+)$/gm, '<h2>$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   if (role === 'guideline') {
+    // 模型偶尔会把资料名单独加粗；先去掉这层标记，避免把“资料名 + 页码”拆断。
+    html = html.replace(/\*\*((?:ESPEN(?:\s*2023)?|IOIBD(?:\s*Dietary\s*Guidance)?(?:\s*2020)?|CCF\s*Medical\s*Nutrition(?:\s*2025)?|NICE(?:\s*NG129)?|CCF[·:：]?\s*What Should I Eat with IBD\?[^*\n]*))\*\*/gi, '$1')
     for (const citation of PDF_CITATIONS) {
       html = html.replace(citation.pattern, (label, page) =>
         `<button type="button" class="citation-link" data-document-id="${citation.id}" data-page="${page}">${label}<i class="ri-external-link-line"></i></button>`)
@@ -1179,7 +1303,11 @@ const renderAiHtml = (content, role) => {
     html = html.replace(/【?CCF[·:：]?\s*What Should I Eat with IBD\?[·:：]?\s*([^】\n]*)】?/gi, (label) =>
       `<a class="citation-link" href="${CCF_WEB_URL}" target="_blank" rel="noopener noreferrer">${label}<i class="ri-external-link-line"></i></a>`)
   }
-  html = html.replace(/^(?:[-*]|\d+\.)\s+(.+)$/gm, '<div class="rich-list-item"><span>•</span><div>$1</div></div>')
+  html = html.replace(/^###\s+(.+)$/gm, '<h4>$1</h4>')
+    .replace(/^##\s+(.+)$/gm, '<h3>$1</h3>')
+    .replace(/^#\s+(.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^(?:[-*]|\d+\.)\s+(.+)$/gm, '<div class="rich-list-item"><span>•</span><div>$1</div></div>')
   return html.split(/\n{2,}/).map(block => {
     const clean = block.trim()
     if (!clean) return ''
@@ -1258,7 +1386,7 @@ const jieqiDateLabel = computed(() => {
   return dayN <= 1 ? `${base} · 今日入${j.name}` : `${base} · ${j.name}第${dayN}天`
 })
 const jieqiBgLayers = computed(() =>
-  `linear-gradient(180deg, rgba(10,20,14,0.05), rgba(8,16,12,0.5)), url('/media/season-hero.png'), linear-gradient(150deg, #eef6ec 0%, #dcefe0 45%, #bfe0cb 75%, #a9d3c4 100%)`
+  `linear-gradient(180deg, rgba(10,20,14,0.05), rgba(8,16,12,0.5)), url('/media/season-hero.webp'), linear-gradient(150deg, #eef6ec 0%, #dcefe0 45%, #bfe0cb 75%, #a9d3c4 100%)`
 )
 
 const formatConvTime = (value) => {
@@ -1493,6 +1621,7 @@ const send = async () => {
 
 onUnmounted(() => {
   if (currentAbort) currentAbort.abort()
+  window.clearTimeout(feelingSpotlightTimer)
   recordImages.value.forEach(image => image.previewUrl && URL.revokeObjectURL(image.previewUrl))
 })
 </script>
@@ -1511,6 +1640,24 @@ onUnmounted(() => {
   background: rgba(15,23,42,0.92); color: #fff; font-size: 13px; font-weight: 800;
   padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); backdrop-filter: blur(12px);
 }
+
+.dance-intro-mask { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: flex-end; justify-content: center; padding: 20px 14px calc(18px + env(safe-area-inset-bottom)); background: rgba(22,18,29,.58); backdrop-filter: blur(9px); }
+.dance-intro-card { position: relative; width: min(100%,440px); overflow: hidden; padding: 27px 23px 18px; border: 1px solid rgba(255,255,255,.55); border-radius: 28px; background: radial-gradient(circle at 90% 2%,rgba(193,152,255,.28),transparent 31%),linear-gradient(160deg,#fffdf9,#f4edf7); box-shadow: 0 28px 70px -24px rgba(23,15,35,.65); }
+.dance-intro-card::before { content: ""; position: absolute; width: 180px; height: 180px; left: -88px; bottom: -105px; border-radius: 50%; background: radial-gradient(circle,rgba(255,153,83,.22),transparent 70%); }
+.dance-intro-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 12px; color: #806f83; background: rgba(255,255,255,.65); }
+.dance-intro-spark { width: 46px; height: 46px; display: grid; place-items: center; margin-bottom: 16px; border-radius: 16px; color: #fff; font-size: 21px; background: linear-gradient(145deg,#f15f71,#8b50df 55%,#554bdc); box-shadow: 0 13px 28px -12px rgba(112,69,205,.75); }
+.dance-intro-eyebrow { color: #a07878; font-size: 8.5px; font-weight: 950; letter-spacing: .18em; }
+.dance-intro-card h2 { margin-top: 7px; color: #2f242d; font-family: Georgia,"Noto Serif SC",serif; font-size: 25px; font-weight: 950; line-height: 1.28; }
+.dance-intro-lead { margin-top: 13px; color: #76666f; font-size: 12px; font-weight: 650; line-height: 1.75; }
+.dance-intro-points { display: grid; grid-template-columns: 1fr; gap: 7px; margin: 17px 0; padding: 12px; border-radius: 16px; background: rgba(255,255,255,.57); }
+.dance-intro-points span { display: flex; align-items: center; gap: 9px; color: #655661; font-size: 10.5px; font-weight: 800; }
+.dance-intro-points i { color: #905fd3; font-size: 14px; }
+.dance-intro-start { width: 100%; height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 16px; color: #fff; background: #2c2330; font-size: 13px; font-weight: 950; box-shadow: 0 12px 24px -15px rgba(31,22,36,.8); }
+.dance-intro-later { width: 100%; margin-top: 11px; color: #9b8b94; font-size: 10px; font-weight: 800; }
+.intro-rise-enter-active,.intro-rise-leave-active { transition: opacity .25s ease; }
+.intro-rise-enter-active .dance-intro-card,.intro-rise-leave-active .dance-intro-card { transition: transform .32s cubic-bezier(.22,1,.36,1); }
+.intro-rise-enter-from,.intro-rise-leave-to { opacity: 0; }
+.intro-rise-enter-from .dance-intro-card,.intro-rise-leave-to .dance-intro-card { transform: translateY(36px) scale(.97); }
 
 .page-dots { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: 6px; }
 .page-dots span { width: 16px; height: 4px; border-radius: 999px; background: rgba(17,24,39,0.14); transition: background 0.2s, width 0.2s; }
@@ -1532,10 +1679,41 @@ onUnmounted(() => {
 .record-tools { display: flex; gap: 7px; padding-top: 2px; }
 .record-tools button { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid rgba(78,55,45,.07); border-radius: 13px; background: rgba(255,255,255,.76); color: #77655c; box-shadow: 0 12px 24px -20px rgba(52,34,27,.45); }
 .record-tools button:disabled { opacity: .45; }
+
+.dance-hot { position: relative; margin: 10px 0 14px; overflow: hidden; border: 1px solid rgba(103,73,56,.08); border-radius: 19px; background: rgba(255,255,255,.72); box-shadow: 0 15px 34px -29px rgba(54,35,28,.62); }
+.dance-hot-summary { width: 100%; min-height: 72px; display: flex; align-items: center; gap: 11px; padding: 10px 13px; text-align: left; }
+.dance-hot-flame { position: relative; flex: 0 0 42px; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 15px; color: #fff; font-size: 19px; background: linear-gradient(145deg,#ffb23f,#f45b45 58%,#9b4de0); box-shadow: 0 9px 20px -9px rgba(244,91,69,.8); }
+.dance-hot-flame::before { content: ""; position: absolute; inset: -7px; z-index: -1; border-radius: 18px; background: radial-gradient(circle,rgba(247,114,67,.25),transparent 68%); animation: hot-breathe 2.4s ease-in-out infinite; }
+.dance-hot-copy { flex: 1; min-width: 0; }
+.dance-hot-copy > span { display: flex; align-items: center; gap: 7px; color: #3d2c25; font-size: 13px; font-weight: 950; }
+.dance-hot-copy b { padding: 2px 6px; border-radius: 6px; color: #fff; background: #ef654d; font-size: 8px; letter-spacing: .1em; }
+.dance-hot-copy small { display: block; margin-top: 5px; overflow: hidden; color: #9b8980; font-size: 9.5px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.dance-hot-summary > i { color: #af9c92; font-size: 17px; }
+.dance-hot-body { display: grid; gap: 7px; padding: 0 10px 11px; }
+.dance-hot-body > button { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 8px 11px; border-radius: 14px; border: 1px solid rgba(85,61,48,.06); background: #fbf8f4; text-align: left; }
+.dance-hot-body > button > i { flex: 0 0 31px; width: 31px; height: 31px; display: grid; place-items: center; border-radius: 10px; color: #fff; background: #6f5bd7; font-size: 14px; }
+.dance-hot-body > button:nth-child(2) > i { background: #308f7b; }
+.dance-hot-body > button:nth-child(3) > i { background: #bd7187; }
+.dance-hot-body > button span { min-width: 0; }
+.dance-hot-body strong { display: block; color: #48372f; font-size: 11.5px; font-weight: 900; }
+.dance-hot-body small { display: block; margin-top: 2px; color: #a09088; font-size: 9px; font-weight: 650; }
+.guideline-info { margin: -1px 2px 2px; padding: 13px; border: 1px solid rgba(48,143,123,.12); border-radius: 14px; background: #f1f8f5; }
+.guideline-info > strong { display: block; color: #1d4f45; font-size: 11.5px; font-weight: 950; }
+.guideline-info ul { display: grid; gap: 4px; margin: 9px 0 0; padding: 0; list-style: none; }
+.guideline-info li { position: relative; padding-left: 11px; color: #527269; font-size: 9.5px; font-weight: 750; line-height: 1.45; }
+.guideline-info li::before { content: ""; position: absolute; top: .55em; left: 0; width: 4px; height: 4px; border-radius: 50%; background: #2b9b83; }
+.guideline-info p { margin-top: 10px; padding-top: 9px; border-top: 1px solid rgba(48,143,123,.11); color: #71817c; font-size: 9px; font-weight: 650; line-height: 1.65; }
+.guideline-info > button { width: 100%; min-height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; border-radius: 11px; color: #fff; background: #277d6b; font-size: 10.5px; font-weight: 900; }
+.hot-reveal-enter-active,.hot-reveal-leave-active { transition: opacity .2s ease, transform .24s ease; transform-origin: top; }
+.hot-reveal-enter-from,.hot-reveal-leave-to { opacity: 0; transform: translateY(-7px); }
+@keyframes hot-breathe { 0%,100% { transform: scale(.86); opacity: .55; } 50% { transform: scale(1.12); opacity: 1; } }
+
 .record-prompt { margin: 20px 2px 10px; }
 .record-prompt span { color: #4d3c34; font-size: 14px; font-weight: 900; }
 .record-prompt p { margin-top: 3px; color: #a29289; font-size: 10.5px; font-weight: 650; }
-.write-launch { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.write-launch { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; border-radius: 24px; transition: box-shadow .28s ease, transform .28s ease; }
+.write-launch.spotlight { transform: translateY(-2px); box-shadow: 0 0 0 4px rgba(124,99,184,.15), 0 18px 38px -25px rgba(102,72,126,.75); animation: feeling-spotlight 1.2s ease-in-out 1; }
+@keyframes feeling-spotlight { 0%,100% { box-shadow: 0 0 0 4px rgba(124,99,184,.15),0 18px 38px -25px rgba(102,72,126,.75); } 50% { box-shadow: 0 0 0 8px rgba(124,99,184,.08),0 20px 42px -22px rgba(102,72,126,.82); } }
 .launch-tile { position: relative; height: 142px; overflow: hidden; border: 1px solid rgba(83,58,47,.07); border-radius: 22px; text-align: left; box-shadow: 0 18px 34px -28px rgba(65,42,33,.48); transition: transform .17s ease, box-shadow .17s ease; }
 .launch-tile:active { transform: scale(.975); box-shadow: 0 10px 20px -18px rgba(65,42,33,.42); }
 .launch-tile.bright { background: linear-gradient(155deg, #fff9e9, #f8e0ae); }
@@ -1554,6 +1732,16 @@ onUnmounted(() => {
 .memory-head div span { display: block; color: #44342d; font-family: Georgia, "Noto Serif SC", serif; font-size: 16px; font-weight: 900; }
 .memory-head div small { display: block; margin-top: 3px; color: #ad9e96; font-size: 9.5px; font-weight: 700; }
 .memory-head > strong { padding: 4px 9px; border-radius: 999px; background: #eee7e2; color: #968278; font-size: 9.5px; font-weight: 900; }
+.tone-filters { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; margin: -3px 0 16px; }
+.tone-filters button { min-width: 0; min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px; border: 1px solid rgba(74,54,44,.06); border-radius: 13px; color: #95857d; background: rgba(255,255,255,.66); font-size: 9.5px; font-weight: 850; transition: transform .16s ease,background .16s ease; }
+.tone-filters button:active { transform: scale(.96); }
+.tone-filters button i { font-size: 12px; }
+.tone-filters button strong { min-width: 17px; height: 17px; display: grid; place-items: center; padding: 0 4px; border-radius: 999px; color: #86756c; background: #eee7e2; font-size: 8.5px; }
+.tone-filters button.active { color: #fff; background: #6f5f58; }
+.tone-filters button.active strong { color: #66544b; background: rgba(255,255,255,.86); }
+.tone-filters button.bright.active { background: #d79b2e; }
+.tone-filters button.calm.active { background: #9a7569; }
+.tone-filters button.dark.active { background: #715a77; }
 
 .week-stack { display: flex; flex-direction: column; gap: 26px; margin-top: 4px; }
 .week-block { padding: 0; }

@@ -69,6 +69,46 @@
       </div>
     </div>
 
+    <!-- ===== 此刻感想：和身体记录放在一起，但不互相强迫 ===== -->
+    <div class="px-4 pt-4">
+      <section class="moment-journal">
+        <header class="moment-journal-head">
+          <div>
+            <p>FEELING NOTES</p>
+            <h3>这一刻，也可以留下</h3>
+            <span>不必完整，不必每天写。想到什么就记什么。</span>
+          </div>
+          <button type="button" aria-label="记录此刻感想" @click="emit('open-feeling-composer')">
+            <i class="ri-add-line"></i>
+          </button>
+        </header>
+
+        <div v-if="feelingsLoading" class="moment-empty">正在拿回你的感想…</div>
+        <div v-else-if="feelingsFailed && !recentFeelings.length" class="moment-empty">感想暂时没拿到，身体记录仍可正常使用。</div>
+        <div v-else-if="recentFeelings.length" class="moment-list">
+          <article v-for="entry in recentFeelings" :key="entry.id" class="moment-note" :class="entry.tone">
+            <div class="moment-note-copy">
+              <div class="moment-note-meta">
+                <span><i class="ri-heart-3-line"></i>{{ moodScoreLabel(entry) }}</span>
+              </div>
+              <h4>{{ feelingTitle(entry) }}</h4>
+              <p>{{ entry.content || entry.mood || '这一刻留下了图片。' }}</p>
+              <small v-if="feelingDetail(entry)">{{ feelingDetail(entry) }}</small>
+              <time class="moment-note-time">{{ formatFeelingTime(entry.createdAt) }}</time>
+            </div>
+            <div class="moment-note-image">
+              <img :src="entry.images[0] || moodCharacterImage(entry)" :alt="entry.images.length ? '感想图片' : '当时的心情角色'" />
+              <span v-if="entry.images.length > 1">+{{ entry.images.length - 1 }}</span>
+            </div>
+          </article>
+        </div>
+        <button v-else type="button" class="moment-empty moment-empty-action" @click="emit('open-feeling-composer')">
+          <i class="ri-quill-pen-line"></i>
+          <span><strong>还没有留下感想</strong><small>一句话也算，点这里写下第一条。</small></span>
+        </button>
+      </section>
+    </div>
+
     <!-- ===== 时间范围切换 ===== -->
     <div class="px-4 pt-4">
       <div class="flex bg-white border border-stone-100 rounded-2xl p-1 shadow-[0_4px_16px_-10px_rgba(15,23,42,0.1)]">
@@ -320,25 +360,37 @@
             <section class="rounded-2xl bg-white border border-stone-100 p-4 space-y-4">
               <p class="text-[11px] font-bold text-stone-400">用药 · 饮食 · 知道就记</p>
               <div>
-                <label class="block text-[12px] font-bold text-stone-600 mb-2">💊 今天用药了吗？</label>
-                <div class="flex flex-wrap gap-2">
-                  <button v-for="m in medOptions" :key="m"
-                    @click="toggleMed(m)"
-                    :class="['px-3 py-1.5 rounded-full text-[12px] font-bold transition-all active:scale-95 border', form.meds.includes(m) ? 'bg-violet-50 text-violet-700 border-violet-200' : 'bg-stone-50 text-stone-400 border-stone-200']"
-                  >{{ m }}</button>
+                <button type="button" @click="medOpen = !medOpen" class="w-full flex items-center justify-between">
+                  <label class="text-[12px] font-bold text-stone-600">💊 今天用药了吗？<span v-if="!medOpen && (form.meds.length || form.medOther)" class="ml-1 text-[11px] font-bold text-violet-500">已记录</span></label>
+                  <i :class="['ri-arrow-down-s-line text-stone-400 text-[18px] transition-transform', medOpen ? 'rotate-180' : '']"></i>
+                </button>
+                <div v-if="medOpen" class="mt-2">
+                  <div class="flex flex-wrap gap-2">
+                    <button v-for="m in medOptions" :key="m"
+                      @click="toggleMed(m)"
+                      :class="['px-3 py-1.5 rounded-full text-[12px] font-bold transition-all active:scale-95 border', form.meds.includes(m) ? 'bg-violet-50 text-violet-700 border-violet-200' : 'bg-stone-50 text-stone-400 border-stone-200']"
+                    >{{ m }}</button>
+                  </div>
+                  <input v-if="form.meds.includes('其它')" v-model="form.medOther" type="text" placeholder="其它药名，如：硫唑嘌呤" class="mt-2 w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-violet-200 focus:bg-white transition-all" />
                 </div>
-                <input v-if="form.meds.includes('其它')" v-model="form.medOther" type="text" placeholder="其它药名，如：硫唑嘌呤" class="mt-2 w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-violet-200 focus:bg-white transition-all" />
               </div>
-              <div>
-                <label class="block text-[12px] font-bold text-stone-600 mb-2">🍚 今天吃了啥？</label>
-                <div class="space-y-2">
-                  <input v-model="form.breakfast" type="text" placeholder="早餐 · 如：白粥、鸡蛋（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
-                  <input v-model="form.lunch" type="text" placeholder="午餐 · 如：米饭、清炒时蔬（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
-                  <input v-model="form.dinner" type="text" placeholder="晚餐 · 如：面条、蒸鱼（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
-                  <input v-model="form.food" type="text" placeholder="其它 · 如：加餐、外食、踩雷食物（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-[12px] font-bold text-stone-600 mb-2">🍚 今天吃了啥？</label>
+                  <div class="space-y-2">
+                    <input v-model="form.breakfast" type="text" placeholder="早餐 · 如：白粥、鸡蛋（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
+                    <input v-model="form.lunch" type="text" placeholder="午餐 · 如：米饭、清炒时蔬（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
+                    <input v-model="form.dinner" type="text" placeholder="晚餐 · 如：面条、蒸鱼（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
+                    <input v-model="form.food" type="text" placeholder="其它 · 如：加餐、外食、踩雷食物（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium text-stone-700 placeholder-stone-300 outline-none focus:border-stone-900 focus:bg-white transition-all" />
+                  </div>
+                </div>
+                <div class="pt-4 border-t border-stone-100">
+                  <label class="block text-[12px] font-bold text-stone-600 mb-2">🌿 吃完有什么感觉？</label>
+                  <textarea v-model="form.foodFeeling" rows="2" placeholder="如：很舒服、肚子胀、有点痛、跑了厕所（可不填）" class="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-100 text-[13px] font-medium leading-relaxed text-stone-700 placeholder-stone-300 outline-none resize-none focus:border-stone-900 focus:bg-white transition-all"></textarea>
                 </div>
               </div>
             </section>
+            <p class="text-[11px] font-bold text-stone-300 text-center leading-relaxed px-2">记漏了？没关系，去日历那天的网格点一下，随时能补记或修改当天的感受和饮食。</p>
           </div>
 
           <div class="shrink-0 px-6 py-4 border-t border-stone-100 bg-white">
@@ -483,6 +535,18 @@
               <span class="text-[12px] font-bold text-stone-400 shrink-0">{{ row.label }}</span>
               <span class="text-[13px] font-black text-stone-800 text-right leading-relaxed">{{ row.value }}</span>
             </div>
+            <section v-if="selectedDayFeelings.length" class="day-feelings">
+              <header><i class="ri-quill-pen-line"></i> 那天还留下了</header>
+              <article v-for="entry in selectedDayFeelings" :key="entry.id" :class="entry.tone">
+                <div><span>{{ moodScoreLabel(entry) }}</span><time>{{ formatFeelingClock(entry.createdAt) }}</time></div>
+                <h4>{{ feelingTitle(entry) }}</h4>
+                <p>{{ entry.content || entry.mood || '这一刻留下了图片。' }}</p>
+                <div class="day-feeling-images">
+                  <img v-if="!entry.images.length" :src="moodCharacterImage(entry)" alt="当时的心情角色" />
+                  <img v-for="image in entry.images" :key="image" :src="image" alt="感想图片" />
+                </div>
+              </article>
+            </section>
           </div>
           <div class="shrink-0 px-6 py-4 border-t border-stone-100 bg-white">
             <button @click="editSelectedDay" class="w-full py-3.5 rounded-2xl bg-stone-900 text-white text-[15px] font-black active:scale-[0.98] transition-all">修改这条记录</button>
@@ -525,7 +589,10 @@ import http from '@/api/http'
 import TabPageHeader from '@/components/ui/TabPageHeader.vue'
 import { SERVER_DOWN_HINT } from '@/utils/serverHint'
 
-const emit = defineEmits(['change-tab'])
+const props = defineProps({
+  feelingRefreshKey: { type: Number, default: 0 }
+})
+const emit = defineEmits(['change-tab', 'open-feeling-composer'])
 
 const today = new Date()
 const todayStr = computed(() => `${today.getMonth() + 1}月${today.getDate()}日`)
@@ -538,6 +605,9 @@ const todayDateStr = computed(() => {
 
 const diaryHistory = ref([])
 const labHistory = ref([])
+const feelingHistory = ref([])
+const feelingsLoading = ref(false)
+const feelingsFailed = ref(false)
 const streakCount = ref(0)
 const totalRecordDays = ref(0)
 const todayDone = ref(false)
@@ -570,6 +640,80 @@ const formatDateStr = (date) => {
 
 const formatDisplayDate = (date) => `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
 
+const parseFeelingDate = (value) => {
+  if (!value) return null
+  if (Array.isArray(value)) {
+    const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0] = value
+    return new Date(year, month - 1, day, hour, minute, second)
+  }
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+const parseFeelingImages = (value) => {
+  if (!value) return []
+  try {
+    const images = JSON.parse(value)
+    return Array.isArray(images) ? images.filter(Boolean) : []
+  } catch {
+    return String(value).split(',').map(item => item.trim()).filter(Boolean)
+  }
+}
+
+const parseMoodScore = (entry) => {
+  const source = `${entry?.title || ''} ${entry?.mood || ''}`
+  const match = source.match(/心情\s*(10|[0-9])\s*\/\s*10/)
+  return match ? Number(match[1]) : null
+}
+
+const moodImageIndex = (score) => {
+  if (score == null) return 3
+  if (score <= 1) return 5
+  if (score <= 3) return 4
+  if (score <= 5) return 3
+  if (score <= 7) return 2
+  return 1
+}
+
+const moodScoreLabel = (entry) => entry.moodScore == null ? '旧感想' : `心情 ${entry.moodScore}/10`
+const feelingTitle = (entry) => {
+  const title = String(entry.title || '').trim()
+  return /^心情\s*(10|[0-9])\s*\/\s*10$/.test(title) ? '这一刻' : (title || '这一刻')
+}
+const moodCharacterImage = (entry) => `/media/journal-companion/mood-${entry.moodImage}.webp`
+const feelingDetail = (entry) => {
+  const moodNote = String(entry.mood || '').replace(/心情\s*(10|[0-9])\s*\/\s*10\s*·?\s*/, '').trim()
+  return [moodNote, entry.statusText].filter(Boolean).join(' · ')
+}
+
+const normalizeFeeling = (entry) => {
+  const moodScore = parseMoodScore(entry)
+  return {
+    ...entry,
+    tone: ['bright', 'calm', 'dark'].includes(entry.tone) ? entry.tone : 'calm',
+    moodScore,
+    moodImage: moodImageIndex(moodScore),
+    date: parseFeelingDate(entry.createdAt),
+    images: parseFeelingImages(entry.imagesJson)
+  }
+}
+
+const formatFeelingTime = (value) => {
+  const date = parseFeelingDate(value)
+  if (!date) return ''
+  const now = new Date()
+  const sameDay = date.toDateString() === now.toDateString()
+  const clock = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  return sameDay ? `今天 ${clock}` : `${date.getMonth() + 1}月${date.getDate()}日 ${clock}`
+}
+
+const formatFeelingClock = (value) => {
+  const date = parseFeelingDate(value)
+  return date ? `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}` : ''
+}
+
+const recentFeelings = computed(() => [...feelingHistory.value].slice(0, 4))
+
 const normalizeRecord = (record) => {
   const date = new Date(`${record.recordDate}T00:00:00`)
   const meals = safeJson(record.mealsJson, {})
@@ -590,7 +734,8 @@ const normalizeRecord = (record) => {
     breakfast: meals.breakfast || '',
     lunch: meals.lunch || '',
     dinner: meals.dinner || '',
-    food: record.foodNote || ''
+    food: record.foodNote || '',
+    foodFeeling: meals.feeling || ''
   }
 }
 
@@ -616,6 +761,24 @@ const rangeOptions = [
 ]
 const rangeDays = ref(14)
 const rangedHistory = computed(() => rangeDays.value === 0 ? diaryHistory.value : diaryHistory.value.slice(-rangeDays.value))
+const moodTrendHistory = computed(() => {
+  const byDay = new Map()
+  feelingHistory.value.forEach(entry => {
+    if (!entry.date || entry.moodScore == null) return
+    const key = formatDateStr(entry.date)
+    const day = byDay.get(key) || { date: new Date(`${key}T00:00:00`), scores: [] }
+    day.scores.push(entry.moodScore)
+    byDay.set(key, day)
+  })
+  const list = Array.from(byDay.values())
+    .map(day => ({ date: day.date, moodScore: Number(avg(day.scores).toFixed(1)) }))
+    .sort((a, b) => a.date - b.date)
+  if (rangeDays.value === 0) return list
+  const from = new Date(today)
+  from.setHours(0, 0, 0, 0)
+  from.setDate(from.getDate() - rangeDays.value + 1)
+  return list.filter(day => day.date >= from)
+})
 const rangeLabel = computed(() => rangeDays.value === 0 ? `全部 ${diaryHistory.value.length} 天` : `近 ${rangeDays.value} 天`)
 
 const rangeStats = computed(() => {
@@ -752,6 +915,12 @@ const bristolText = (type) => {
   return meta ? `${meta.icon} ${meta.label}` : `类型 ${type}`
 }
 
+const selectedDayFeelings = computed(() => {
+  const record = selectedDayRecord.value
+  if (!record?.date) return []
+  return feelingHistory.value.filter(entry => entry.date && entry.date.toDateString() === record.date.toDateString())
+})
+
 const dayDetailRows = computed(() => {
   const r = selectedDayRecord.value
   if (!r) return []
@@ -767,9 +936,11 @@ const dayDetailRows = computed(() => {
   if (r.lunch) rows.push({ label: '午餐', value: r.lunch })
   if (r.dinner) rows.push({ label: '晚餐', value: r.dinner })
   if (r.food) rows.push({ label: '饮食其它', value: r.food })
+  if (r.foodFeeling) rows.push({ label: '吃后感觉', value: r.foodFeeling })
   if (!r.breakfast && !r.lunch && !r.dinner && !r.food) {
     rows.push({ label: '饮食', value: '未填' })
   }
+  if (!r.foodFeeling) rows.push({ label: '吃后感觉', value: '未填' })
   return rows
 })
 
@@ -787,25 +958,26 @@ const trendMode = ref('poop')
 const trendMeta = {
   poop: { label: '排便', field: 'poop', color: '#14b8a6', unit: '次' },
   pain: { label: '腹痛', field: 'pain', color: '#f43f5e', unit: '分' },
+  mood: { label: '心情', field: 'moodScore', color: '#a87b96', unit: '分', max: 10 },
 }
 const trendModes = Object.entries(trendMeta).map(([key, m]) => ({ key, label: m.label }))
 
 const renderChart = () => {
   if (!chart) return
   const meta = trendMeta[trendMode.value] || trendMeta.poop
-  const list = rangedHistory.value
+  const list = trendMode.value === 'mood' ? moodTrendHistory.value : rangedHistory.value
   if (!list.length) {
     chart.clear()
     return
   }
-  const data = list.map(d => d[meta.field])
+  const data = list.map(day => day[meta.field])
   const labels = list.map(d => `${d.date.getMonth() + 1}/${d.date.getDate()}`)
   const color = meta.color
   const labelInterval = Math.max(0, Math.ceil(list.length / 7) - 1)
   chart.setOption({
     grid: { left: 28, right: 12, top: 16, bottom: 24 },
     xAxis: { type: 'category', data: labels, axisLine: { lineStyle: { color: '#e7e5e4' } }, axisLabel: { color: '#a8a29e', fontSize: 9, interval: labelInterval }, axisTick: { show: false } },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f5f5f4' } }, axisLabel: { color: '#a8a29e', fontSize: 9 } },
+    yAxis: { type: 'value', min: 0, max: meta.max, splitLine: { lineStyle: { color: '#f5f5f4' } }, axisLabel: { color: '#a8a29e', fontSize: 9 } },
     series: [{
       type: 'line', data, smooth: true, symbol: list.length > 45 ? 'none' : 'circle', symbolSize: 6,
       lineStyle: { color, width: 3 }, itemStyle: { color },
@@ -843,8 +1015,27 @@ const renderLab = () => {
   }, true)
 }
 
-watch([trendMode, rangeDays, diaryHistory], () => nextTick(renderChart))
+watch([trendMode, rangeDays, diaryHistory, moodTrendHistory], () => nextTick(renderChart))
 watch(labHistory, () => nextTick(() => { ensureLabChart(); renderLab() }))
+
+const loadFeelings = async () => {
+  feelingsLoading.value = true
+  feelingsFailed.value = false
+  try {
+    const response = await http.get('/dance/entries', {
+      params: { limit: 200, mode: 'peakvalley' },
+      timeout: 30000
+    })
+    if ((response?.status === 200 || response?.code === 200) && Array.isArray(response.data?.entries)) {
+      feelingHistory.value = response.data.entries.map(normalizeFeeling)
+    }
+  } catch (error) {
+    feelingsFailed.value = true
+    console.error('感想记录加载失败', error)
+  } finally {
+    feelingsLoading.value = false
+  }
+}
 
 const loadDiary = async () => {
   isLoading.value = true
@@ -892,10 +1083,13 @@ onMounted(async () => {
       labChart && labChart.resize()
     })
   })
-  await loadDiary()
+  await Promise.all([loadDiary(), loadFeelings()])
 })
 
+watch(() => props.feelingRefreshKey, () => loadFeelings())
+
 const checkinOpen = ref(false)
+const medOpen = ref(false)
 const celebrate = ref(false)
 const checkinTargetDate = ref(todayDateStr.value)
 const checkinIsToday = computed(() => checkinTargetDate.value === todayDateStr.value)
@@ -903,7 +1097,7 @@ const checkinDateLabel = computed(() => {
   const d = new Date(`${checkinTargetDate.value}T00:00:00`)
   return checkinIsToday.value ? todayStr.value : formatDisplayDate(d)
 })
-const form = reactive({ poopCount: '', bristol: 0, blood: '', pain: 0, feel: '', meds: [], medOther: '', breakfast: '', lunch: '', dinner: '', food: '' })
+const form = reactive({ poopCount: '', bristol: 0, blood: '', pain: 0, feel: '', meds: [], medOther: '', breakfast: '', lunch: '', dinner: '', food: '', foodFeeling: '' })
 const poopCountOptions = ['0', '1', '2', '3', '4', '5', '6+']
 const bristol = [
   { type: 1, icon: '🌑', label: '硬球' }, { type: 2, icon: '🥔', label: '块状' },
@@ -954,6 +1148,7 @@ const buildMealsPayload = () => {
   if (form.breakfast.trim()) meals.breakfast = form.breakfast.trim()
   if (form.lunch.trim()) meals.lunch = form.lunch.trim()
   if (form.dinner.trim()) meals.dinner = form.dinner.trim()
+  if (form.foodFeeling.trim()) meals.feeling = form.foodFeeling.trim()
   return Object.keys(meals).length ? meals : null
 }
 
@@ -992,6 +1187,7 @@ const resetForm = () => {
   form.lunch = ''
   form.dinner = ''
   form.food = ''
+  form.foodFeeling = ''
 }
 
 const fillFormFromRecord = (record) => {
@@ -1009,6 +1205,7 @@ const fillFormFromRecord = (record) => {
   form.lunch = meals.lunch || record.lunch || ''
   form.dinner = meals.dinner || record.dinner || ''
   form.food = record.foodNote || record.food || ''
+  form.foodFeeling = meals.feeling || record.foodFeeling || ''
 }
 
 const openCheckin = async () => {
@@ -1023,6 +1220,7 @@ const openCheckin = async () => {
   } catch {
     resetForm()
   }
+  medOpen.value = Boolean(form.meds.length || form.medOther)
   checkinOpen.value = true
 }
 
@@ -1030,6 +1228,7 @@ const editSelectedDay = () => {
   if (!selectedDayRecord.value) return
   checkinTargetDate.value = selectedDayRecord.value.recordDate
   fillFormFromRecord(selectedDayRecord.value)
+  medOpen.value = Boolean(form.meds.length || form.medOther)
   dayDetailOpen.value = false
   checkinOpen.value = true
 }
@@ -1254,6 +1453,43 @@ const doExport = async () => {
 </script>
 
 <style scoped>
+.moment-journal { overflow: hidden; border: 1px solid rgba(103,76,61,.09); border-radius: 26px; background: radial-gradient(circle at 88% 4%, rgba(255,241,206,.88), transparent 30%), linear-gradient(145deg, #fffdf9, #f6eee8); box-shadow: 0 18px 38px -32px rgba(72,48,37,.45); }
+.moment-journal-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 18px 14px; }
+.moment-journal-head p { color: #ad8d7f; font-size: 9px; font-weight: 900; letter-spacing: .18em; }
+.moment-journal-head h3 { margin-top: 3px; color: #392b26; font-family: Georgia, "Noto Serif SC", serif; font-size: 18px; font-weight: 900; }
+.moment-journal-head span { display: block; margin-top: 4px; color: #9d8d85; font-size: 10px; font-weight: 700; }
+.moment-journal-head button { width: 43px; height: 43px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 15px; color: #fff; background: #2c2522; font-size: 23px; box-shadow: 0 13px 22px -16px rgba(44,37,34,.8); }
+.moment-list { display: grid; gap: 8px; padding: 0 10px 10px; }
+.moment-note { --moment-accent: #967366; min-height: 88px; display: flex; align-items: stretch; overflow: hidden; border: 1px solid rgba(98,73,61,.07); border-radius: 17px; background: rgba(255,255,255,.84); }
+.moment-note.bright { --moment-accent: #c48627; }
+.moment-note.dark { --moment-accent: #715878; }
+.moment-note-copy { min-width: 0; flex: 1; padding: 12px 13px; }
+.moment-note-meta { display: flex; align-items: center; gap: 8px; color: #aa9c95; font-size: 9.5px; font-weight: 800; }
+.moment-note-meta span { display: inline-flex; align-items: center; gap: 4px; color: var(--moment-accent); }
+.moment-note-copy > h4 { overflow: hidden; margin-top: 7px; color: #392b26; font-family: Georgia, "Noto Serif SC", serif; font-size: 14px; font-weight: 900; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.moment-note-copy > p { display: -webkit-box; overflow: hidden; margin-top: 3px; color: #62524b; font-size: 11px; font-weight: 650; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.moment-note-copy > small { display: block; overflow: hidden; margin-top: 4px; color: #a4968f; font-size: 9.5px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.moment-note-time { display: block; margin-top: 7px; color: #b1a49d; font-size: 9px; font-weight: 750; }
+.moment-note-image { position: relative; width: 84px; flex: 0 0 auto; overflow: hidden; }
+.moment-note-image img { width: 100%; height: 100%; object-fit: cover; }
+.moment-note-image span { position: absolute; right: 5px; bottom: 5px; min-width: 23px; height: 20px; display: grid; place-items: center; padding: 0 5px; border-radius: 999px; color: #fff; background: rgba(30,25,23,.65); font-size: 9px; font-weight: 900; }
+.moment-empty { margin: 0 10px 10px; padding: 20px; border-radius: 17px; color: #a4968f; background: rgba(255,255,255,.66); font-size: 11px; font-weight: 750; text-align: center; }
+.moment-empty-action { width: calc(100% - 20px); display: flex; align-items: center; justify-content: center; gap: 9px; text-align: left; }
+.moment-empty-action > i { color: #9a7569; font-size: 21px; }
+.moment-empty-action span { display: grid; gap: 2px; }
+.moment-empty-action strong { color: #6f5e55; font-size: 11.5px; }
+.moment-empty-action small { color: #ac9e97; font-size: 9.5px; }
+.day-feelings { display: grid; gap: 8px; margin-top: 6px; }
+.day-feelings > header { display: flex; align-items: center; gap: 6px; padding: 5px 2px 1px; color: #88736a; font-size: 11px; font-weight: 900; }
+.day-feelings > article { --day-accent: #967366; padding: 13px 14px; border-left: 3px solid var(--day-accent); border-radius: 5px 16px 16px 5px; background: #fff; }
+.day-feelings > article.bright { --day-accent: #c48627; }
+.day-feelings > article.dark { --day-accent: #715878; }
+.day-feelings article > div:first-child { display: flex; align-items: center; justify-content: space-between; color: #aa9c95; font-size: 9.5px; font-weight: 800; }
+.day-feelings article > div:first-child span { color: var(--day-accent); }
+.day-feelings article > h4 { margin-top: 8px; color: #392b26; font-family: Georgia, "Noto Serif SC", serif; font-size: 14px; font-weight: 900; }
+.day-feelings article > p { margin-top: 4px; color: #62524b; font-size: 12px; font-weight: 650; line-height: 1.65; white-space: pre-wrap; }
+.day-feeling-images { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 9px; }
+.day-feeling-images img { width: 100%; aspect-ratio: 1; border-radius: 9px; object-fit: cover; }
 .custom-scroll::-webkit-scrollbar { display: none; }
 .custom-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 .sheet-enter-active, .sheet-leave-active { transition: opacity .3s; }

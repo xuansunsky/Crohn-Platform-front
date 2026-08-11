@@ -80,9 +80,9 @@ const hidden = computed(() => props.suppress)
 
 // ---- 立绘（先用现有三张乙游立绘，等 Live2D 模型到位后可无缝换成 <Live2DStage>） ----
 const PORTRAITS = {
-  bright: '/media/mascot/mascot-bright.png',
-  calm: '/media/mascot/mascot-calm.png',
-  dark: '/media/mascot/mascot-dark.png',
+  bright: '/media/mascot/mascot-bright.webp',
+  calm: '/media/mascot/mascot-calm.webp',
+  dark: '/media/mascot/mascot-dark.webp',
 }
 const moodTag = ref('calm')
 const portrait = computed(() => PORTRAITS[moodTag.value] || PORTRAITS.calm)

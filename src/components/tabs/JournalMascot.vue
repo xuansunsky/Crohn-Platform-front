@@ -39,9 +39,9 @@ const props = defineProps({
 })
 
 const PORTRAITS = {
-  bright: '/media/journal-companion/bright.png',
-  calm: '/media/journal-companion/normal.png',
-  dark: '/media/journal-companion/comfort.png',
+  bright: '/media/journal-companion/bright.webp',
+  calm: '/media/journal-companion/normal.webp',
+  dark: '/media/journal-companion/comfort.webp',
 }
 
 const IDLE_LINES = {
